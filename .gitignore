@@ -1,0 +1,17 @@
+# Created by venv; see https://docs.python.org/3/library/venv.html, dấu * để bỏ toàn bộ file trong cùng thư mục với file .gitignore này, ví dụ: *.pyc sẽ bỏ qua tất cả các file .pyc trong cùng thư mục với file .gitignore này
+# *
+
+<<<<<<< HEAD
+legalqa_local1.py
+
+dense_finetuned/
+
+dense_finetuned_tmp/
+
+submission.zip
+
+subcon/
+=======
+# Bỏ qua toàn bộ thư mục models: giả sử tất cả mô hình quá nặng thì sẽ đặt vào đây
+models/
+>>>>>>> 76cf4a2994d4afa635a0c58dbc1e8e002bfb771e
