@@ -1,18 +1,14 @@
 """
-legalqa_advanced.py — LegalQA (UIT DSC2026 Task 2), tối ưu cho RTX 2050 4GB VRAM, 
-không giới hạn thời gian, mục tiêu METEOR > 0.6.
+legalqa_dense_rerank.py — LegalQA (UIT DSC2026 Task 2)
+Tối ưu cho RTX 2050 4GB VRAM + 32GB RAM, không generator, chỉ dense + reranker.
+Mục tiêu: METEOR 0.40–0.48, thời gian ~2-3 giờ.
 
-CÁCH DÙNG: đặt file này cạnh train.json, public-official.json, selected-contexts/ rồi chạy:
-    python legalqa_advanced.py
-Output: submission.zip trong cùng thư mục.
+CÁCH DÙNG: đặt cạnh train.json, public-official.json, selected-contexts/ rồi chạy:
+    python legalqa_dense_rerank.py
+Output: submission.zip
 
-CÁC CẢI TIẾN (có thể bật/tắt qua config):
-- ViLegalBERT (dense retriever) thay vì SimCSE-PhoBERT
-- Semi-hard negative mining
-- Cross-Encoder reranker (XLM-RoBERTa)
-- ViLegalQwen2.5-1.5B generator với LoRA SFT + Context-Aware DPO (tuỳ chọn)
-- Ensemble retrieval (kết hợp nhiều dense models)
-- Tối ưu batch size (encode batch = 64)
+THƯ VIỆN CẦN CÀI:
+    pip install numpy sentence-transformers datasets accelerate nltk rouge_score rank_bm25 tqdm transformers
 """
 from __future__ import annotations
 import os
@@ -29,61 +25,44 @@ from collections import defaultdict, Counter
 import numpy as np
 import torch
 from tqdm import tqdm
-from sentence_transformers import SentenceTransformer, CrossEncoder, InputExample, losses
-from sentence_transformers import SentenceTransformerTrainer, SentenceTransformerTrainingArguments
-from datasets import Dataset
-import nltk
-from nltk.translate.meteor_score import meteor_score
-from rouge_score import rouge_scorer
 
-# ==============================================================================
-# CONFIG (bật/tắt tính năng)
-# ==============================================================================
+# =========================== CONFIG ===========================
 HERE = Path(__file__).resolve().parent
 CONTEXTS_DIR = HERE / "selected-contexts"
 TRAIN_PATH = HERE / "train.json"
 PUBLIC_PATH = HERE / "public-official.json"
-OUT_DIR = HERE
 
-# ---- Các tùy chọn nâng cao ----
-USE_VILEGALBERT = True                # True: dùng ViLegalBERT, False: dùng SimCSE-PhoBERT
-USE_RERANKER = True                   # True: dùng Cross-Encoder reranker (tốn VRAM)
-USE_LLM_GENERATOR = False             # True: dùng ViLegalQwen (LoRA SFT), False: dùng template extractive
-USE_ENSEMBLE = False                  # True: ensemble nhiều dense models (cần nhiều VRAM)
-USE_DPO = False                       # True: áp dụng Context-Aware DPO (chỉ khi có generator)
-ENCODE_BATCH_SIZE = 64                # 64 phù hợp với RTX 2050 (giảm nếu OOM)
-TRAIN_BATCH_SIZE = 8                  # batch size cho fine-tune dense/reranker
-TOP_K_RETRIEVE = 100                  # số ứng viên trước rerank
-TOP_K_RERANK = 10                     # số ứng viên sau rerank
-TOP_N_ANSWER = 3                      # số chunk dùng để sinh answer (mặc định, có thể điều chỉnh qua dev-eval)
+# ---- Mô hình (dùng model mở, không cần đăng nhập) ----
+DENSE_MODEL_NAME = "VoVanPhuc/sup-SimCSE-VietNamese-phobert-base"  # 135M, mở
+RERANKER_MODEL_NAME = "xlm-roberta-base"                           # 278M, mở
 
-# ---- Các ngưỡng và giới hạn ----
-MIN_TRAIN_PAIRS = 50
-MAX_TRAIN_EXAMPLES = 1000             # giới hạn số positive dùng để fine-tune (tránh quá lâu)
+# ---- Hyperparameters ----
 DENSE_MAX_SEQ_LEN = 256
 RERANKER_MAX_SEQ_LEN = 512
+ENCODE_BATCH_SIZE = 64           # Tăng để encode nhanh hơn
+TRAIN_BATCH_SIZE = 8
+TOP_K_RETRIEVE = 100
+TOP_K_RERANK = 10
+TOP_N_ANSWER = 3                 # Số chunk dùng để sinh câu trả lời
 
-# ---- Đường dẫn mô hình ----
-if USE_VILEGALBERT:
-    BASE_DENSE_MODEL = "ntphuc149/ViLegalBERT"   # Gated repo, cần đăng nhập HF
-else:
-    BASE_DENSE_MODEL = "VoVanPhuc/sup-SimCSE-VietNamese-phobert-base"
+# ---- Fine-tune options ----
+USE_FINETUNE_DENSE = True        # Có fine-tune dense retriever
+USE_FINETUNE_RERANKER = True     # Có fine-tune reranker
+MIN_TRAIN_PAIRS = 50
+MAX_TRAIN_EXAMPLES = 1000        # Giới hạn số positive dùng cho train
 
-RERANKER_MODEL = "xlm-roberta-base"
-GENERATOR_MODEL = "ntphuc149/ViLegalQwen2.5-1.5B-Base"  # Gated repo
+# ---- Output ----
+OUT_ZIP = HERE / "submission.zip"
 
-# ---- Biến toàn cục ----
+# =========================== UTILITIES ===========================
 _START_TIME = time.time()
-
 def elapsed() -> float:
     return time.time() - _START_TIME
 
 def checkpoint(label: str) -> None:
     print(f"[{elapsed()/60:5.1f} phút] {label}")
 
-# ==============================================================================
-# BƯỚC 1 — Chunk corpus (giữ nguyên từ bản cũ)
-# ==============================================================================
+# =========================== BƯỚC 1: CHUNK CORPUS ===========================
 DIEU_RE = re.compile(r"^[ \t]*Điều\s+(\d+)[a-zđA-ZĐ]?[\.\s]", re.MULTILINE)
 SO_HEADER_RE = re.compile(r"Số\s*[:：]\s*([0-9A-Za-zĐđ/\-]+)")
 SO_HIEU_RE = re.compile(r"\d{1,6}[A-Za-z]{0,3}/(?:\d{4}/)?[A-Za-zĐđ]{2,10}(?:-[A-Za-zĐđ]{2,10})?")
@@ -148,9 +127,7 @@ def load_corpus(contexts_dir: Path) -> list:
     print(f"  {len(files)} văn bản -> {len(all_chunks)} chunk.")
     return all_chunks
 
-# ==============================================================================
-# BƯỚC 2 — BM25 (sử dụng rank_bm25 để nhanh hơn)
-# ==============================================================================
+# =========================== BƯỚC 2: BM25 ===========================
 from rank_bm25 import BM25Okapi
 
 _TOKEN_RE = re.compile(r"[^\W\d_]+|\d+", re.UNICODE)
@@ -161,9 +138,7 @@ def build_bm25(all_chunks):
     tokenized = [tokenize_simple(f"{c.get('loai_vb','')} {c['text']}") for c in all_chunks]
     return BM25Okapi(tokenized)
 
-# ==============================================================================
-# BƯỚC 3 — Sinh nhãn (positive pairs) từ train.json
-# ==============================================================================
+# =========================== BƯỚC 3: SINH NHÃN ===========================
 DIEU_CITATION_RE = re.compile(r"Điều\s+(\d+)\s*[a-zđA-ZĐ]?\b")
 
 def extract_citations(answer: str) -> list:
@@ -183,8 +158,7 @@ def build_train_pairs(train_data: dict, all_chunks: list):
     for c in all_chunks:
         if c["so_hieu"] and c["dieu_so"] != "0":
             key = (c["dieu_so"], norm_so_hieu(c["so_hieu"]))
-            if key not in so_hieu_index:
-                so_hieu_index[key] = c["id"]
+            so_hieu_index.setdefault(key, c["id"])
     positive = {}
     for qid, item in train_data.items():
         for dieu, so_hieu in extract_citations(item["answer"]):
@@ -195,27 +169,26 @@ def build_train_pairs(train_data: dict, all_chunks: list):
     chunk_by_id = {c["id"]: c for c in all_chunks}
     return positive, chunk_by_id
 
-# ==============================================================================
-# BƯỚC 4 — Dense Retriever (ViLegalBERT hoặc SimCSE-PhoBERT) + Semi-hard mining
-# ==============================================================================
-def load_dense_retriever(model_name, device, max_seq_len=DENSE_MAX_SEQ_LEN):
-    # Nếu dùng ViLegalBERT (gated), cần đăng nhập huggingface-cli login
-    model = SentenceTransformer(model_name, device=device)
-    model.max_seq_length = max_seq_len
+# =========================== BƯỚC 4: DENSE RETRIEVER ===========================
+from sentence_transformers import SentenceTransformer, InputExample, losses
+from sentence_transformers import SentenceTransformerTrainer, SentenceTransformerTrainingArguments
+from datasets import Dataset
+
+def load_dense_model(device='cuda'):
+    """Load SimCSE-PhoBERT (mở, không cần đăng nhập)."""
+    model = SentenceTransformer(DENSE_MODEL_NAME, device=device)
+    model.max_seq_length = DENSE_MAX_SEQ_LEN
     return model
 
-def build_training_rows_semi_hard(train_positive, train_data, chunk_by_id, all_chunks, bm25, n_neg=4):
-    """Semi-hard negatives: lấy từ top 10-50 của BM25."""
+def build_semi_hard_rows(train_positive, train_data, chunk_by_id, all_chunks, bm25, n_neg=4):
     rows = []
     all_chunks_list = all_chunks
     for qid, pos_id in tqdm(train_positive.items(), desc="Tạo semi-hard training rows"):
         question = train_data[qid]["question"]
         pos_text = chunk_by_id[pos_id]["text"]
         token_q = tokenize_simple(question)
-        # BM25 top-100
         ranked = bm25.get_top_n(token_q, list(range(len(all_chunks_list))), n=100)
-        # Semi-hard: chỉ lấy từ vị trí 10-50
-        semi_hard = ranked[10:50]
+        semi_hard = ranked[10:50]  # semi-hard: từ vị trí 10 đến 50
         neg_ids = [all_chunks_list[idx]["id"] for idx in semi_hard if all_chunks_list[idx]["id"] != pos_id][:n_neg]
         if len(neg_ids) < n_neg:
             pool = [c["id"] for c in all_chunks_list if c["id"] != pos_id]
@@ -227,20 +200,18 @@ def build_training_rows_semi_hard(train_positive, train_data, chunk_by_id, all_c
         rows.append(row)
     return rows
 
-def finetune_dense_retriever(model, train_positive, train_data, chunk_by_id, all_chunks, bm25):
+def finetune_dense(model, train_positive, train_data, chunk_by_id, all_chunks, bm25):
     if len(train_positive) < MIN_TRAIN_PAIRS:
-        print("  Không đủ positive pairs, bỏ fine-tune.")
+        print("  Không đủ positive pairs, bỏ fine-tune dense.")
         return model
-    # Giới hạn số lượng train positive
+    # Giới hạn mẫu
     if len(train_positive) > MAX_TRAIN_EXAMPLES:
         sampled = random.sample(list(train_positive.keys()), MAX_TRAIN_EXAMPLES)
         train_positive = {qid: train_positive[qid] for qid in sampled}
         print(f"  Lấy mẫu {MAX_TRAIN_EXAMPLES} positive pairs để fine-tune.")
-    # Tạo dữ liệu
-    rows = build_training_rows_semi_hard(train_positive, train_data, chunk_by_id, all_chunks, bm25)
+    rows = build_semi_hard_rows(train_positive, train_data, chunk_by_id, all_chunks, bm25)
     dataset = Dataset.from_list(rows)
-    print(f"  Training rows: {len(dataset)}")
-    # Trainer
+    print(f"  Dense training rows: {len(dataset)}")
     loss = losses.MultipleNegativesRankingLoss(model)
     args = SentenceTransformerTrainingArguments(
         output_dir="dense_finetuned",
@@ -258,28 +229,28 @@ def finetune_dense_retriever(model, train_positive, train_data, chunk_by_id, all
     model.save_pretrained("dense_finetuned")
     return model
 
-# ==============================================================================
-# BƯỚC 5 — Reranker (Cross-Encoder)
-# ==============================================================================
-def load_reranker(model_name=RERANKER_MODEL, device='cuda'):
-    reranker = CrossEncoder(model_name, num_labels=1, device=device)
-    # Nếu đã fine-tune trước đó, load từ checkpoint
+# =========================== BƯỚC 5: RERANKER (Cross-Encoder) ===========================
+from sentence_transformers import CrossEncoder
+
+def load_reranker(device='cuda'):
     if os.path.exists("reranker_finetuned"):
-        reranker = CrossEncoder("reranker_finetuned", device=device)
-    return reranker
+        print("  Load reranker from checkpoint.")
+        return CrossEncoder("reranker_finetuned", device=device)
+    return CrossEncoder(RERANKER_MODEL_NAME, num_labels=1, device=device)
 
 def finetune_reranker(reranker, train_positive, train_data, chunk_by_id, all_chunks, bm25):
-    if not train_positive:
+    if len(train_positive) < MIN_TRAIN_PAIRS:
+        print("  Không đủ positive pairs, bỏ fine-tune reranker.")
         return reranker
     train_pairs = []
-    for qid, pos_id in train_positive.items():
+    for qid, pos_id in tqdm(train_positive.items(), desc="Tạo reranker pairs"):
         question = train_data[qid]["question"]
         pos_chunk = chunk_by_id[pos_id]
         train_pairs.append((question, pos_chunk['text'], 1))
         token_q = tokenize_simple(question)
         ranked = bm25.get_top_n(token_q, list(range(len(all_chunks))), n=60)
-        neg_ids = [all_chunks[idx]["id"] for idx in ranked[10:50] if all_chunks[idx]["id"] != pos_id][:3]
-        for nid in neg_ids:
+        semi_hard = [all_chunks[idx]["id"] for idx in ranked[10:50] if all_chunks[idx]["id"] != pos_id][:3]
+        for nid in semi_hard:
             neg_chunk = chunk_by_id[nid]
             train_pairs.append((question, neg_chunk['text'], 0))
     print(f"  Reranker training pairs: {len(train_pairs)}")
@@ -294,73 +265,25 @@ def finetune_reranker(reranker, train_positive, train_data, chunk_by_id, all_chu
     )
     return CrossEncoder("reranker_finetuned", device='cuda')
 
-# ==============================================================================
-# BƯỚC 6 — Generator (ViLegalQwen + LoRA + DPO)
-# ==============================================================================
-def load_generator(model_name=GENERATOR_MODEL, use_lora=True):
-    from transformers import AutoModelForCausalLM, AutoTokenizer
-    from peft import LoraConfig, get_peft_model, PeftModel
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    tokenizer.pad_token = tokenizer.eos_token
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name,
-        torch_dtype=torch.bfloat16,
-        device_map="auto" if torch.cuda.is_available() else None,
-        trust_remote_code=True
-    )
-    if use_lora and os.path.exists("vilegalqwen_lora"):
-        model = PeftModel.from_pretrained(model, "vilegalqwen_lora")
-        model = model.merge_and_unload()
-    elif use_lora:
-        # Chỉ áp dụng LoRA nếu chưa có, cần fine-tune riêng (phần này tùy chọn)
-        print("  LoRA adapter chưa có, cần fine-tune generator. Bỏ qua.")
-    return model, tokenizer
-
-def generate_answer_with_llm(question, contexts, model, tokenizer, max_new_tokens=512):
-    prompt = f"""Bạn là trợ lý pháp luật. Dựa CHỈ vào các điều luật dưới đây, trả lời câu hỏi.
-YÊU CẦU:
-- Bắt đầu bằng câu dẫn nêu rõ Điều và số hiệu văn bản.
-- TRÍCH NGUYÊN VĂN nội dung điều luật, GIỮ ĐÚNG thứ tự.
-- KHÔNG diễn giải lại, KHÔNG tóm tắt.
-
-[ĐIỀU LUẬT] {contexts}
-[CÂU HỎI] {question}
-[TRẢ LỜI]"""
-    inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=2048)
-    if torch.cuda.is_available():
-        inputs = {k: v.to('cuda') for k, v in inputs.items()}
-    outputs = model.generate(
-        **inputs,
-        max_new_tokens=max_new_tokens,
-        temperature=0.1,
-        do_sample=False,
-        pad_token_id=tokenizer.eos_token_id
-    )
-    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    # Lấy phần sau "[TRẢ LỜI]"
-    if "[TRẢ LỜI]" in response:
-        response = response.split("[TRẢ LỜI]")[-1].strip()
-    return response
-
-# ==============================================================================
-# BƯỚC 7 — Hybrid Retrieval + Rerank + Generate
-# ==============================================================================
-def hybrid_retrieve(question, bm25, dense_model, dense_embeddings, all_chunks, top_k=100):
+# =========================== BƯỚC 6: RETRIEVAL + RERANK + ANSWER ===========================
+def hybrid_retrieve(question, bm25, dense_model, dense_embeddings, all_chunks, top_k=TOP_K_RETRIEVE):
     token_q = tokenize_simple(question)
     bm25_ranked = bm25.get_top_n(token_q, list(range(len(all_chunks))), n=top_k)
-    # Dense
     q_emb = dense_model.encode([question], convert_to_numpy=True, normalize_embeddings=True)[0]
     dense_scores = dense_embeddings @ q_emb
     dense_ranked = list(np.argsort(-dense_scores)[:top_k])
-    # RRF
     bm25_rank_map = {idx: r for r, idx in enumerate(bm25_ranked)}
     dense_rank_map = {idx: r for r, idx in enumerate(dense_ranked)}
     all_idx = set(bm25_ranked) | set(dense_ranked)
-    rrf = {i: 1/(60 + bm25_rank_map.get(i, top_k+1)) + 1/(60 + dense_rank_map.get(i, top_k+1)) for i in all_idx}
+    rrf = {}
+    for i in all_idx:
+        r1 = bm25_rank_map.get(i, top_k+1)
+        r2 = dense_rank_map.get(i, top_k+1)
+        rrf[i] = 1/(60+r1) + 1/(60+r2)
     ranked = sorted(rrf, key=rrf.get, reverse=True)
     return [all_chunks[i] for i in ranked]
 
-def rerank_chunks(question, chunks, reranker, top_k=10):
+def rerank_chunks(question, chunks, reranker, top_k=TOP_K_RERANK):
     if not reranker:
         return chunks[:top_k]
     pairs = [(question, c['text']) for c in chunks]
@@ -368,7 +291,7 @@ def rerank_chunks(question, chunks, reranker, top_k=10):
     sorted_idx = np.argsort(-scores)[:top_k]
     return [chunks[i] for i in sorted_idx]
 
-def render_answer(chunks, top_n):
+def render_answer(chunks, top_n=TOP_N_ANSWER):
     parts, seen = [], set()
     for c in chunks:
         if c["id"] in seen or len(parts) >= top_n:
@@ -381,15 +304,27 @@ def render_answer(chunks, top_n):
         parts.append(f"{lead}\n{c['text']}")
     return "\n\n".join(parts)
 
-# ==============================================================================
-# BƯỚC 8 — Dev-eval và Submission
-# ==============================================================================
-def try_dev_eval(bm25, dense_model, dense_embeddings, all_chunks, train_data, reranker=None, generator=None, tokenizer=None):
+def answer_question(question, bm25, dense_model, dense_embeddings, all_chunks, reranker=None):
+    raw = hybrid_retrieve(question, bm25, dense_model, dense_embeddings, all_chunks)
+    if not raw:
+        return "Không tìm thấy thông tin pháp lý."
+    reranked = rerank_chunks(question, raw, reranker, TOP_K_RERANK)
+    return render_answer(reranked, TOP_N_ANSWER)
+
+# =========================== BƯỚC 7: DEV-EVAL (tìm TOP_N_ANSWER tối ưu) ===========================
+def try_dev_eval(bm25, dense_model, dense_embeddings, all_chunks, train_data, reranker=None):
     try:
-        nltk.data.find("corpora/wordnet")
-    except LookupError:
-        nltk.download("wordnet", quiet=True)
-        nltk.download("omw-1.4", quiet=True)
+        import nltk
+        try:
+            nltk.data.find("corpora/wordnet")
+        except LookupError:
+            nltk.download("wordnet", quiet=True)
+            nltk.download("omw-1.4", quiet=True)
+        from nltk.translate.meteor_score import meteor_score
+        from rouge_score import rouge_scorer
+    except Exception as e:
+        print(f"  Bỏ qua dev-eval ({e}), dùng TOP_N_ANSWER=3.")
+        return 3
     rouge = rouge_scorer.RougeScorer(["rougeL"], use_stemmer=False)
     random.seed(42)
     n_sample = min(40, len(train_data))
@@ -399,15 +334,13 @@ def try_dev_eval(bm25, dense_model, dense_embeddings, all_chunks, train_data, re
         ms, rs = [], []
         for qid in tqdm(ids, desc=f"Eval top{top_n}"):
             item = train_data[qid]
-            # Retrieve
-            raw_chunks = hybrid_retrieve(item["question"], bm25, dense_model, dense_embeddings, all_chunks)
+            pred = answer_question(item["question"], bm25, dense_model, dense_embeddings, all_chunks, reranker)
+            # Tạm thời dùng TOP_N_ANSWER = top_n bằng cách override render_answer
+            # Cách nhanh: gọi lại render_answer với top_n khác
+            raw = hybrid_retrieve(item["question"], bm25, dense_model, dense_embeddings, all_chunks)
             if reranker:
-                raw_chunks = rerank_chunks(item["question"], raw_chunks, reranker, TOP_K_RERANK)
-            if generator:
-                context = "\n".join([f"Điều {c['dieu_so']}: {c['text']}" for c in raw_chunks[:top_n]])
-                pred = generate_answer_with_llm(item["question"], context, generator, tokenizer)
-            else:
-                pred = render_answer(raw_chunks, top_n)
+                raw = rerank_chunks(item["question"], raw, reranker, TOP_K_RERANK)
+            pred = render_answer(raw, top_n)
             ref = item["answer"]
             ms.append(meteor_score([str(ref).split()], str(pred).split()))
             rs.append(rouge.score(str(ref), str(pred))["rougeL"].fmeasure)
@@ -418,16 +351,14 @@ def try_dev_eval(bm25, dense_model, dense_embeddings, all_chunks, train_data, re
     print(f"  => chọn TOP_N_ANSWER={best_n}")
     return best_n
 
+# =========================== BƯỚC 8: SUBMISSION ===========================
 def build_submission(answers, expected_ids, out_zip):
-    errors = []
     got = set(answers.keys())
     if got != expected_ids:
-        errors.append(f"Key lệch: thiếu {len(expected_ids-got)}, thừa {len(got-expected_ids)}")
+        raise ValueError(f"Key lệch: thiếu {len(expected_ids-got)}, thừa {len(got-expected_ids)}")
     for qid, ans in answers.items():
         if not isinstance(ans, str) or not ans.strip():
-            errors.append(f"[{qid}] answer rỗng")
-    if errors:
-        raise ValueError("Submission không hợp lệ:\n" + "\n".join(errors[:20]))
+            print(f"  [WARN] {qid} answer rỗng")
     normalized = {qid: {"answer": str(ans)} for qid, ans in answers.items()}
     json_path = out_zip.with_suffix(".json")
     with json_path.open("w", encoding="utf-8") as f:
@@ -436,25 +367,24 @@ def build_submission(answers, expected_ids, out_zip):
         zf.write(json_path, arcname="submission.json")
     print(f"  OK — {out_zip} ({len(normalized)} câu trả lời)")
 
-# ==============================================================================
-# MAIN
-# ==============================================================================
+# =========================== MAIN ===========================
 def main():
+    print("=== LEGALQA DENSE + RERANKER PIPELINE ===")
     checkpoint("Bắt đầu")
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"  Device: {device}")
 
-    # Bước 1: Chunk
+    # 1. Chunk
     print("\n=== Bước 1: Chunk corpus ===")
     all_chunks = load_corpus(CONTEXTS_DIR)
     checkpoint("Xong chunking")
 
-    # Bước 2: BM25
+    # 2. BM25
     print("\n=== Bước 2: BM25 index ===")
     bm25 = build_bm25(all_chunks)
     checkpoint("Xong BM25")
 
-    # Bước 3: Sinh nhãn
+    # 3. Sinh nhãn
     print("\n=== Bước 3: Sinh nhãn từ train.json ===")
     with TRAIN_PATH.open(encoding="utf-8") as f:
         train_data = json.load(f)
@@ -462,12 +392,11 @@ def main():
     print(f"  Positive pairs: {len(train_positive)}/{len(train_data)}")
     checkpoint("Xong sinh nhãn")
 
-    # Bước 4: Dense retriever
+    # 4. Dense Retriever
     print("\n=== Bước 4: Dense retriever ===")
-    dense_model = load_dense_retriever(BASE_DENSE_MODEL, device)
-    # Fine-tune nếu có đủ dữ liệu
-    if len(train_positive) >= MIN_TRAIN_PAIRS:
-        dense_model = finetune_dense_retriever(dense_model, train_positive, train_data, chunk_by_id, all_chunks, bm25)
+    dense_model = load_dense_model(device)
+    if USE_FINETUNE_DENSE and len(train_positive) >= MIN_TRAIN_PAIRS:
+        dense_model = finetune_dense(dense_model, train_positive, train_data, chunk_by_id, all_chunks, bm25)
     checkpoint("Xong dense retriever")
 
     # Encode corpus
@@ -481,52 +410,50 @@ def main():
     )
     checkpoint("Xong encode corpus")
 
-    # Bước 5: Reranker (nếu bật)
-    reranker = None
-    if USE_RERANKER:
-        print("\n=== Bước 5: Reranker (Cross-Encoder) ===")
-        reranker = load_reranker(RERANKER_MODEL, device)
-        # Fine-tune reranker
-        if len(train_positive) >= MIN_TRAIN_PAIRS and not os.path.exists("reranker_finetuned"):
-            reranker = finetune_reranker(reranker, train_positive, train_data, chunk_by_id, all_chunks, bm25)
-        checkpoint("Xong reranker")
+    # 5. Reranker
+    print("\n=== Bước 5: Reranker (Cross-Encoder) ===")
+    reranker = load_reranker(device)
+    if USE_FINETUNE_RERANKER and len(train_positive) >= MIN_TRAIN_PAIRS:
+        reranker = finetune_reranker(reranker, train_positive, train_data, chunk_by_id, all_chunks, bm25)
+    checkpoint("Xong reranker")
 
-    # Bước 6: Generator (nếu bật)
-    generator, tokenizer = None, None
-    if USE_LLM_GENERATOR:
-        print("\n=== Bước 6: Generator (ViLegalQwen) ===")
-        generator, tokenizer = load_generator(GENERATOR_MODEL, use_lora=True)
-        checkpoint("Xong generator")
-
-    # Bước 7: Dev-eval chọn TOP_N_ANSWER
-    print("\n=== Bước 7: Dev-eval chọn TOP_N_ANSWER ===")
-    top_n_answer = try_dev_eval(
-        bm25, dense_model, dense_embeddings, all_chunks, train_data,
-        reranker=reranker, generator=generator, tokenizer=tokenizer
-    )
+    # 6. Dev-eval chọn TOP_N_ANSWER
+    print("\n=== Bước 6: Dev-eval ===")
+    top_n = try_dev_eval(bm25, dense_model, dense_embeddings, all_chunks, train_data, reranker)
+    global TOP_N_ANSWER
+    TOP_N_ANSWER = top_n
+    # Cập nhật lại render_answer để dùng top_n mới
+    def render_answer_updated(chunks, top_n=TOP_N_ANSWER):
+        parts, seen = [], set()
+        for c in chunks:
+            if c["id"] in seen or len(parts) >= top_n:
+                continue
+            seen.add(c["id"])
+            loai_vb = c["loai_vb"] or "văn bản"
+            so_hieu = c["so_hieu"] or ""
+            dieu = c["dieu_so"]
+            lead = f"Theo Điều {dieu} {loai_vb} {so_hieu} quy định cụ thể:" if dieu != "0" else f"Theo {loai_vb} {so_hieu} quy định cụ thể:"
+            parts.append(f"{lead}\n{c['text']}")
+        return "\n\n".join(parts)
     checkpoint("Xong dev-eval")
 
-    # Bước 8: Predict public
-    print("\n=== Bước 8: Sinh câu trả lời cho public-official.json ===")
+    # 7. Predict public
+    print("\n=== Bước 7: Sinh câu trả lời cho public-official.json ===")
     with PUBLIC_PATH.open(encoding="utf-8") as f:
         questions = json.load(f)
     answers = {}
     for qid, item in tqdm(questions.items(), desc="Predict"):
-        raw_chunks = hybrid_retrieve(item["question"], bm25, dense_model, dense_embeddings, all_chunks)
+        raw = hybrid_retrieve(item["question"], bm25, dense_model, dense_embeddings, all_chunks)
         if reranker:
-            raw_chunks = rerank_chunks(item["question"], raw_chunks, reranker, TOP_K_RERANK)
-        if generator:
-            context = "\n".join([f"Điều {c['dieu_so']}: {c['text']}" for c in raw_chunks[:top_n_answer]])
-            answers[qid] = generate_answer_with_llm(item["question"], context, generator, tokenizer)
-        else:
-            answers[qid] = render_answer(raw_chunks, top_n_answer)
+            raw = rerank_chunks(item["question"], raw, reranker, TOP_K_RERANK)
+        answers[qid] = render_answer_updated(raw, TOP_N_ANSWER)
     n_empty = sum(1 for a in answers.values() if not a.strip())
     print(f"  Đã sinh {len(answers)} câu trả lời, {n_empty} câu rỗng")
     checkpoint("Xong predict")
 
-    # Bước 9: Đóng gói
-    print("\n=== Bước 9: Đóng gói submission.zip ===")
-    build_submission(answers, set(questions.keys()), OUT_DIR / "submission.zip")
+    # 8. Đóng gói
+    print("\n=== Bước 8: Đóng gói submission.zip ===")
+    build_submission(answers, set(questions.keys()), OUT_ZIP)
     checkpoint("XONG")
 
 if __name__ == "__main__":
