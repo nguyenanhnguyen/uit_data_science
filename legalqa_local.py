@@ -44,11 +44,9 @@ Tổng ngân sách được phân bổ ước tính (có thể lệch tuỳ corp
   Predict 1000 câu public test: ~3-6 phút  (GPU cho retrieval, CPU cho ghép câu trả lời)
   Đóng gói + validate         : vài giây
 ===============================================================================
-d 
 """
 from __future__ import annotations
 import os
-<<<<<<< HEAD
 
 # SỬA (log lần 4): treo với CPU~8%/RAM ổn định = đang CHỜ MẠNG, không phải đang tính toán —
 # log trước đó có "sending unauthenticated requests to HF Hub" xác nhận có gọi mạng ở bước
@@ -59,8 +57,6 @@ os.environ.setdefault("HF_HUB_DISABLE_TELEMETRY", "1")
 os.environ.setdefault("HF_HUB_OFFLINE", "1")           # model đã cache -> không cần mạng nữa
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")  # tránh treo do fork trên Windows
 os.environ.setdefault("TRANSFORMERS_NO_ADVISORY_WARNINGS", "1")
-=======
->>>>>>> 76cf4a2994d4afa635a0c58dbc1e8e002bfb771e
 import re
 import json
 import math
@@ -85,7 +81,6 @@ OUT_DIR = HERE
 TIME_BUDGET_SEC = 55 * 60          # tổng ngân sách, chừa 5 phút đệm cho phần validate/zip
 FINETUNE_TIME_BUDGET_SEC = 22 * 60  # tối đa dành cho fine-tune dense retriever (Bước 4)
 MIN_TRAIN_PAIRS = 50               # dưới ngưỡng này -> bỏ fine-tune, dùng zero-shot
-<<<<<<< HEAD
 MAX_TRAIN_EXAMPLES = 1000          # SỬA: giới hạn số cặp dùng để mine hard-negative + train.
                                     # Bước này dùng BM25.top_k() thuần Python (không vector hoá),
                                     # với corpus lớn + hàng nghìn positive pairs có thể chạy rất
@@ -94,8 +89,6 @@ MAX_TRAIN_EXAMPLES = 1000          # SỬA: giới hạn số cặp dùng để 
                                     # trước đây không có giới hạn/không in tiến độ nên trông như treo).
                                     # 1000 mẫu là quá đủ cho vài trăm step train trong ngân sách
                                     # 1 giờ — không cần dùng hết 3565 cặp.
-=======
->>>>>>> 76cf4a2994d4afa635a0c58dbc1e8e002bfb771e
 
 BASE_DENSE_MODEL = "VoVanPhuc/sup-SimCSE-VietNamese-phobert-base"  # ~135M tham số, vừa 4GB
 DENSE_MAX_SEQ_LEN = 256            # cắt ngắn để tiết kiệm VRAM + thời gian (câu luật dài,
@@ -290,7 +283,6 @@ def build_train_pairs(train_data: dict, all_chunks: list):
 # ==============================================================================
 def _build_training_rows(train_positive, train_data, chunk_by_id, all_chunks, bm25, n_neg: int = 4):
     """Trả về list dict {anchor, positive, negative_1..negative_n} — đúng format
-<<<<<<< HEAD
     SentenceTransformerTrainer + MultipleNegativesRankingLoss chấp nhận trực tiếp.
     In progress mỗi 500 câu — SỬA (log lần 4): vòng lặp này có thể chạy vài nghìn lần (mỗi lần
     1 lượt BM25 top_k trên toàn corpus), trước đây KHÔNG in gì cho tới khi xong hẳn -> trông
@@ -298,36 +290,21 @@ def _build_training_rows(train_positive, train_data, chunk_by_id, all_chunks, bm
     rows = []
     n = len(train_positive)
     for i, (qid, pos_id) in enumerate(train_positive.items()):
-=======
-    SentenceTransformerTrainer + MultipleNegativesRankingLoss chấp nhận trực tiếp."""
-    rows = []
-    for qid, pos_id in train_positive.items():
->>>>>>> 76cf4a2994d4afa635a0c58dbc1e8e002bfb771e
         question = train_data[qid]["question"]
         pos_text = chunk_by_id[pos_id]["text"]
         token_q = tokenize_simple(question)
         ranked = bm25.top_k(token_q, 60)
-<<<<<<< HEAD
         neg_ids = [all_chunks_list[idx]["id"] for idx in ranked if all_chunks_list[idx]["id"] != pos_id][:n_neg]
-=======
-        neg_ids = [all_chunks[i]["id"] for i in ranked[5:60] if all_chunks[i]["id"] != pos_id][:n_neg]
->>>>>>> 76cf4a2994d4afa635a0c58dbc1e8e002bfb771e
         if len(neg_ids) < n_neg:
             pool = [c["id"] for c in all_chunks if c["id"] != pos_id]
             while len(neg_ids) < n_neg and pool:
                 neg_ids.append(random.choice(pool))
         row = {"anchor": question, "positive": pos_text}
-<<<<<<< HEAD
         for j, nid in enumerate(neg_ids[:n_neg]):
             row[f"negative_{j+1}"] = chunk_by_id[nid]["text"]
         rows.append(row)
         if (i + 1) % 500 == 0 or (i + 1) == n:
             print(f"    _build_training_rows: {i+1}/{n}  ({elapsed()/60:.1f} phút)")
-=======
-        for i, nid in enumerate(neg_ids[:n_neg]):
-            row[f"negative_{i+1}"] = chunk_by_id[nid]["text"]
-        rows.append(row)
->>>>>>> 76cf4a2994d4afa635a0c58dbc1e8e002bfb771e
     return rows
 
 
@@ -379,10 +356,7 @@ def finetune_or_load_dense(train_positive, train_data, chunk_by_id, all_chunks, 
     model.max_seq_length = DENSE_MAX_SEQ_LEN
 
     try:
-<<<<<<< HEAD
         print("  Đang import datasets/Trainer/accelerate...")
-=======
->>>>>>> 76cf4a2994d4afa635a0c58dbc1e8e002bfb771e
         from datasets import Dataset
         from sentence_transformers import SentenceTransformerTrainer, SentenceTransformerTrainingArguments
         from sentence_transformers.losses import MultipleNegativesRankingLoss
@@ -392,10 +366,7 @@ def finetune_or_load_dense(train_positive, train_data, chunk_by_id, all_chunks, 
         # TrainingArguments — đó là lý do bạn thấy "treo lâu" trước khi báo lỗi (transformers dò
         # nhiều bước trước khi tới đoạn cần accelerate). Import tường minh ở đây để bắt SỚM, tránh
         # phải đợi lại từ đầu.
-<<<<<<< HEAD
         print("  Import xong.")
-=======
->>>>>>> 76cf4a2994d4afa635a0c58dbc1e8e002bfb771e
         if tuple(map(int, accelerate.__version__.split(".")[:2])) < (1, 1):
             raise ImportError(f"accelerate {accelerate.__version__} quá cũ, cần >= 1.1.0")
     except ImportError as e:
@@ -404,7 +375,6 @@ def finetune_or_load_dense(train_positive, train_data, chunk_by_id, all_chunks, 
               f"submission.zip. Cài xong package rồi chạy lại để có bản fine-tune tốt hơn.")
         return model
 
-<<<<<<< HEAD
     if len(train_positive) > MAX_TRAIN_EXAMPLES:
         sampled_qids = random.sample(list(train_positive.keys()), MAX_TRAIN_EXAMPLES)
         train_positive_used = {qid: train_positive[qid] for qid in sampled_qids}
@@ -416,10 +386,6 @@ def finetune_or_load_dense(train_positive, train_data, chunk_by_id, all_chunks, 
     print(f"  Đang tạo training rows (BM25 top_k cho {len(train_positive_used)} câu hỏi)...")
     rows = _build_training_rows(train_positive_used, train_data, chunk_by_id, all_chunks, bm25)
     print("  Đang tạo Dataset object...")
-=======
-
-    rows = _build_training_rows(train_positive, train_data, chunk_by_id, all_chunks, bm25)
->>>>>>> 76cf4a2994d4afa635a0c58dbc1e8e002bfb771e
     dataset = Dataset.from_list(rows)
     print(f"  Training rows: {len(dataset)}")
 
@@ -437,11 +403,8 @@ def finetune_or_load_dense(train_positive, train_data, chunk_by_id, all_chunks, 
                 save_strategy="no", report_to=[], disable_tqdm=True,
             )
             calib_start = time.time()
-<<<<<<< HEAD
             print("  Đang chạy calib training (vài step đầu — lần đầu init CUDA context có thể mất "
                   "10-30s, sau đó nhanh)...")
-=======
->>>>>>> 76cf4a2994d4afa635a0c58dbc1e8e002bfb771e
             SentenceTransformerTrainer(model=model, args=calib_args, train_dataset=dataset, loss=loss).train()
             calib_time = (time.time() - calib_start) / calib_steps
 
