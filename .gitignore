@@ -3,13 +3,9 @@
 
 <<<<<<< HEAD
 legalqa_local1.py
-
 dense_finetuned/
-
 dense_finetuned_tmp/
-
 submission.zip
-
 subcon/
 =======
 # Bỏ qua toàn bộ thư mục models: giả sử tất cả mô hình quá nặng thì sẽ đặt vào đây

@@ -44,6 +44,7 @@ Tổng ngân sách được phân bổ ước tính (có thể lệch tuỳ corp
   Predict 1000 câu public test: ~3-6 phút  (GPU cho retrieval, CPU cho ghép câu trả lời)
   Đóng gói + validate         : vài giây
 ===============================================================================
+d 
 """
 from __future__ import annotations
 import os
