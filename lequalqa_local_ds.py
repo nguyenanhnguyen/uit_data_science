@@ -1,14 +1,8 @@
 """
-legalqa_dense_rerank.py — LegalQA (UIT DSC2026 Task 2)
+legalqa_optimized.py — LegalQA (UIT DSC2026 Task 2)
 Tối ưu cho RTX 2050 4GB VRAM + 32GB RAM, không generator, chỉ dense + reranker.
-Mục tiêu: METEOR 0.40–0.48, thời gian ~2-3 giờ.
-
-CÁCH DÙNG: đặt cạnh train.json, public-official.json, selected-contexts/ rồi chạy:
-    python legalqa_dense_rerank.py
+Mục tiêu: METEOR > 0.45, thời gian ~6-8 giờ (có cache).
 Output: submission.zip
-
-THƯ VIỆN CẦN CÀI:
-    pip install numpy sentence-transformers datasets accelerate nltk rouge_score rank_bm25 tqdm transformers
 """
 from __future__ import annotations
 import os
@@ -19,6 +13,7 @@ import math
 import time
 import random
 import zipfile
+import pickle
 from pathlib import Path
 from collections import defaultdict, Counter
 
@@ -32,26 +27,26 @@ CONTEXTS_DIR = HERE / "selected-contexts"
 TRAIN_PATH = HERE / "train.json"
 PUBLIC_PATH = HERE / "public-official.json"
 
-# ---- Mô hình (dùng model mở, không cần đăng nhập) ----
-DENSE_MODEL_NAME = "VoVanPhuc/sup-SimCSE-VietNamese-phobert-base"  # 135M, mở
-RERANKER_MODEL_NAME = "xlm-roberta-base"                           # 278M, mở
+DENSE_MODEL_NAME = "VoVanPhuc/sup-SimCSE-VietNamese-phobert-base"  # 135M
+RERANKER_MODEL_NAME = "xlm-roberta-base"                           # 278M
 
-# ---- Hyperparameters ----
-DENSE_MAX_SEQ_LEN = 256
+# ---- Hyperparameters (tối ưu cho tốc độ) ----
+DENSE_MAX_SEQ_LEN = 128          # Giảm để encode nhanh hơn
 RERANKER_MAX_SEQ_LEN = 512
-ENCODE_BATCH_SIZE = 64           # Tăng để encode nhanh hơn
+ENCODE_BATCH_SIZE = 128          # Tăng batch size
 TRAIN_BATCH_SIZE = 8
 TOP_K_RETRIEVE = 100
 TOP_K_RERANK = 10
-TOP_N_ANSWER = 3                 # Số chunk dùng để sinh câu trả lời
+TOP_N_ANSWER = 3
 
-# ---- Fine-tune options ----
-USE_FINETUNE_DENSE = True        # Có fine-tune dense retriever
-USE_FINETUNE_RERANKER = True     # Có fine-tune reranker
+# ---- Fine-tune options (bạn có thể tắt nếu đã có model fine-tuned) ----
+USE_FINETUNE_DENSE = True        # Tắt nếu muốn chạy nhanh hơn (dùng zero-shot)
+USE_FINETUNE_RERANKER = True     # Tắt nếu muốn nhanh
 MIN_TRAIN_PAIRS = 50
-MAX_TRAIN_EXAMPLES = 1000        # Giới hạn số positive dùng cho train
+MAX_TRAIN_EXAMPLES = 1000
 
-# ---- Output ----
+# ---- Cache ----
+EMBED_CACHE_FILE = HERE / "corpus_embeddings.pkl"
 OUT_ZIP = HERE / "submission.zip"
 
 # =========================== UTILITIES ===========================
@@ -61,6 +56,13 @@ def elapsed() -> float:
 
 def checkpoint(label: str) -> None:
     print(f"[{elapsed()/60:5.1f} phút] {label}")
+
+def move_to_device(model, device):
+    """Ép model lên device và in log."""
+    if hasattr(model, 'to'):
+        model = model.to(device)
+        print(f"  Model moved to {device}")
+    return model
 
 # =========================== BƯỚC 1: CHUNK CORPUS ===========================
 DIEU_RE = re.compile(r"^[ \t]*Điều\s+(\d+)[a-zđA-ZĐ]?[\.\s]", re.MULTILINE)
@@ -169,15 +171,18 @@ def build_train_pairs(train_data: dict, all_chunks: list):
     chunk_by_id = {c["id"]: c for c in all_chunks}
     return positive, chunk_by_id
 
-# =========================== BƯỚC 4: DENSE RETRIEVER ===========================
+# =========================== BƯỚC 4: DENSE RETRIEVER (có ép GPU) ===========================
 from sentence_transformers import SentenceTransformer, InputExample, losses
 from sentence_transformers import SentenceTransformerTrainer, SentenceTransformerTrainingArguments
 from datasets import Dataset
 
 def load_dense_model(device='cuda'):
-    """Load SimCSE-PhoBERT (mở, không cần đăng nhập)."""
     model = SentenceTransformer(DENSE_MODEL_NAME, device=device)
     model.max_seq_length = DENSE_MAX_SEQ_LEN
+    # Ép model lên device rõ ràng
+    if device == 'cuda':
+        model = move_to_device(model, device)
+    print(f"  Dense model device: {model.device}")
     return model
 
 def build_semi_hard_rows(train_positive, train_data, chunk_by_id, all_chunks, bm25, n_neg=4):
@@ -204,11 +209,10 @@ def finetune_dense(model, train_positive, train_data, chunk_by_id, all_chunks, b
     if len(train_positive) < MIN_TRAIN_PAIRS:
         print("  Không đủ positive pairs, bỏ fine-tune dense.")
         return model
-    # Giới hạn mẫu
     if len(train_positive) > MAX_TRAIN_EXAMPLES:
         sampled = random.sample(list(train_positive.keys()), MAX_TRAIN_EXAMPLES)
         train_positive = {qid: train_positive[qid] for qid in sampled}
-        print(f"  Lấy mẫu {MAX_TRAIN_EXAMPLES} positive pairs để fine-tune.")
+        print(f"  Lấy mẫu {MAX_TRAIN_EXAMPLES} positive pairs.")
     rows = build_semi_hard_rows(train_positive, train_data, chunk_by_id, all_chunks, bm25)
     dataset = Dataset.from_list(rows)
     print(f"  Dense training rows: {len(dataset)}")
@@ -223,20 +227,30 @@ def finetune_dense(model, train_positive, train_data, chunk_by_id, all_chunks, b
         logging_steps=20,
         save_strategy="no",
         report_to=[],
+        # KHÔNG dùng no_cuda – trainer tự dùng GPU nếu có
     )
     trainer = SentenceTransformerTrainer(model=model, args=args, train_dataset=dataset, loss=loss)
     trainer.train()
     model.save_pretrained("dense_finetuned")
+    # Sau khi save, nếu có GPU, load lại model và đưa về GPU
+    if torch.cuda.is_available():
+        from sentence_transformers import SentenceTransformer
+        model = SentenceTransformer("dense_finetuned", device='cuda')
+        model.max_seq_length = DENSE_MAX_SEQ_LEN
     return model
 
-# =========================== BƯỚC 5: RERANKER (Cross-Encoder) ===========================
+# =========================== BƯỚC 5: RERANKER ===========================
 from sentence_transformers import CrossEncoder
 
 def load_reranker(device='cuda'):
     if os.path.exists("reranker_finetuned"):
         print("  Load reranker from checkpoint.")
-        return CrossEncoder("reranker_finetuned", device=device)
-    return CrossEncoder(RERANKER_MODEL_NAME, num_labels=1, device=device)
+        reranker = CrossEncoder("reranker_finetuned", device=device)
+    else:
+        reranker = CrossEncoder(RERANKER_MODEL_NAME, num_labels=1, device=device)
+    if device == 'cuda':
+        reranker = move_to_device(reranker, device)
+    return reranker
 
 def finetune_reranker(reranker, train_positive, train_data, chunk_by_id, all_chunks, bm25):
     if len(train_positive) < MIN_TRAIN_PAIRS:
@@ -263,12 +277,14 @@ def finetune_reranker(reranker, train_positive, train_data, chunk_by_id, all_chu
         output_path="reranker_finetuned",
         show_progress_bar=True
     )
-    return CrossEncoder("reranker_finetuned", device='cuda')
+    reranker = CrossEncoder("reranker_finetuned", device='cuda')
+    return reranker
 
 # =========================== BƯỚC 6: RETRIEVAL + RERANK + ANSWER ===========================
 def hybrid_retrieve(question, bm25, dense_model, dense_embeddings, all_chunks, top_k=TOP_K_RETRIEVE):
     token_q = tokenize_simple(question)
     bm25_ranked = bm25.get_top_n(token_q, list(range(len(all_chunks))), n=top_k)
+    # Ép model encode trên đúng device
     q_emb = dense_model.encode([question], convert_to_numpy=True, normalize_embeddings=True)[0]
     dense_scores = dense_embeddings @ q_emb
     dense_ranked = list(np.argsort(-dense_scores)[:top_k])
@@ -311,7 +327,7 @@ def answer_question(question, bm25, dense_model, dense_embeddings, all_chunks, r
     reranked = rerank_chunks(question, raw, reranker, TOP_K_RERANK)
     return render_answer(reranked, TOP_N_ANSWER)
 
-# =========================== BƯỚC 7: DEV-EVAL (tìm TOP_N_ANSWER tối ưu) ===========================
+# =========================== BƯỚC 7: DEV-EVAL ===========================
 def try_dev_eval(bm25, dense_model, dense_embeddings, all_chunks, train_data, reranker=None):
     try:
         import nltk
@@ -334,9 +350,6 @@ def try_dev_eval(bm25, dense_model, dense_embeddings, all_chunks, train_data, re
         ms, rs = [], []
         for qid in tqdm(ids, desc=f"Eval top{top_n}"):
             item = train_data[qid]
-            pred = answer_question(item["question"], bm25, dense_model, dense_embeddings, all_chunks, reranker)
-            # Tạm thời dùng TOP_N_ANSWER = top_n bằng cách override render_answer
-            # Cách nhanh: gọi lại render_answer với top_n khác
             raw = hybrid_retrieve(item["question"], bm25, dense_model, dense_embeddings, all_chunks)
             if reranker:
                 raw = rerank_chunks(item["question"], raw, reranker, TOP_K_RERANK)
@@ -369,7 +382,7 @@ def build_submission(answers, expected_ids, out_zip):
 
 # =========================== MAIN ===========================
 def main():
-    print("=== LEGALQA DENSE + RERANKER PIPELINE ===")
+    print("=== LEGALQA OPTIMIZED PIPELINE ===")
     checkpoint("Bắt đầu")
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"  Device: {device}")
@@ -397,32 +410,50 @@ def main():
     dense_model = load_dense_model(device)
     if USE_FINETUNE_DENSE and len(train_positive) >= MIN_TRAIN_PAIRS:
         dense_model = finetune_dense(dense_model, train_positive, train_data, chunk_by_id, all_chunks, bm25)
+        # Sau khi fine-tune, đảm bảo model trên GPU
+        if device == 'cuda':
+            dense_model = move_to_device(dense_model, device)
     checkpoint("Xong dense retriever")
 
-    # Encode corpus
+    # 5. Encode corpus (có cache)
     print("\n=== Encode corpus ===")
-    dense_embeddings = dense_model.encode(
-        [c["text"] for c in all_chunks],
-        batch_size=ENCODE_BATCH_SIZE,
-        convert_to_numpy=True,
-        normalize_embeddings=True,
-        show_progress_bar=True
-    )
+    if EMBED_CACHE_FILE.exists():
+        with EMBED_CACHE_FILE.open("rb") as f:
+            dense_embeddings = pickle.load(f)
+        print(f"  Loaded embeddings from cache ({len(dense_embeddings)} vectors).")
+    else:
+        # Ép model về GPU trước khi encode (phòng trường hợp bị rơi xuống CPU)
+        if device == 'cuda':
+            dense_model = move_to_device(dense_model, device)
+        print(f"  Encoding with batch_size={ENCODE_BATCH_SIZE} on {device}...")
+        dense_embeddings = dense_model.encode(
+            [c["text"] for c in all_chunks],
+            batch_size=ENCODE_BATCH_SIZE,
+            convert_to_numpy=True,
+            normalize_embeddings=True,
+            show_progress_bar=True,
+            device=device  # Truyền device rõ ràng
+        )
+        with EMBED_CACHE_FILE.open("wb") as f:
+            pickle.dump(dense_embeddings, f)
+        print(f"  Saved embeddings to {EMBED_CACHE_FILE}.")
     checkpoint("Xong encode corpus")
 
-    # 5. Reranker
+    # 6. Reranker
     print("\n=== Bước 5: Reranker (Cross-Encoder) ===")
     reranker = load_reranker(device)
     if USE_FINETUNE_RERANKER and len(train_positive) >= MIN_TRAIN_PAIRS:
         reranker = finetune_reranker(reranker, train_positive, train_data, chunk_by_id, all_chunks, bm25)
+        if device == 'cuda':
+            reranker = move_to_device(reranker, device)
     checkpoint("Xong reranker")
 
-    # 6. Dev-eval chọn TOP_N_ANSWER
+    # 7. Dev-eval
     print("\n=== Bước 6: Dev-eval ===")
     top_n = try_dev_eval(bm25, dense_model, dense_embeddings, all_chunks, train_data, reranker)
     global TOP_N_ANSWER
     TOP_N_ANSWER = top_n
-    # Cập nhật lại render_answer để dùng top_n mới
+
     def render_answer_updated(chunks, top_n=TOP_N_ANSWER):
         parts, seen = [], set()
         for c in chunks:
@@ -437,7 +468,7 @@ def main():
         return "\n\n".join(parts)
     checkpoint("Xong dev-eval")
 
-    # 7. Predict public
+    # 8. Predict public
     print("\n=== Bước 7: Sinh câu trả lời cho public-official.json ===")
     with PUBLIC_PATH.open(encoding="utf-8") as f:
         questions = json.load(f)
@@ -451,7 +482,7 @@ def main():
     print(f"  Đã sinh {len(answers)} câu trả lời, {n_empty} câu rỗng")
     checkpoint("Xong predict")
 
-    # 8. Đóng gói
+    # 9. Đóng gói
     print("\n=== Bước 8: Đóng gói submission.zip ===")
     build_submission(answers, set(questions.keys()), OUT_ZIP)
     checkpoint("XONG")
