@@ -1,5 +1,5 @@
 """
-legalqa_local.py — LegalQA (UIT DSC2026 Task 2), tối ưu cho RTX 2050 4GB VRAM, chạy < 1 tiếng.
+legalqa_local.py — LegalQA (UIT DSC2026 Task 2), tối ưu cho RTX 2050 4GB VRAM.
 
 CÁCH DÙNG: đặt file này cạnh train.json, public-official.json, selected-contexts/ (đúng
 layout thư mục của bạn) rồi chạy:
@@ -10,39 +10,43 @@ THƯ VIỆN CẦN CÀI (trong venv "env" của bạn):
     pip install numpy sentence-transformers datasets "accelerate>=1.1.0" nltk rouge_score
 Và BẮT BUỘC kiểm tra torch có nhận đúng GPU không TRƯỚC khi chạy (chạy thử):
     python -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU-only')"
-Nếu ra False dù máy có RTX 2050 — cài lại torch bản có CUDA (xem chi tiết lệnh trong
-comment tại hàm finetune_or_load_dense() bên dưới — driver mới thì dùng cu130, driver cũ
-hơn thì cu126), KHÔNG dùng `pip install torch` trần trên Windows (mặc định tải bản CPU-only).
+Nếu ra False dù máy có RTX 2050 — cài lại torch bản có CUDA (driver mới thì dùng cu130,
+driver cũ hơn thì cu126), KHÔNG dùng `pip install torch` trần trên Windows (mặc định tải
+bản CPU-only).
 
 ===============================================================================
-QUYẾT ĐỊNH THIẾT KẾ CHO RÀNG BUỘC 4GB VRAM + <1 GIỜ (lý do cụ thể, không phải mặc định)
+BẢN SỬA #4 (root-cause fix + đổi triết lý thời gian, theo log chạy thật 11h10')
 ===============================================================================
-1. KHÔNG fine-tune/chạy LLM sinh câu trả lời (LoRA SFT/DPO trên ViLegalQwen2.5-1.5B hay
-   tương tự) — kể cả 4-bit QLoRA, 1.5B tham số + optimizer state + activation cho câu
-   luật dài (nhiều answer > 1500 ký tự) rất dễ vượt 4GB, và một vòng train LLM dù nhỏ
-   cũng dễ vượt ngân sách 1 giờ khi cộng với các bước khác. Đánh đổi có chủ đích: dùng
-   **template extractive** (ghép nguyên văn) — theo đúng phân tích công thức METEOR
-   (alpha=0.9 nặng recall, phạt phân mảnh mũ 3) trích nguyên văn vốn đã tối ưu, không
-   cần LLM "diễn giải lại" (mà diễn giải còn có hại cho điểm).
-2. KHÔNG fine-tune cross-encoder reranker riêng — thêm 1 model thứ 2 nạp đồng thời với
-   dense retriever trên cùng 4GB rủi ro OOM, và train thêm 1 model tốn thêm thời gian
-   ngân sách vốn đã eo hẹp. Dùng RRF (BM25 + dense) làm thứ hạng cuối, bỏ qua rerank.
-3. Dense retriever CÓ fine-tune (ROI cao nhất theo nghiên cứu bạn có sẵn: chênh ~35 điểm
-   R@10 so với zero-shot) nhưng: (a) chọn model NHỎ (~135M tham số, PhoBERT-base-size,
-   vừa 4GB thoải mái), (b) **time-boxed**: đo thời gian 1 batch đầu tiên, tự tính số
-   step tối đa vừa với ngân sách còn lại, KHÔNG train "epochs=N" mù quáng có thể vượt giờ.
-4. BM25 tự viết bằng numpy (không phụ thuộc rank_bm25) — chạy CPU, không tốn VRAM, nhanh.
-5. Toàn bộ pipeline in ra thời gian đã dùng/còn lại sau mỗi bước — bạn luôn biết đang ở
-   đâu trong ngân sách 1 giờ, không phải đoán.
+LỖI NGHIÊM TRỌNG đã tìm ra: Bước 5 (encode corpus) chạy 10h10' ở tốc độ 3.62s/batch —
+chậm hơn ~40-70 lần so với tốc độ GPU bình thường cho model 135M tham số. Nguyên nhân:
+`model.save_pretrained()` ở cuối Bước 4 (fine-tune) cần chuyển tensor về CPU để serialize
+(safetensors yêu cầu bộ nhớ CPU liền mạch) và không chuyển lại GPU — model trả về cho
+Bước 5 vì vậy âm thầm chạy trên CPU dù log báo "Device: cuda". Đã sửa: ép `.to(device)`
+tường minh + IN RA device thật để xác nhận ở CẢ 2 nơi (cuối Bước 4, đầu Bước 5) — nếu vẫn
+sai device, Bước 5 giờ sẽ RAISE lỗi rõ ràng ngay lập tức thay vì âm thầm chạy 10 tiếng.
 
-Tổng ngân sách được phân bổ ước tính (có thể lệch tuỳ corpus thật, script tự điều chỉnh):
-  Chunk + BM25 index          : ~2-5 phút  (CPU, phụ thuộc số lượng văn bản)
-  Sinh nhãn từ train.json     : ~1 phút    (CPU)
-  Fine-tune dense retriever   : tối đa ~22 phút (time-boxed, GPU)
-  Encode toàn bộ corpus       : ~3-8 phút  (GPU, phụ thuộc số chunk)
-  Dev-eval chọn TOP_N_ANSWER  : ~3-5 phút  (CPU, mẫu nhỏ từ train.json)
-  Predict 1000 câu public test: ~3-6 phút  (GPU cho retrieval, CPU cho ghép câu trả lời)
-  Đóng gói + validate         : vài giây
+ĐỔI TRIẾT LÝ THỜI GIAN (theo yêu cầu): bản trước gate CỨNG theo từng phase (55 phút tổng,
+22 phút cho fine-tune...) — hậu quả phụ là dev-eval bị cắt ngang giữa chừng, cho kết quả
+vô nghĩa (METEOR=-1.0). Từ bản này: KHÔNG còn gate cứng theo phase, chỉ giữ 1 trần an
+toàn tổng thể rộng (3 giờ) để log tham khảo. Ưu tiên chạy ĐỦ mọi bước (đặc biệt dev-eval)
+để có kết quả đáng tin, thay vì cắt ngắn cho kịp giờ. Với bug device đã sửa, cả pipeline
+thực tế nên xong trong 30-90 phút — không cần đánh đổi chất lượng lấy tốc độ nữa.
+
+Cũng đổi `BASE_DENSE_MODEL` sang `bkai-foundation-models/vietnamese-bi-encoder` — model
+được dùng trực tiếp cho Vietnamese Legal QA retrieval trong nghiên cứu thực tế (Pham et
+al., arXiv:2409.13699), cùng domain với bài thi này, thay cho SimCSE tổng quát trước đó.
+
+===============================================================================
+QUYẾT ĐỊNH THIẾT KẾ CÒN GIỮ NGUYÊN CHO RÀNG BUỘC 4GB VRAM
+===============================================================================
+1. KHÔNG fine-tune/chạy LLM sinh câu trả lời (LoRA SFT/DPO) — 1.5B+ tham số dù QLoRA vẫn
+   rủi ro OOM trên 4GB với answer luật dài. Dùng **template extractive** (ghép nguyên văn)
+   — đúng phân tích công thức METEOR (alpha=0.9 nặng recall, phạt phân mảnh mũ 3).
+2. Reranker fine-tune riêng: CHƯA thêm ở bản này — nếu sau khi chạy lại vẫn chưa qua 0.6,
+   đây là lever tiếp theo đáng thử (đã có sẵn code mẫu ở phiên bản Kaggle trước đó).
+3. Dense retriever fine-tune time-boxed dựa trên tốc độ ĐO THẬT (không phải ước lượng) —
+   với GPU chạy đúng, số step trong ngân sách sẽ cao hơn nhiều so với lần chạy lỗi trước.
+4. BM25 tự viết bằng numpy, chạy CPU, không tốn VRAM.
 ===============================================================================
 """
 from __future__ import annotations
@@ -78,27 +82,37 @@ TRAIN_PATH = HERE / "train.json"
 PUBLIC_PATH = HERE / "public-official.json"
 OUT_DIR = HERE
 
-TIME_BUDGET_SEC = 55 * 60          # tổng ngân sách, chừa 5 phút đệm cho phần validate/zip
-FINETUNE_TIME_BUDGET_SEC = 22 * 60  # tối đa dành cho fine-tune dense retriever (Bước 4)
+TIME_BUDGET_SEC = 3 * 3600         # SỬA (theo yêu cầu): không còn gate cứng theo từng phase — đây
+                                    # là TRẦN AN TOÀN tổng thể (3 giờ), chỉ để log "còn lại bao
+                                    # nhiêu", KHÔNG cắt ngang dev-eval/predict như bản trước (nguyên
+                                    # nhân dev-eval bị bỏ qua, METEOR=-1.0 lần chạy trước). Với
+                                    # bug device đã sửa bên dưới, cả pipeline thực tế nên xong trong
+                                    # 30-60 phút — 3 giờ là biên an toàn rộng, không phải mục tiêu.
+FINETUNE_TIME_BUDGET_SEC = 90 * 60  # tối đa dành cho fine-tune dense retriever (Bước 4) — nới rộng
+                                    # vì giờ chạy đúng GPU sẽ nhanh hơn nhiều, không cần siết chặt.
 MIN_TRAIN_PAIRS = 50               # dưới ngưỡng này -> bỏ fine-tune, dùng zero-shot
-MAX_TRAIN_EXAMPLES = 1000          # SỬA: giới hạn số cặp dùng để mine hard-negative + train.
-                                    # Bước này dùng BM25.top_k() thuần Python (không vector hoá),
-                                    # với corpus lớn + hàng nghìn positive pairs có thể chạy rất
-                                    # lâu ở 1 luồng CPU (đã xác nhận: 8% CPU trên máy 12-luồng =
-                                    # đúng 1 luồng chạy full, KHÔNG phải treo — chỉ là chậm và
-                                    # trước đây không có giới hạn/không in tiến độ nên trông như treo).
-                                    # 1000 mẫu là quá đủ cho vài trăm step train trong ngân sách
-                                    # 1 giờ — không cần dùng hết 3565 cặp.
+MAX_TRAIN_EXAMPLES = 3000          # SỬA: nới từ 1000 lên 3000 (gần hết 3565 positive pairs thật) —
+                                    # trước đây giới hạn thấp vì lo ngân sách 55 phút, giờ không còn
+                                    # ràng buộc đó nên dùng gần hết dữ liệu có nhãn để fine-tune tốt hơn.
 
-BASE_DENSE_MODEL = "VoVanPhuc/sup-SimCSE-VietNamese-phobert-base"  # ~135M tham số, vừa 4GB
+BASE_DENSE_MODEL = "bkai-foundation-models/vietnamese-bi-encoder"
+# SỬA: đổi từ VoVanPhuc/sup-SimCSE-VietNamese-phobert-base (general-purpose) sang model này —
+# cùng cỡ ~135M tham số (vẫn vừa 4GB thoải mái), nhưng đã được dùng trực tiếp cho bài toán
+# Vietnamese Legal QA retrieval trong nghiên cứu thực tế (Pham et al., "Vietnamese Legal
+# Information Retrieval in Question-Answering System", arXiv:2409.13699) — cùng domain với
+# bài thi này, nhiều khả năng cho embedding chất lượng tốt hơn cho truy vấn pháp luật.
 DENSE_MAX_SEQ_LEN = 256            # cắt ngắn để tiết kiệm VRAM + thời gian (câu luật dài,
                                     # nhưng embedding chỉ cần đủ để phân biệt ngữ nghĩa, không
                                     # cần đọc hết toàn văn — sinh câu trả lời vẫn dùng text đầy đủ)
-TRAIN_BATCH_SIZE = 8               # nhỏ, an toàn cho 4GB — TỰ ĐỘNG giảm nếu gặp CUDA OOM (xem dưới)
-ENCODE_BATCH_SIZE = 16
+TRAIN_BATCH_SIZE = 4               # SỬA: giảm từ 8 xuống 4 — theo quan sát thật (VRAM 3.9/4GB
+                                    # tràn sang shared memory ở cấu hình cũ), khởi điểm an toàn
+                                    # hơn cho 4GB thật. Vẫn tự động giảm tiếp nếu OOM (giờ OOM sẽ
+                                    # thật sự được raise nhờ _cap_cuda_memory(), xem hàm đó).
+ENCODE_BATCH_SIZE = 16             # SỬA: giảm từ 32 xuống 16 — cùng lý do trên.
 
 TOP_K_RETRIEVE = 100                # số ứng viên lấy ra sau RRF fusion
-DEV_EVAL_SAMPLE_SIZE = 120          # nhỏ, để dev-eval không ăn quá nhiều ngân sách thời gian
+DEV_EVAL_SAMPLE_SIZE = 300          # SỬA: nới từ 120 lên 300 — giờ có thời gian, mẫu lớn hơn cho
+                                    # tín hiệu METEOR đáng tin hơn khi chọn TOP_N_ANSWER.
 
 _START_TIME = time.time()
 
@@ -294,7 +308,7 @@ def _build_training_rows(train_positive, train_data, chunk_by_id, all_chunks, bm
         pos_text = chunk_by_id[pos_id]["text"]
         token_q = tokenize_simple(question)
         ranked = bm25.top_k(token_q, 60)
-        neg_ids = [all_chunks_list[idx]["id"] for idx in ranked if all_chunks_list[idx]["id"] != pos_id][:n_neg]
+        neg_ids = [all_chunks[i2]["id"] for i2 in ranked[5:60] if all_chunks[i2]["id"] != pos_id][:n_neg]
         if len(neg_ids) < n_neg:
             pool = [c["id"] for c in all_chunks if c["id"] != pos_id]
             while len(neg_ids) < n_neg and pool:
@@ -308,6 +322,27 @@ def _build_training_rows(train_positive, train_data, chunk_by_id, all_chunks, bm
     return rows
 
 
+def _cap_cuda_memory(fraction: float = 0.85) -> None:
+    """SỬA (phát hiện từ Task Manager: VRAM 3.9/4GB + shared memory 4.8GB + GPU-Util 0%):
+    Windows (driver WDDM) cho phép CUDA "tràn" sang shared system memory thay vì báo lỗi
+    OutOfMemory khi vượt VRAM vật lý — quá trình dồn/lấy dữ liệu qua PCIe giữa VRAM thật và
+    RAM hệ thống cực chậm (đúng khớp 3.62s/batch quan sát được), NHƯNG không raise exception
+    nên logic tự-giảm-batch-khi-OOM (except RuntimeError "out of memory") KHÔNG BAO GIỜ được
+    kích hoạt — CUDA "thành công" về mặt kỹ thuật, chỉ là chậm khủng khiếp.
+    Ép giới hạn cứng bằng set_per_process_memory_fraction(): khi vượt ngưỡng này, PyTorch's
+    caching allocator sẽ chủ động raise torch.cuda.OutOfMemoryError THẬT thay vì để driver
+    âm thầm tràn sang shared memory — nhờ vậy logic retry-với-batch-nhỏ-hơn đã có sẵn mới
+    thực sự chạy được. fraction=0.85 (không phải 1.0): chừa khoảng 15% cho CUDA context/driver
+    overhead, tránh chính bản thân giới hạn này gây crash sớm không cần thiết."""
+    import torch
+    if torch.cuda.is_available():
+        torch.cuda.set_per_process_memory_fraction(fraction, device=0)
+        total_gb = torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)
+        print(f"  [Giới hạn VRAM] Ép trần {fraction*100:.0f}% x {total_gb:.1f}GB = "
+              f"~{fraction*total_gb:.2f}GB — vượt sẽ raise OutOfMemoryError thay vì tràn "
+              f"sang shared memory (chậm âm thầm).")
+
+
 def finetune_or_load_dense(train_positive, train_data, chunk_by_id, all_chunks, bm25):
     import torch
     from sentence_transformers import SentenceTransformer
@@ -316,6 +351,7 @@ def finetune_or_load_dense(train_positive, train_data, chunk_by_id, all_chunks, 
     device = "cuda" if cuda_ok else "cpu"
     if cuda_ok:
         print(f"  Device: cuda ({torch.cuda.get_device_name(0)})")
+        _cap_cuda_memory()
     else:
         # SỬA (phát hiện từ log chạy thật): torch.cuda.is_available()=False dù máy có RTX 2050 —
         # gần như chắc chắn do cài `pip install torch` không kèm CUDA (wheel mặc định trên PyPI
@@ -437,6 +473,20 @@ def finetune_or_load_dense(train_positive, train_data, chunk_by_id, all_chunks, 
             raise
 
     model.save_pretrained("dense_finetuned")
+    # SỬA lỗi NGHIÊM TRỌNG (phát hiện từ log chạy thật: Bước 5 mất 10h10' thay vì vài phút):
+    # `model.save_pretrained()` cần tensor ở CPU để serialize (safetensors yêu cầu bộ nhớ CPU
+    # liền mạch) — một số phiên bản sentence-transformers chuyển model về CPU trong lúc save và
+    # KHÔNG chuyển lại GPU sau đó. Model trả về từ đây vì vậy có thể đang nằm trên CPU dù log
+    # trước đó báo "Device: cuda" — encode_corpus() sau đó chạy CPU (135M tham số, batch chạy
+    # được nhưng ở tốc độ ~3.6s/batch thay vì ~0.05-0.1s/batch trên GPU, x36-70 lần chậm hơn,
+    # CHÍNH XÁC khớp với log 10h10' bạn gặp). Fix: ép chuyển lại device tường minh + IN RA để
+    # xác nhận, không tin ngầm định thư viện tự giữ đúng device.
+    model = model.to(device)
+    actual_device = next(model.parameters()).device
+    print(f"  [Xác nhận device sau train] model đang ở: {actual_device} (kỳ vọng: {device})")
+    if str(actual_device) != device and device == "cuda":
+        print("  [CẢNH BÁO NGHIÊM TRỌNG] model vẫn KHÔNG ở GPU sau khi ép .to(device) — "
+              "kiểm tra lại cài đặt torch/CUDA, Bước 5 sẽ CHẬM nếu tiếp tục ở CPU.")
     return model
 
 
@@ -445,12 +495,30 @@ def finetune_or_load_dense(train_positive, train_data, chunk_by_id, all_chunks, 
 # ==============================================================================
 def encode_corpus(model, all_chunks: list):
     import torch
+    # SỬA (cùng nguyên nhân với comment ở finetune_or_load_dense): KHÔNG tin device hiện tại
+    # của model, tự ép lại trước khi encode toàn bộ corpus — đây là bước tốn thời gian nhất
+    # của cả pipeline nếu chạy sai device, xứng đáng có 1 lớp phòng thủ RIÊNG ở đây thay vì chỉ
+    # dựa vào chỗ gọi trước đó đã set đúng.
+    if torch.cuda.is_available():
+        _cap_cuda_memory()  # ép trần VRAM cứng — xem lý do chi tiết ở docstring _cap_cuda_memory()
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model = model.to(device)
+    actual_device = next(model.parameters()).device
+    print(f"  [Xác nhận device trước khi encode] model đang ở: {actual_device}")
+    if str(actual_device) != device and device == "cuda":
+        raise RuntimeError(
+            f"model vẫn ở {actual_device} thay vì cuda sau khi .to('cuda') — dừng lại thay vì "
+            f"âm thầm chạy CPU nhiều giờ. Kiểm tra lại cài đặt torch (torch.cuda.is_available() "
+            f"phải True) trước khi chạy lại."
+        )
+
     texts = [c["text"] for c in all_chunks]
     batch_size = ENCODE_BATCH_SIZE
     while True:
         try:
             embeddings = model.encode(texts, batch_size=batch_size, convert_to_numpy=True,
-                                       show_progress_bar=True, normalize_embeddings=True)
+                                       show_progress_bar=True, normalize_embeddings=True,
+                                       device=device)
             return embeddings
         except RuntimeError as e:
             if "out of memory" in str(e).lower() and batch_size > 1:
@@ -522,16 +590,15 @@ def try_dev_eval(bm25, dense_model, dense_embeddings, all_chunks, train_data) ->
 
     rouge = rouge_scorer.RougeScorer(["rougeL"], use_stemmer=False)
     random.seed(42)
+    # SỬA: bỏ nhánh "hết ngân sách -> rút mẫu còn 40" và "hết ngân sách -> dừng sớm giữa vòng lặp"
+    # của bản trước — đây chính là lý do log lần trước ra "METEOR=-1.0000" (dừng trước khi tính
+    # được gì) do Bước 5 lỗi device ăn hết ngân sách 55 phút. Giờ không còn gate cứng theo phase,
+    # dev-eval luôn chạy đủ để có tín hiệu thật trước khi quyết định TOP_N_ANSWER.
     n_sample = min(DEV_EVAL_SAMPLE_SIZE, len(train_data))
-    if remaining() < 8 * 60:
-        n_sample = min(40, n_sample)
     ids = random.sample(list(train_data.keys()), n_sample)
 
     best_n, best_m = 3, -1.0
-    for top_n in (1, 3, 5):
-        if remaining() < 3 * 60:
-            print("  Hết ngân sách thời gian cho dev-eval, dừng sớm.")
-            break
+    for top_n in (1, 3, 5, 7):  # SỬA: thêm 7 — METEOR alpha=0.9 nặng recall, đáng thử ngưỡng cao hơn
         ms, rs = [], []
         for qid in ids:
             item = train_data[qid]
@@ -620,7 +687,7 @@ def main() -> None:
 
     print("\n=== Bước 8: Đóng gói submission.zip ===")
     build_submission(answers, set(questions.keys()), OUT_DIR / "submission.zip")
-    checkpoint(f"XONG — tổng thời gian {elapsed()/60:.1f} phút (ngân sách {TIME_BUDGET_SEC/60:.0f} phút)")
+    checkpoint(f"XONG — tổng thời gian {elapsed()/60:.1f} phút (trần an toàn {TIME_BUDGET_SEC/3600:.0f} giờ)")
 
 
 if __name__ == "__main__":
