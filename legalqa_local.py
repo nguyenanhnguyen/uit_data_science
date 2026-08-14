@@ -58,7 +58,7 @@ import os
 # hẳn các cuộc gọi ra HF Hub (telemetry, version check) TRƯỚC KHI import bất cứ thư viện HF nào
 # (phải đặt env var trước import, đặt sau không có tác dụng).
 os.environ.setdefault("HF_HUB_DISABLE_TELEMETRY", "1")
-os.environ.setdefault("HF_HUB_OFFLINE", "1")           # model đã cache -> không cần mạng nữa
+# os.environ.setdefault("HF_HUB_OFFLINE", "1")           # model đã cache -> không cần mạng nữa
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")  # tránh treo do fork trên Windows
 os.environ.setdefault("TRANSFORMERS_NO_ADVISORY_WARNINGS", "1")
 import re
