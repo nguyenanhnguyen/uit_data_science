@@ -58,7 +58,7 @@ import os
 # hẳn các cuộc gọi ra HF Hub (telemetry, version check) TRƯỚC KHI import bất cứ thư viện HF nào
 # (phải đặt env var trước import, đặt sau không có tác dụng).
 os.environ.setdefault("HF_HUB_DISABLE_TELEMETRY", "1")
-# os.environ.setdefault("HF_HUB_OFFLINE", "1")           # model đã cache -> không cần mạng nữa
+os.environ.setdefault("HF_HUB_OFFLINE", "1")           # model đã cache -> không cần mạng nữa
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")  # tránh treo do fork trên Windows
 os.environ.setdefault("TRANSFORMERS_NO_ADVISORY_WARNINGS", "1")
 import re
@@ -104,11 +104,10 @@ BASE_DENSE_MODEL = "bkai-foundation-models/vietnamese-bi-encoder"
 DENSE_MAX_SEQ_LEN = 256            # cắt ngắn để tiết kiệm VRAM + thời gian (câu luật dài,
                                     # nhưng embedding chỉ cần đủ để phân biệt ngữ nghĩa, không
                                     # cần đọc hết toàn văn — sinh câu trả lời vẫn dùng text đầy đủ)
-TRAIN_BATCH_SIZE = 4               # SỬA: giảm từ 8 xuống 4 — theo quan sát thật (VRAM 3.9/4GB
-                                    # tràn sang shared memory ở cấu hình cũ), khởi điểm an toàn
-                                    # hơn cho 4GB thật. Vẫn tự động giảm tiếp nếu OOM (giờ OOM sẽ
-                                    # thật sự được raise nhờ _cap_cuda_memory(), xem hàm đó).
-ENCODE_BATCH_SIZE = 16             # SỬA: giảm từ 32 xuống 16 — cùng lý do trên.
+TRAIN_BATCH_SIZE = 8               # SỬA: nâng lại 4->8 — giờ có fp16 (giảm ~nửa VRAM) + memory
+                                    # fraction cap hoạt động đúng (OOM sẽ raise thật, tự giảm tiếp
+                                    # nếu vẫn quá lớn) nên khởi điểm cao hơn an toàn, tận dụng VRAM tốt hơn.
+ENCODE_BATCH_SIZE = 32             # SỬA: nâng lại 16->32 — cùng lý do trên (fp16 + OOM-retry hoạt động đúng).
 
 TOP_K_RETRIEVE = 100                # số ứng viên lấy ra sau RRF fusion
 DEV_EVAL_SAMPLE_SIZE = 300          # SỬA: nới từ 120 lên 300 — giờ có thời gian, mẫu lớn hơn cho
@@ -322,25 +321,34 @@ def _build_training_rows(train_positive, train_data, chunk_by_id, all_chunks, bm
     return rows
 
 
-def _cap_cuda_memory(fraction: float = 0.85) -> None:
+def _cap_cuda_memory(fraction: float = 0.92) -> None:
     """SỬA (phát hiện từ Task Manager: VRAM 3.9/4GB + shared memory 4.8GB + GPU-Util 0%):
-    Windows (driver WDDM) cho phép CUDA "tràn" sang shared system memory thay vì báo lỗi
-    OutOfMemory khi vượt VRAM vật lý — quá trình dồn/lấy dữ liệu qua PCIe giữa VRAM thật và
-    RAM hệ thống cực chậm (đúng khớp 3.62s/batch quan sát được), NHƯNG không raise exception
-    nên logic tự-giảm-batch-khi-OOM (except RuntimeError "out of memory") KHÔNG BAO GIỜ được
-    kích hoạt — CUDA "thành công" về mặt kỹ thuật, chỉ là chậm khủng khiếp.
-    Ép giới hạn cứng bằng set_per_process_memory_fraction(): khi vượt ngưỡng này, PyTorch's
-    caching allocator sẽ chủ động raise torch.cuda.OutOfMemoryError THẬT thay vì để driver
-    âm thầm tràn sang shared memory — nhờ vậy logic retry-với-batch-nhỏ-hơn đã có sẵn mới
-    thực sự chạy được. fraction=0.85 (không phải 1.0): chừa khoảng 15% cho CUDA context/driver
-    overhead, tránh chính bản thân giới hạn này gây crash sớm không cần thiết."""
+    Windows (driver WDDM, mặc định từ driver 536.40+/2023) cho phép CUDA "tràn" sang shared
+    system memory thay vì báo lỗi OutOfMemory khi vượt VRAM vật lý. QUAN TRỌNG: đây KHÔNG
+    phải "thêm tài nguyên để nhanh hơn" — shared memory LUÔN chậm hơn VRAM thật (phải đi qua
+    PCIe), nó chỉ là cơ chế dự phòng chống crash, không phải tăng tốc. Xác nhận từ thảo luận
+    PyTorch Forums (discuss.pytorch.org/t/218909, ptrblck - PyTorch maintainer): đúng
+    `set_per_process_memory_fraction` là cách chính thức được khuyến nghị để tránh hành vi
+    này, đo được rơi vào shared memory chậm ~3x trên workload tương tự.
+    fraction=0.92 (không phải thấp hơn để "an toàn" quá mức, cũng không phải 1.0): CUDA
+    context + driver overhead luôn chiếm 1 phần cố định VRAM (thường 200-400MB trên card
+    4GB), đặt đúng 100% sẽ khiến ngay cả việc khởi tạo context cũng OOM. 92% x 4GB ~= 3.7GB
+    khả dụng cho model+batch — tận dụng gần hết VRAM thật, không rơi vào shared memory chậm."""
     import torch
     if torch.cuda.is_available():
         torch.cuda.set_per_process_memory_fraction(fraction, device=0)
         total_gb = torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)
         print(f"  [Giới hạn VRAM] Ép trần {fraction*100:.0f}% x {total_gb:.1f}GB = "
               f"~{fraction*total_gb:.2f}GB — vượt sẽ raise OutOfMemoryError thay vì tràn "
-              f"sang shared memory (chậm âm thầm).")
+              f"sang shared memory (LUÔN chậm hơn nhiều, không phải 'thêm tài nguyên để "
+              f"nhanh hơn' — xem docstring hàm này).")
+        # Mixed precision (fp16/TF32) — tối ưu THẬT giúp nhanh hơn (Ampere có Tensor Core tăng
+        # tốc fp16) VÀ giảm VRAM cần dùng cùng lúc (không đánh đổi, được cả 2), khác hẳn việc
+        # tràn shared memory (chỉ chậm đi, không được gì). RTX 2050 (Ampere/GA107) hỗ trợ đầy đủ.
+        torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.cudnn.allow_tf32 = True
+        torch.backends.cudnn.benchmark = True  # input shape cố định (đã pad theo DENSE_MAX_SEQ_LEN)
+        # -> cuDNN tự chọn thuật toán nhanh nhất cho shape này sau vài batch đầu.
 
 
 def finetune_or_load_dense(train_positive, train_data, chunk_by_id, all_chunks, bm25):
@@ -437,6 +445,8 @@ def finetune_or_load_dense(train_positive, train_data, chunk_by_id, all_chunks, 
                 output_dir="dense_finetuned_tmp", max_steps=calib_steps,
                 per_device_train_batch_size=batch_size, logging_steps=calib_steps + 1,
                 save_strategy="no", report_to=[], disable_tqdm=True,
+                fp16=(device == "cuda"),  # SỬA: mixed precision — nhanh hơn thật (Tensor Core trên
+                # Ampere) VÀ giảm VRAM cần dùng, không đánh đổi — khác hẳn tràn shared memory.
             )
             calib_start = time.time()
             print("  Đang chạy calib training (vài step đầu — lần đầu init CUDA context có thể mất "
@@ -457,6 +467,7 @@ def finetune_or_load_dense(train_positive, train_data, chunk_by_id, all_chunks, 
                     warmup_steps=0.05,  # float = tỉ lệ warmup (API mới thay cho warmup_ratio, tránh deprecation warning)
                     lr_scheduler_type="cosine",
                     logging_steps=max(1, max_steps // 20), save_strategy="no", report_to=[],
+                    fp16=(device == "cuda"),
                 )
                 SentenceTransformerTrainer(model=model, args=args, train_dataset=dataset, loss=loss).train()
             break
@@ -484,7 +495,7 @@ def finetune_or_load_dense(train_positive, train_data, chunk_by_id, all_chunks, 
     model = model.to(device)
     actual_device = next(model.parameters()).device
     print(f"  [Xác nhận device sau train] model đang ở: {actual_device} (kỳ vọng: {device})")
-    if str(actual_device) != device and device == "cuda":
+    if actual_device.type != device and device == "cuda":
         print("  [CẢNH BÁO NGHIÊM TRỌNG] model vẫn KHÔNG ở GPU sau khi ép .to(device) — "
               "kiểm tra lại cài đặt torch/CUDA, Bước 5 sẽ CHẬM nếu tiếp tục ở CPU.")
     return model
@@ -503,9 +514,15 @@ def encode_corpus(model, all_chunks: list):
         _cap_cuda_memory()  # ép trần VRAM cứng — xem lý do chi tiết ở docstring _cap_cuda_memory()
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model = model.to(device)
+    if device == "cuda":
+        model = model.half()  # SỬA: fp16 cho encode — giảm ~1 nửa VRAM cần dùng + nhanh hơn nhờ
+        # Tensor Core (Ampere) — cho phép batch lớn hơn trong cùng ngân sách VRAM đã ép ở
+        # _cap_cuda_memory(). Không dùng cho CPU (fp16 trên CPU thường CHẬM hơn fp32, không có
+        # tăng tốc phần cứng tương ứng).
     actual_device = next(model.parameters()).device
-    print(f"  [Xác nhận device trước khi encode] model đang ở: {actual_device}")
-    if str(actual_device) != device and device == "cuda":
+    print(f"  [Xác nhận device trước khi encode] model đang ở: {actual_device}"
+          f"{' (fp16)' if device == 'cuda' else ''}")
+    if actual_device.type != device and device == "cuda":
         raise RuntimeError(
             f"model vẫn ở {actual_device} thay vì cuda sau khi .to('cuda') — dừng lại thay vì "
             f"âm thầm chạy CPU nhiều giờ. Kiểm tra lại cài đặt torch (torch.cuda.is_available() "
