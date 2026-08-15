@@ -1,12 +1,11 @@
 """
-legalqa_advanced.py — LegalQA (UIT DSC2026 Task 2)
-- Dense retriever: bkai-foundation-models/vietnamese-bi-encoder (fine-tune)
-- Reranker: xlm-roberta-base (cross-encoder, fine-tune)
-- Answer generation: template extractive (ghép nguyên văn)
-- Tối ưu cho RTX 2050 4GB VRAM, thời gian ~2 giờ.
-- Mục tiêu METEOR ≥ 0.50.
+legalqa_optimized.py — LegalQA (UIT DSC2026 Task 2)
+- Dense retriever: bkai-foundation-models/vietnamese-bi-encoder (fine-tune 3500 pairs)
+- Reranker: xlm-roberta-base (fine-tune 1500 pairs)
+- Answer generation: template extractive
+- Tối ưu cho RTX 2050 4GB VRAM, thời gian ~2.5 giờ.
+Mục tiêu METEOR ≥ 0.50.
 """
-
 from __future__ import annotations
 import os
 import sys
@@ -30,14 +29,14 @@ from datasets import Dataset
 
 # =========================== CONFIG ===========================
 HERE = Path(__file__).resolve().parent
-CONTEXTS_DIR = HERE / "selected-contexts"          # thư mục chứa context_*.json
+CONTEXTS_DIR = HERE / "selected-contexts"
 TRAIN_PATH = HERE / "train.json"
 PUBLIC_PATH = HERE / "public-official.json"
 OUT_ZIP = HERE / "submission.zip"
 
 # ---- Mô hình ----
-DENSE_MODEL_NAME = "bkai-foundation-models/vietnamese-bi-encoder"   # 135M, fine-tune
-RERANKER_MODEL_NAME = "xlm-roberta-base"                           # 278M, fine-tune
+DENSE_MODEL_NAME = "bkai-foundation-models/vietnamese-bi-encoder"   # 135M
+RERANKER_MODEL_NAME = "xlm-roberta-base"                           # 278M
 
 # ---- Hyperparameters ----
 DENSE_MAX_SEQ_LEN = 256
@@ -51,10 +50,11 @@ TOP_N_CANDIDATES = (1, 3, 5, 7)     # các giá trị top_n thử trong dev-eval
 
 # ---- Fine-tune options ----
 USE_FINETUNE_DENSE = True
-USE_FINETUNE_RERANKER = True
+USE_FINETUNE_RERANKER = True         # BẬT RERANKER FINE-TUNE
 MIN_TRAIN_PAIRS = 50
-MAX_TRAIN_EXAMPLES_DENSE = 3000
-MAX_TRAIN_EXAMPLES_RERANKER = 1000
+MAX_TRAIN_EXAMPLES_DENSE = 3500      # tăng từ 3000 lên 3500
+MAX_TRAIN_EXAMPLES_RERANKER = 1500   # số positive pairs cho reranker
+RERANKER_EPOCHS = 2
 
 # ---- Cache ----
 EMBED_CACHE_FILE = HERE / "corpus_embeddings.pkl"
@@ -272,7 +272,7 @@ def encode_corpus(model, all_chunks):
         pickle.dump(embeddings, f)
     return embeddings
 
-# =========================== BƯỚC 6: RERANKER ===========================
+# =========================== BƯỚC 6: RERANKER (CÓ FINE-TUNE) ===========================
 def load_reranker(device):
     if os.path.exists("reranker_finetuned"):
         return CrossEncoder("reranker_finetuned", device=device)
@@ -305,7 +305,7 @@ def finetune_reranker(reranker, train_positive, train_data, chunk_by_id, all_chu
         try:
             reranker.fit(
                 train_data=pairs,
-                epochs=2,
+                epochs=RERANKER_EPOCHS,
                 batch_size=batch_size,
                 warmup_steps=100,
                 output_path="reranker_finetuned",
@@ -419,7 +419,7 @@ def build_submission(answers, expected_ids, out_zip):
 
 # =========================== MAIN ===========================
 def main():
-    print("=== LEGALQA ADVANCED (DENSE + RERANKER) ===")
+    print("=== LEGALQA OPTIMIZED (DENSE + RERANKER FINE-TUNE) ===")
     checkpoint("Start")
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"  Device: {device}")
@@ -449,10 +449,12 @@ def main():
     dense_embeddings = encode_corpus(dense_model, all_chunks)
     checkpoint("Encode done")
 
-    print("\n=== Bước 6: Reranker ===")
+    print("\n=== Bước 6: Reranker (fine-tune) ===")
     reranker = load_reranker(device)
     if USE_FINETUNE_RERANKER and len(train_positive) >= MIN_TRAIN_PAIRS:
         reranker = finetune_reranker(reranker, train_positive, train_data, chunk_by_id, all_chunks, bm25)
+    else:
+        print("  Sử dụng reranker zero-shot (AITeamVN/Vietnamese_Reranker hoặc XLM-R base).")
     checkpoint("Reranker done")
 
     print("\n=== Bước 7: Dev-eval ===")
