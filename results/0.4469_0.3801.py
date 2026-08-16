@@ -54,11 +54,15 @@ import os
 
 # SỬA (log lần 4): treo với CPU~8%/RAM ổn định = đang CHỜ MẠNG, không phải đang tính toán —
 # log trước đó có "sending unauthenticated requests to HF Hub" xác nhận có gọi mạng ở bước
-# này. Model đã tải xong (thấy "LOAD REPORT" trong log) nên KHÔNG cần gọi mạng thêm nữa — tắt
-# hẳn các cuộc gọi ra HF Hub (telemetry, version check) TRƯỚC KHI import bất cứ thư viện HF nào
-# (phải đặt env var trước import, đặt sau không có tác dụng).
+# này. Tắt TELEMETRY (không cần, chỉ là thống kê ẩn danh) nhưng KHÔNG tắt hẳn khả năng gọi
+# mạng — xem SỬA NGHIÊM TRỌNG bên dưới.
 os.environ.setdefault("HF_HUB_DISABLE_TELEMETRY", "1")
-os.environ.setdefault("HF_HUB_OFFLINE", "1")           # model đã cache -> không cần mạng nữa
+# SỬA NGHIÊM TRỌNG (log thật: reranker AITeamVN/Vietnamese_Reranker load lỗi "couldn't connect
+# ... and couldn't find them in cached files"): dòng `HF_HUB_OFFLINE=1` ở bản trước là NGUYÊN
+# NHÂN THẬT của lỗi này, KHÔNG PHẢI do wifi chập chờn như tưởng lúc đó. Đặt OFFLINE=1 chặn
+# TOÀN BỘ cuộc gọi mạng HuggingFace — kể cả lần ĐẦU TIÊN tải 1 model MỚI (reranker) chưa từng
+# có trong cache, dù model retriever cũ đã cache sẵn. Bỏ hẳn dòng này — HF Hub tự dùng cache
+# cục bộ khi có sẵn, không cần ép OFFLINE mới dùng được cache.
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")  # tránh treo do fork trên Windows
 os.environ.setdefault("TRANSFORMERS_NO_ADVISORY_WARNINGS", "1")
 import re
@@ -474,7 +478,10 @@ def finetune_or_load_dense(train_positive, train_data, chunk_by_id, all_chunks, 
 
             budget_left = min(remaining() - 3 * 60, FINETUNE_TIME_BUDGET_SEC - (time.time() - calib_start))
             max_steps = max(0, int(budget_left / max(calib_time, 1e-6)))
-            max_steps = min(max_steps, (len(dataset) // batch_size) * 2)  # đừng train quá 2 "epoch" dữ liệu
+            max_steps = min(max_steps, (len(dataset) // batch_size) * 8)  # SỬA (log thật: pipeline
+            # chỉ dùng 38.5/180 phút ngân sách — cap "2 epoch" cũ khiến train dừng SỚM dù còn rất
+            # nhiều ngân sách chưa dùng). Nới lên 8 epoch — v ẫn có time-boxing thật ở trên chặn nếu
+            # máy chậm hơn, cap này chỉ tránh việc lặp dữ liệu vô hạn nếu máy nhanh bất thường.
             print(f"  Calib: ~{calib_time:.2f}s/step ({device}), ngân sách còn ~{budget_left/60:.1f} phút "
                   f"-> chạy thêm tối đa {max_steps} step (batch_size={batch_size}).")
 
@@ -584,30 +591,38 @@ def load_reranker():
     crash toàn bộ pipeline vì 1 model tuỳ chọn."""
     import torch
     from transformers import AutoModelForSequenceClassification, AutoTokenizer
-    try:
-        print("  Đang tải reranker AITeamVN/Vietnamese_Reranker (zero-shot, không fine-tune)...")
-        tokenizer = AutoTokenizer.from_pretrained("AITeamVN/Vietnamese_Reranker")
-        model = AutoModelForSequenceClassification.from_pretrained("AITeamVN/Vietnamese_Reranker")
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        model = model.to(device)
-        if device == "cuda":
-            model = model.half()
-        model.eval()
-        print(f"  Reranker sẵn sàng trên {next(model.parameters()).device}"
-              f"{' (fp16)' if device == 'cuda' else ''}.")
-        return model, tokenizer
-    except Exception as e:
-        print(f"  [CẢNH BÁO] Không tải được reranker ({e}) -> bỏ qua rerank, dùng thẳng thứ hạng "
-              f"RRF (BM25+dense). Không ảnh hưởng tới việc ra submission.zip.")
-        return None, None
+    for attempt in range(2):  # thử lại 1 lần nếu lỗi mạng thoáng qua (khác hẳn bug OFFLINE=1 đã sửa ở trên)
+        try:
+            print(f"  Đang tải reranker AITeamVN/Vietnamese_Reranker (zero-shot, không fine-tune)"
+                  f"{' — thử lại lần 2' if attempt else ''}...")
+            tokenizer = AutoTokenizer.from_pretrained("AITeamVN/Vietnamese_Reranker")
+            model = AutoModelForSequenceClassification.from_pretrained("AITeamVN/Vietnamese_Reranker")
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            model = model.to(device)
+            if device == "cuda":
+                model = model.half()
+            model.eval()
+            print(f"  Reranker sẵn sàng trên {next(model.parameters()).device}"
+                  f"{' (fp16)' if device == 'cuda' else ''}.")
+            return model, tokenizer
+        except Exception as e:
+            if attempt == 0:
+                print(f"  [Lần 1 lỗi: {e}] thử lại sau 5s...")
+                time.sleep(5)
+                continue
+            print(f"  [CẢNH BÁO] Không tải được reranker sau 2 lần thử ({e}) -> bỏ qua rerank, "
+                  f"dùng thẳng thứ hạng RRF (BM25+dense). Không ảnh hưởng tới việc ra submission.zip. "
+                  f"Nếu lỗi vẫn là 'couldn't connect', kiểm tra Internet thật sự đang bật.")
+            return None, None
 
 
 def rerank(question: str, candidates: list, reranker_model, reranker_tokenizer,
-           max_candidates: int = 30, max_length: int = 1024) -> list:
-    """Chấm điểm lại top `max_candidates` (giới hạn để nhanh — không cần rerank hết top_k=100)
-    bằng cross-encoder, trả về list đã sắp xếp lại theo điểm giảm dần. max_length=1024 (không
-    dùng hết 2304 model hỗ trợ) — cân bằng tốc độ/VRAM vì corpus 161.930 chunk cần rerank cho
-    MỌI câu hỏi (300 câu dev-eval x nhiều top_n + 1000 câu public test), không phải 1 lần."""
+           max_candidates: int = 100, max_length: int = 1024) -> list:
+    """Chấm điểm lại top `max_candidates` bằng cross-encoder, trả về list đã sắp xếp lại theo
+    điểm giảm dần. SỬA (log thật): Recall@30=78.3% nhưng Recall@100=85.0% -- max_candidates=30
+    cũ tự giới hạn trần khả năng của reranker ở 78.3%, bỏ lỡ 6.7 điểm % chunk đúng nằm ở rank
+    31-100. Nới lên 100 (= TOP_K_RETRIEVE) để reranker có cơ hội thấy toàn bộ ứng viên đã có.
+    max_length=1024 (không dùng hết 2304 model hỗ trợ) — cân bằng tốc độ/VRAM."""
     import torch
     if reranker_model is None or not candidates:
         return candidates
@@ -784,7 +799,9 @@ def try_dev_eval(bm25, dense_model, dense_embeddings, all_chunks, train_data,
                 ranked = rerank(item["question"], ranked, rr_model, rr_tok)
             ranked_cache[qid] = ranked
 
-        for top_n in (1, 3, 5, 7):
+        for top_n in (1, 2, 3, 4, 5):  # SỬA (log thật): đỉnh METEOR nằm ở top_n=3, giảm mạnh sau
+            # đó (0.4022 -> 0.3449 ở top_n=5) — bỏ top_n=7 (chắc chắn kém hơn, không cần đo lại),
+            # thêm 2,4 để dò sát quanh đỉnh thay vì nhảy cách quãng 1,3,5,7.
             ms, rs = [], []
             for qid in ids:
                 ranked = ranked_cache[qid]
