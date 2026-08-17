@@ -7,7 +7,7 @@ layout thư mục của bạn) rồi chạy:
 Output: submission.zip trong cùng thư mục.
 
 THƯ VIỆN CẦN CÀI (trong venv "env" của bạn):
-    pip install numpy sentence-transformers datasets "accelerate>=1.1.0" nltk rouge_score tiktoken sentencepiece pyvi
+    pip install numpy sentence-transformers datasets "accelerate>=1.1.0" nltk rouge_score tiktoken sentencepiece
 Và BẮT BUỘC kiểm tra torch có nhận đúng GPU không TRƯỚC khi chạy (chạy thử):
     python -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU-only')"
 Nếu ra False dù máy có RTX 2050 — cài lại torch bản có CUDA (driver mới thì dùng cu130,
@@ -105,14 +105,6 @@ BASE_DENSE_MODEL = "bkai-foundation-models/vietnamese-bi-encoder"
 # Vietnamese Legal QA retrieval trong nghiên cứu thực tế (Pham et al., "Vietnamese Legal
 # Information Retrieval in Question-Answering System", arXiv:2409.13699) — cùng domain với
 # bài thi này, nhiều khả năng cho embedding chất lượng tốt hơn cho truy vấn pháp luật.
-SECOND_DENSE_MODEL = "VoVanPhuc/sup-SimCSE-VietNamese-phobert-base"
-# SỬA (research "tối đa điểm"): ensemble thêm 1 dense retriever THỨ 2, dùng ZERO-SHOT (không
-# fine-tune — giữ chi phí thấp) làm tín hiệu độc lập thứ 3 trong RRF cùng BM25 + dense đã
-# fine-tune. Lý do: đây chính là model gốc trước khi đổi sang bkai-foundation-models — kiến
-# trúc khác (PhoBERT/SimCSE thuần túy vs XLM-R fine-tune cho retrieval), nên lỗi 2 model mắc
-# phải nhiều khả năng KHÁC NHAU (đa dạng tín hiệu) thay vì cùng bỏ sót 1 kiểu câu hỏi giống
-# nhau. RRF không cần chuẩn hoá thang điểm giữa các hệ thống nên cộng thêm 1 nguồn tín hiệu
-# không cần thêm bước hiệu chỉnh nào — nếu tải lỗi (mạng), tự bỏ qua, dùng lại 2-way RRF cũ.
 DENSE_MAX_SEQ_LEN = 256            # cắt ngắn để tiết kiệm VRAM + thời gian (câu luật dài,
                                     # nhưng embedding chỉ cần đủ để phân biệt ngữ nghĩa, không
                                     # cần đọc hết toàn văn — sinh câu trả lời vẫn dùng text đầy đủ)
@@ -235,29 +227,10 @@ def load_corpus(contexts_dir: Path) -> list:
 # ==============================================================================
 # BƯỚC 2 — BM25 tự viết bằng numpy (inverted index — nhanh, không phụ thuộc rank_bm25)
 # ==============================================================================
-_TOKEN_RE = re.compile(r"[^\W\d_]+|\d+", re.UNICODE)  # dùng cho văn bản THƯỜNG (không qua Pyvi)
-_TOKEN_RE_KEEP_UNDERSCORE = re.compile(r"[^\W\d]+|\d+", re.UNICODE)  # dùng SAU khi Pyvi nối âm
-# tiết bằng "_" — PHẢI giữ "_" là 1 phần của token (bỏ nó khỏi danh sách loại trừ), nếu không
-# cụm "trách_nhiệm" bị chính regex này cắt lại thành "trách", "nhiệm" như cũ, vô hiệu hoá Pyvi.
-
-# SỬA (research "tối đa điểm"): tokenizer regex cũ tách theo ÂM TIẾT — "trách nhiệm" (1 khái
-# niệm) thành 2 token rời "trách", "nhiệm", làm BM25 khớp từ kém chính xác hơn cần thiết. Bài
-# báo cùng domain (Vietnamese legal retrieval, arXiv:2507.14619, "Optimizing Legal Document
-# Retrieval in Vietnamese with Semi-Hard Negative Mining" — cùng nhóm kỹ thuật semi-hard negative
-# đã dùng ở Bước 4) dùng Pyvi để tách TỪ (word-level) cho cả câu hỏi lẫn corpus, ghi nhận "giúp
-# model học biểu diễn tốt hơn, cải thiện độ chính xác retrieval". Dùng Pyvi nếu có (pip install
-# pyvi), tự rơi về tokenizer âm tiết cũ nếu chưa cài — KHÔNG bắt buộc, không crash nếu thiếu.
-try:
-    from pyvi import ViTokenizer as _ViTokenizer
-    _HAS_PYVI = True
-except ImportError:
-    _HAS_PYVI = False
+_TOKEN_RE = re.compile(r"[^\W\d_]+|\d+", re.UNICODE)
 
 
 def tokenize_simple(text: str) -> list:
-    if _HAS_PYVI:
-        segmented = _ViTokenizer.tokenize(text)  # nối âm tiết cùng 1 từ bằng "_", vd "trách_nhiệm"
-        return _TOKEN_RE_KEEP_UNDERSCORE.findall(segmented.lower())
     return _TOKEN_RE.findall(text.lower())
 
 
@@ -627,25 +600,6 @@ def encode_corpus(model, all_chunks: list):
             raise
 
 
-def load_and_encode_second_dense(all_chunks: list):
-    """SỬA (research "tối đa điểm"): tải + encode model dense THỨ 2 (zero-shot, xem comment ở
-    SECOND_DENSE_MODEL). Trả về (model, embeddings) hoặc (None, None) nếu lỗi — không bao giờ
-    làm crash pipeline vì 1 nguồn tín hiệu tuỳ chọn, giống hệt pattern của load_reranker()."""
-    import torch
-    from sentence_transformers import SentenceTransformer
-    try:
-        print(f"  Đang tải dense model thứ 2 (zero-shot) '{SECOND_DENSE_MODEL}'...")
-        model2 = SentenceTransformer(SECOND_DENSE_MODEL, device="cuda" if torch.cuda.is_available() else "cpu")
-        model2.max_seq_length = DENSE_MAX_SEQ_LEN
-        embeddings2 = encode_corpus(model2, all_chunks)
-        print(f"  Dense model thứ 2 sẵn sàng, đã encode {len(all_chunks)} chunk.")
-        return model2, embeddings2
-    except Exception as e:
-        print(f"  [CẢNH BÁO] Không tải/encode được dense model thứ 2 ({e}) -> chỉ dùng RRF "
-              f"2 nguồn (BM25 + dense chính) như trước. Không ảnh hưởng tới submission.zip.")
-        return None, None
-
-
 def load_reranker():
     """SỬA (research theo yêu cầu "tối đa điểm"): thêm reranker — lever còn thiếu duy nhất
     trong kiến trúc so với bản thiết kế đầy đủ. Dùng ZERO-SHOT `AITeamVN/Vietnamese_Reranker`
@@ -739,11 +693,7 @@ def adaptive_k_cutoff(scores, min_k: int = 1, max_k: int = 5, search_window: int
     return max(min_k, min(k_star, max_k))
 
 
-def rrf_retrieve(question: str, bm25: BM25, dense_model, dense_embeddings, all_chunks, top_k: int = TOP_K_RETRIEVE,
-                  dense_model2=None, dense_embeddings2=None):
-    """SỬA (research "tối đa điểm"): thêm nguồn tín hiệu thứ 3 tuỳ chọn (dense_model2) — RRF
-    tự nhiên mở rộng sang N nguồn (không cần chuẩn hoá thang điểm giữa các hệ thống, chỉ cần
-    thứ hạng), không đổi công thức, chỉ cộng thêm 1/(60+rank) cho nguồn thứ 3 nếu có."""
+def rrf_retrieve(question: str, bm25: BM25, dense_model, dense_embeddings, all_chunks, top_k: int = TOP_K_RETRIEVE):
     bm25_ranked = bm25.top_k(tokenize_simple(question), top_k)
     q_emb = dense_model.encode([question], convert_to_numpy=True, normalize_embeddings=True)[0]
     dense_scores = dense_embeddings @ q_emb
@@ -752,21 +702,8 @@ def rrf_retrieve(question: str, bm25: BM25, dense_model, dense_embeddings, all_c
     bm25_rank_map = {idx: r for r, idx in enumerate(bm25_ranked)}
     dense_rank_map = {idx: r for r, idx in enumerate(dense_ranked)}
     all_idx = set(bm25_ranked) | set(dense_ranked)
-
-    dense2_rank_map = {}
-    if dense_model2 is not None and dense_embeddings2 is not None:
-        q_emb2 = dense_model2.encode([question], convert_to_numpy=True, normalize_embeddings=True)[0]
-        dense_scores2 = dense_embeddings2 @ q_emb2
-        dense_ranked2 = list(np.argsort(-dense_scores2)[:top_k])
-        dense2_rank_map = {idx: r for r, idx in enumerate(dense_ranked2)}
-        all_idx |= set(dense_ranked2)
-
-    rrf = {}
-    for i in all_idx:
-        score = 1 / (60 + bm25_rank_map.get(i, top_k + 1)) + 1 / (60 + dense_rank_map.get(i, top_k + 1))
-        if dense2_rank_map:
-            score += 1 / (60 + dense2_rank_map.get(i, top_k + 1))
-        rrf[i] = score
+    rrf = {i: 1 / (60 + bm25_rank_map.get(i, top_k + 1)) + 1 / (60 + dense_rank_map.get(i, top_k + 1))
+           for i in all_idx}
     ranked = sorted(rrf, key=rrf.get, reverse=True)
     return [all_chunks[i] for i in ranked]
 
@@ -809,10 +746,8 @@ def render_answer(selected_chunks: list, top_n: int) -> str:
 
 
 def answer_question(question: str, bm25, dense_model, dense_embeddings, all_chunks, top_n: int,
-                     reranker_model=None, reranker_tokenizer=None, use_adaptive_k: bool = False,
-                     dense_model2=None, dense_embeddings2=None) -> str:
-    ranked = rrf_retrieve(question, bm25, dense_model, dense_embeddings, all_chunks,
-                           dense_model2=dense_model2, dense_embeddings2=dense_embeddings2)
+                     reranker_model=None, reranker_tokenizer=None, use_adaptive_k: bool = False) -> str:
+    ranked = rrf_retrieve(question, bm25, dense_model, dense_embeddings, all_chunks)
     if not ranked:
         return "Không tìm thấy thông tin pháp lý cho câu hỏi này."
     scores = None
@@ -828,7 +763,7 @@ def answer_question(question: str, bm25, dense_model, dense_embeddings, all_chun
 # ==============================================================================
 def measure_retrieval_recall(bm25, dense_model, dense_embeddings, all_chunks, train_data,
                               train_positive, reranker_model=None, reranker_tokenizer=None,
-                              sample_size: int = 300, dense_model2=None, dense_embeddings2=None) -> None:
+                              sample_size: int = 300) -> None:
     """SỬA (research "tối đa điểm"): đo TRỰC TIẾP retrieval có tìm đúng chunk hay không, tách
     biệt khỏi METEOR (vốn trộn lẫn cả lỗi retrieval LẪN lỗi câu chữ, khó biết cái nào là nút
     thắt). Dùng chính `train_positive` (chunk_id đúng, suy từ citation trong answer thật) làm
@@ -846,8 +781,7 @@ def measure_retrieval_recall(bm25, dense_model, dense_embeddings, all_chunks, tr
     for qid in ids:
         question = train_data[qid]["question"]
         pos_id = train_positive[qid]
-        ranked = rrf_retrieve(question, bm25, dense_model, dense_embeddings, all_chunks,
-                               dense_model2=dense_model2, dense_embeddings2=dense_embeddings2)
+        ranked = rrf_retrieve(question, bm25, dense_model, dense_embeddings, all_chunks)
         ranked_ids = [c["id"] for c in ranked]
         for k in ks:
             if pos_id in ranked_ids[:k]:
@@ -1018,7 +952,7 @@ def main() -> None:
 
     print("\n=== Bước 6: Dev-eval chọn TOP_N_ANSWER + xác nhận reranker có giúp ích không ===")
     top_n_answer, use_reranker, use_adaptive = try_dev_eval(bm25, dense_model, dense_embeddings, all_chunks,
-                                                     train_data, reranker_model, reranker_tokenizer)
+                                                             train_data, reranker_model, reranker_tokenizer)
     checkpoint("Xong dev-eval")
 
     print("\n=== Bước 7: Sinh câu trả lời cho public-official.json ===")
