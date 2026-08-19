@@ -99,13 +99,20 @@ MAX_TRAIN_EXAMPLES = 3000          # SỬA: nới từ 1000 lên 3000 (gần h�
                                     # trước đây giới hạn thấp vì lo ngân sách 55 phút, giờ không còn
                                     # ràng buộc đó nên dùng gần hết dữ liệu có nhãn để fine-tune tốt hơn.
 
-BASE_DENSE_MODEL = "AITeamVN/Vietnamese_Embedding"  # BGE-M3 fine-tune 568M, 2048 token, train 300K triplet Việt
+BASE_DENSE_MODEL = "bkai-foundation-models/vietnamese-bi-encoder"
 # SỬA: đổi từ VoVanPhuc/sup-SimCSE-VietNamese-phobert-base (general-purpose) sang model này —
 # cùng cỡ ~135M tham số (vẫn vừa 4GB thoải mái), nhưng đã được dùng trực tiếp cho bài toán
 # Vietnamese Legal QA retrieval trong nghiên cứu thực tế (Pham et al., "Vietnamese Legal
 # Information Retrieval in Question-Answering System", arXiv:2409.13699) — cùng domain với
 # bài thi này, nhiều khả năng cho embedding chất lượng tốt hơn cho truy vấn pháp luật.
-
+SECOND_DENSE_MODEL = "VoVanPhuc/sup-SimCSE-VietNamese-phobert-base"
+# SỬA (research "tối đa điểm"): ensemble thêm 1 dense retriever THỨ 2, dùng ZERO-SHOT (không
+# fine-tune — giữ chi phí thấp) làm tín hiệu độc lập thứ 3 trong RRF cùng BM25 + dense đã
+# fine-tune. Lý do: đây chính là model gốc trước khi đổi sang bkai-foundation-models — kiến
+# trúc khác (PhoBERT/SimCSE thuần túy vs XLM-R fine-tune cho retrieval), nên lỗi 2 model mắc
+# phải nhiều khả năng KHÁC NHAU (đa dạng tín hiệu) thay vì cùng bỏ sót 1 kiểu câu hỏi giống
+# nhau. RRF không cần chuẩn hoá thang điểm giữa các hệ thống nên cộng thêm 1 nguồn tín hiệu
+# không cần thêm bước hiệu chỉnh nào — nếu tải lỗi (mạng), tự bỏ qua, dùng lại 2-way RRF cũ.
 DENSE_MAX_SEQ_LEN = 256            # cắt ngắn để tiết kiệm VRAM + thời gian (câu luật dài,
                                     # nhưng embedding chỉ cần đủ để phân biệt ngữ nghĩa, không
                                     # cần đọc hết toàn văn — sinh câu trả lời vẫn dùng text đầy đủ)
@@ -125,7 +132,7 @@ N_NEG_PER_ROW = 2                   # SỬA: giảm từ 4->2 hard-negative/anch
                                     # negative "miễn phí" từ batch lớn rồi, không cần ép nhiều hard-neg
                                     # tường minh (vốn là nguyên nhân chính làm 1 "row" nặng gấp 6 lần
                                     # tưởng tượng, xem giải thích TRAIN_BATCH_SIZE).
-ENCODE_BATCH_SIZE = 16  # SỬA: giảm từ 32->16 vì AITeamVN/Vietnamese_Embedding 568M nặng gấp ~4x model cũ 135M             # SỬA: nâng lại 16->32 — cùng lý do trên (fp16 + OOM-retry hoạt động đúng).
+ENCODE_BATCH_SIZE = 32             # SỬA: nâng lại 16->32 — cùng lý do trên (fp16 + OOM-retry hoạt động đúng).
 
 TOP_K_RETRIEVE = 100                # số ứng viên lấy ra sau RRF fusion
 DEV_EVAL_SAMPLE_SIZE = 300          # SỬA: nới từ 120 lên 300 — giờ có thời gian, mẫu lớn hơn cho
@@ -620,6 +627,24 @@ def encode_corpus(model, all_chunks: list):
             raise
 
 
+def load_and_encode_second_dense(all_chunks: list):
+    """SỬA (research "tối đa điểm"): tải + encode model dense THỨ 2 (zero-shot, xem comment ở
+    SECOND_DENSE_MODEL). Trả về (model, embeddings) hoặc (None, None) nếu lỗi — không bao giờ
+    làm crash pipeline vì 1 nguồn tín hiệu tuỳ chọn, giống hệt pattern của load_reranker()."""
+    import torch
+    from sentence_transformers import SentenceTransformer
+    try:
+        print(f"  Đang tải dense model thứ 2 (zero-shot) '{SECOND_DENSE_MODEL}'...")
+        model2 = SentenceTransformer(SECOND_DENSE_MODEL, device="cuda" if torch.cuda.is_available() else "cpu")
+        model2.max_seq_length = DENSE_MAX_SEQ_LEN
+        embeddings2 = encode_corpus(model2, all_chunks)
+        print(f"  Dense model thứ 2 sẵn sàng, đã encode {len(all_chunks)} chunk.")
+        return model2, embeddings2
+    except Exception as e:
+        print(f"  [CẢNH BÁO] Không tải/encode được dense model thứ 2 ({e}) -> chỉ dùng RRF "
+              f"2 nguồn (BM25 + dense chính) như trước. Không ảnh hưởng tới submission.zip.")
+        return None, None
+
 
 def load_reranker():
     """SỬA (research theo yêu cầu "tối đa điểm"): thêm reranker — lever còn thiếu duy nhất
@@ -714,9 +739,11 @@ def adaptive_k_cutoff(scores, min_k: int = 1, max_k: int = 5, search_window: int
     return max(min_k, min(k_star, max_k))
 
 
-def rrf_retrieve(question: str, bm25: BM25, dense_model, dense_embeddings, all_chunks, top_k: int = TOP_K_RETRIEVE):
-    """RRF fusion BM25 + dense retriever. Không cần chuẩn hoá thang điểm giữa các hệ thống,
-    chỉ cần thứ hạng. Công thức: score = 1/(60+BM25_rank) + 1/(60+dense_rank)."""
+def rrf_retrieve(question: str, bm25: BM25, dense_model, dense_embeddings, all_chunks, top_k: int = TOP_K_RETRIEVE,
+                  dense_model2=None, dense_embeddings2=None):
+    """SỬA (research "tối đa điểm"): thêm nguồn tín hiệu thứ 3 tuỳ chọn (dense_model2) — RRF
+    tự nhiên mở rộng sang N nguồn (không cần chuẩn hoá thang điểm giữa các hệ thống, chỉ cần
+    thứ hạng), không đổi công thức, chỉ cộng thêm 1/(60+rank) cho nguồn thứ 3 nếu có."""
     bm25_ranked = bm25.top_k(tokenize_simple(question), top_k)
     q_emb = dense_model.encode([question], convert_to_numpy=True, normalize_embeddings=True)[0]
     dense_scores = dense_embeddings @ q_emb
@@ -725,8 +752,21 @@ def rrf_retrieve(question: str, bm25: BM25, dense_model, dense_embeddings, all_c
     bm25_rank_map = {idx: r for r, idx in enumerate(bm25_ranked)}
     dense_rank_map = {idx: r for r, idx in enumerate(dense_ranked)}
     all_idx = set(bm25_ranked) | set(dense_ranked)
-    rrf = {i: 1 / (60 + bm25_rank_map.get(i, top_k + 1)) + 1 / (60 + dense_rank_map.get(i, top_k + 1))
-           for i in all_idx}
+
+    dense2_rank_map = {}
+    if dense_model2 is not None and dense_embeddings2 is not None:
+        q_emb2 = dense_model2.encode([question], convert_to_numpy=True, normalize_embeddings=True)[0]
+        dense_scores2 = dense_embeddings2 @ q_emb2
+        dense_ranked2 = list(np.argsort(-dense_scores2)[:top_k])
+        dense2_rank_map = {idx: r for r, idx in enumerate(dense_ranked2)}
+        all_idx |= set(dense_ranked2)
+
+    rrf = {}
+    for i in all_idx:
+        score = 1 / (60 + bm25_rank_map.get(i, top_k + 1)) + 1 / (60 + dense_rank_map.get(i, top_k + 1))
+        if dense2_rank_map:
+            score += 1 / (60 + dense2_rank_map.get(i, top_k + 1))
+        rrf[i] = score
     ranked = sorted(rrf, key=rrf.get, reverse=True)
     return [all_chunks[i] for i in ranked]
 
@@ -769,8 +809,10 @@ def render_answer(selected_chunks: list, top_n: int) -> str:
 
 
 def answer_question(question: str, bm25, dense_model, dense_embeddings, all_chunks, top_n: int,
-                     reranker_model=None, reranker_tokenizer=None, use_adaptive_k: bool = False) -> str:
-    ranked = rrf_retrieve(question, bm25, dense_model, dense_embeddings, all_chunks)
+                     reranker_model=None, reranker_tokenizer=None, use_adaptive_k: bool = False,
+                     dense_model2=None, dense_embeddings2=None) -> str:
+    ranked = rrf_retrieve(question, bm25, dense_model, dense_embeddings, all_chunks,
+                           dense_model2=dense_model2, dense_embeddings2=dense_embeddings2)
     if not ranked:
         return "Không tìm thấy thông tin pháp lý cho câu hỏi này."
     scores = None
@@ -786,7 +828,7 @@ def answer_question(question: str, bm25, dense_model, dense_embeddings, all_chun
 # ==============================================================================
 def measure_retrieval_recall(bm25, dense_model, dense_embeddings, all_chunks, train_data,
                               train_positive, reranker_model=None, reranker_tokenizer=None,
-                              sample_size: int = 300) -> None:
+                              sample_size: int = 300, dense_model2=None, dense_embeddings2=None) -> None:
     """SỬA (research "tối đa điểm"): đo TRỰC TIẾP retrieval có tìm đúng chunk hay không, tách
     biệt khỏi METEOR (vốn trộn lẫn cả lỗi retrieval LẪN lỗi câu chữ, khó biết cái nào là nút
     thắt). Dùng chính `train_positive` (chunk_id đúng, suy từ citation trong answer thật) làm
@@ -804,7 +846,8 @@ def measure_retrieval_recall(bm25, dense_model, dense_embeddings, all_chunks, tr
     for qid in ids:
         question = train_data[qid]["question"]
         pos_id = train_positive[qid]
-        ranked = rrf_retrieve(question, bm25, dense_model, dense_embeddings, all_chunks)
+        ranked = rrf_retrieve(question, bm25, dense_model, dense_embeddings, all_chunks,
+                               dense_model2=dense_model2, dense_embeddings2=dense_embeddings2)
         ranked_ids = [c["id"] for c in ranked]
         for k in ks:
             if pos_id in ranked_ids[:k]:
@@ -831,7 +874,8 @@ def measure_retrieval_recall(bm25, dense_model, dense_embeddings, all_chunks, tr
 
 
 def try_dev_eval(bm25, dense_model, dense_embeddings, all_chunks, train_data,
-                  reranker_model=None, reranker_tokenizer=None) -> tuple:
+                  reranker_model=None, reranker_tokenizer=None,
+                  dense_model2=None, dense_embeddings2=None) -> tuple:
     try:
         import nltk
         try:
@@ -843,7 +887,9 @@ def try_dev_eval(bm25, dense_model, dense_embeddings, all_chunks, train_data,
         from rouge_score import rouge_scorer
     except Exception as e:
         print(f"  Bỏ qua dev-eval (thiếu nltk/rouge_score: {e}). Dùng TOP_N_ANSWER=3, không rerank.")
-        return 3, False
+        # SỬA (bug tiềm ẩn): nhánh này trước đây trả về 2-tuple trong khi main() unpack 3 giá trị
+        # -> ValueError: not enough values to unpack nếu thiếu nltk/rouge_score. Trả đủ 3 giá trị.
+        return 3, False, False
 
     rouge = rouge_scorer.RougeScorer(["rougeL"], use_stemmer=False)
     random.seed(42)
@@ -866,7 +912,11 @@ def try_dev_eval(bm25, dense_model, dense_embeddings, all_chunks, train_data,
         ranked_cache, scores_cache = {}, {}
         for qid in ids:
             item = train_data[qid]
-            ranked = rrf_retrieve(item["question"], bm25, dense_model, dense_embeddings, all_chunks)
+            # SỬA (wiring ensemble 3-way): truyền dense_model2 vào để dev-eval đo ĐÚNG cấu hình
+            # retrieval sẽ dùng lúc predict — trước đây thiếu, dev-eval đo 2-way trong khi predict
+            # (sau fix này) dùng 3-way -> top_n/reranker được chọn trên cấu hình LỆCH với thực tế.
+            ranked = rrf_retrieve(item["question"], bm25, dense_model, dense_embeddings, all_chunks,
+                                   dense_model2=dense_model2, dense_embeddings2=dense_embeddings2)
             scores = None
             if rr_model is not None and ranked:
                 ranked, scores = rerank(item["question"], ranked, rr_model, rr_tok)
@@ -964,18 +1014,28 @@ def main() -> None:
     dense_embeddings = encode_corpus(dense_model, all_chunks)
     checkpoint("Xong encode corpus")
 
+    # SỬA (wiring ensemble 3-way — bug code chết): load_and_encode_second_dense() đã được viết
+    # đầy đủ (kèm fallback êm về 2-way nếu tải lỗi) nhưng main() không bao giờ gọi -> toàn bộ
+    # nhánh nguồn tín hiệu thứ 3 trong rrf_retrieve() chưa từng chạy. Gọi ở đây và truyền xuống
+    # MỌI nơi dùng rrf_retrieve (Recall@k, dev-eval, predict) để đo và dùng CÙNG 1 cấu hình.
+    print("\n=== Bước 5a: Dense model thứ 2 (zero-shot, nguồn tín hiệu thứ 3 cho RRF) ===")
+    dense_model2, dense_embeddings2 = load_and_encode_second_dense(all_chunks)
+    checkpoint("Xong dense model thứ 2")
+
     print("\n=== Bước 5b: Tải reranker (zero-shot, không fine-tune) ===")
     reranker_model, reranker_tokenizer = load_reranker()
     checkpoint("Xong tải reranker")
 
     print("\n=== Bước 5c: Đo Recall@k — retrieval có tìm đúng chunk không? ===")
     measure_retrieval_recall(bm25, dense_model, dense_embeddings, all_chunks, train_data,
-                              train_positive, reranker_model, reranker_tokenizer)
+                              train_positive, reranker_model, reranker_tokenizer,
+                              dense_model2=dense_model2, dense_embeddings2=dense_embeddings2)
     checkpoint("Xong đo Recall@k")
 
     print("\n=== Bước 6: Dev-eval chọn TOP_N_ANSWER + xác nhận reranker có giúp ích không ===")
     top_n_answer, use_reranker, use_adaptive = try_dev_eval(bm25, dense_model, dense_embeddings, all_chunks,
-                                                     train_data, reranker_model, reranker_tokenizer)
+                                                     train_data, reranker_model, reranker_tokenizer,
+                                                     dense_model2=dense_model2, dense_embeddings2=dense_embeddings2)
     checkpoint("Xong dev-eval")
 
     print("\n=== Bước 7: Sinh câu trả lời cho public-official.json ===")
@@ -987,7 +1047,8 @@ def main() -> None:
     for i, (qid, item) in enumerate(questions.items()):
         answers[qid] = answer_question(item["question"], bm25, dense_model, dense_embeddings,
                                         all_chunks, top_n_answer, reranker_model=rr_model,
-                                        reranker_tokenizer=rr_tok, use_adaptive_k=use_adaptive)
+                                        reranker_tokenizer=rr_tok, use_adaptive_k=use_adaptive,
+                                        dense_model2=dense_model2, dense_embeddings2=dense_embeddings2)
         if (i + 1) % 200 == 0:
             print(f"  ... {i+1}/{len(questions)}  ({elapsed()/60:.1f} phút)")
     n_empty = sum(1 for a in answers.values() if not a.strip())
