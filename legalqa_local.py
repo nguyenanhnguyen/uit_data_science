@@ -482,7 +482,13 @@ def finetune_or_load_dense(train_positive, train_data, chunk_by_id, all_chunks, 
         return model
 
     if len(train_positive) > MAX_TRAIN_EXAMPLES:
-        sampled_qids = random.sample(list(train_positive.keys()), MAX_TRAIN_EXAMPLES)
+        random.seed(42)  # SỬA: thiếu seed -> mỗi lần chạy train trên 1 tập con NGẪU NHIÊN khác
+        # nhau trong 3565 cặp, khiến so sánh METEOR giữa các lần chạy (có/không 1 thay đổi code)
+        # lẫn cả nhiễu do sample khác nhau — không tách được đâu là do code, đâu là do may rủi.
+        # SỬA: cố định seed=42 RIÊNG cho bước này (Random() cục bộ, không đụng state `random`
+        # toàn cục dùng ở chỗ khác) — từ giờ mọi so sánh trước/sau đều dùng ĐÚNG 1 tập train.
+        rng_sample = random.Random(42)
+        sampled_qids = rng_sample.sample(list(train_positive.keys()), MAX_TRAIN_EXAMPLES)
         train_positive_used = {qid: train_positive[qid] for qid in sampled_qids}
         print(f"  Có {len(train_positive)} positive pairs, lấy mẫu ngẫu nhiên {MAX_TRAIN_EXAMPLES} "
               f"để giới hạn thời gian mine hard-negative + train (xem MAX_TRAIN_EXAMPLES ở CONFIG).")
@@ -874,7 +880,8 @@ def measure_retrieval_recall(bm25, dense_model, dense_embeddings, all_chunks, tr
 
 
 def try_dev_eval(bm25, dense_model, dense_embeddings, all_chunks, train_data,
-                  reranker_model=None, reranker_tokenizer=None) -> tuple:
+                  reranker_model=None, reranker_tokenizer=None,
+                  dense_model2=None, dense_embeddings2=None) -> tuple:
     try:
         import nltk
         try:
@@ -909,7 +916,8 @@ def try_dev_eval(bm25, dense_model, dense_embeddings, all_chunks, train_data,
         ranked_cache, scores_cache = {}, {}
         for qid in ids:
             item = train_data[qid]
-            ranked = rrf_retrieve(item["question"], bm25, dense_model, dense_embeddings, all_chunks)
+            ranked = rrf_retrieve(item["question"], bm25, dense_model, dense_embeddings, all_chunks,
+                                   dense_model2=dense_model2, dense_embeddings2=dense_embeddings2)
             scores = None
             if rr_model is not None and ranked:
                 ranked, scores = rerank(item["question"], ranked, rr_model, rr_tok)
@@ -1007,18 +1015,27 @@ def main() -> None:
     dense_embeddings = encode_corpus(dense_model, all_chunks)
     checkpoint("Xong encode corpus")
 
+    print("\n=== Bước 5a: Tải + encode dense model thứ 2 (zero-shot, ensemble) ===")
+    # SỬA (bug nghiêm trọng): hàm này đã viết nhưng CHƯA TỪNG được gọi trong main() ở bản
+    # trước — toàn bộ ensemble dense model thứ 2 là code chết, không ảnh hưởng gì tới kết quả
+    # đã đo (0.4625/0.4639 v.v. đều KHÔNG có đóng góp của nó). Giờ mới thực sự chạy lần đầu.
+    dense_model2, dense_embeddings2 = load_and_encode_second_dense(all_chunks)
+    checkpoint("Xong dense model thứ 2")
+
     print("\n=== Bước 5b: Tải reranker (zero-shot, không fine-tune) ===")
     reranker_model, reranker_tokenizer = load_reranker()
     checkpoint("Xong tải reranker")
 
     print("\n=== Bước 5c: Đo Recall@k — retrieval có tìm đúng chunk không? ===")
     measure_retrieval_recall(bm25, dense_model, dense_embeddings, all_chunks, train_data,
-                              train_positive, reranker_model, reranker_tokenizer)
+                              train_positive, reranker_model, reranker_tokenizer,
+                              dense_model2=dense_model2, dense_embeddings2=dense_embeddings2)
     checkpoint("Xong đo Recall@k")
 
     print("\n=== Bước 6: Dev-eval chọn TOP_N_ANSWER + xác nhận reranker có giúp ích không ===")
-    top_n_answer, use_reranker, use_adaptive = try_dev_eval(bm25, dense_model, dense_embeddings, all_chunks,
-                                                     train_data, reranker_model, reranker_tokenizer)
+    top_n_answer, use_reranker, use_adaptive = try_dev_eval(
+        bm25, dense_model, dense_embeddings, all_chunks, train_data, reranker_model,
+        reranker_tokenizer, dense_model2=dense_model2, dense_embeddings2=dense_embeddings2)
     checkpoint("Xong dev-eval")
 
     print("\n=== Bước 7: Sinh câu trả lời cho public-official.json ===")
@@ -1030,7 +1047,8 @@ def main() -> None:
     for i, (qid, item) in enumerate(questions.items()):
         answers[qid] = answer_question(item["question"], bm25, dense_model, dense_embeddings,
                                         all_chunks, top_n_answer, reranker_model=rr_model,
-                                        reranker_tokenizer=rr_tok, use_adaptive_k=use_adaptive)
+                                        reranker_tokenizer=rr_tok, use_adaptive_k=use_adaptive,
+                                        dense_model2=dense_model2, dense_embeddings2=dense_embeddings2)
         if (i + 1) % 200 == 0:
             print(f"  ... {i+1}/{len(questions)}  ({elapsed()/60:.1f} phút)")
     n_empty = sum(1 for a in answers.values() if not a.strip())
