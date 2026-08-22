@@ -7,4 +7,4 @@ dense_finetuned_tmp/
 submission.zip
 subcon/
 results/submission/
-model_cache/
+cache_v2/
