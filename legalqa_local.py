@@ -50,6 +50,23 @@ bắt đầu ở mức cao hơn cũng an toàn (OOM-backoff tự lùi nếu vẫ
 hụt chứ không mất gì khác).
 
 ===============================================================================
+BẢN SỬA #6 (tối ưu THỜI GIAN, KHÔNG đổi kết quả cuối — theo log chạy thật: Bước 5c
+"im lặng" 2+ giờ, nvidia-smi cho GPU-Util 100% nhưng Power chỉ 19W/30W = nghẽn băng thông
+bộ nhớ, không phải nghẽn tính toán)
+===============================================================================
+1. `rerank()` giờ xử lý ứng viên theo LÔ NHỎ (`RERANK_SUBBATCH=24`) thay vì nhồi cả
+   `max_candidates=100` vào một forward pass. Điểm số mỗi cặp KHÔNG ĐỔI (transformer không
+   trộn phép tính giữa các example trong batch, chỉ có padding — lô nhỏ padding ít hơn nên
+   còn tính ít token thừa hơn) — đây thuần tuý là sửa nghẽn tốc độ, không đánh đổi chất lượng.
+2. Bỏ `measure_retrieval_recall()` (Bước 5c cũ, chạy retrieval+rerank RIÊNG cho ~300 câu chỉ
+   để in Recall@k tham khảo — không hề ảnh hưởng tới TOP_N_ANSWER/use_reranker/use_adaptive
+   cuối cùng). Gộp vào `try_dev_eval()`: Recall@k giờ tính trực tiếp từ `ranked_cache` mà
+   dev-eval ĐÃ có sẵn (lọc những câu trong mẫu dev-eval cũng có citation resolve được) — bớt
+   hẳn một lượt retrieval+rerank đầy đủ, logic chọn cấu hình cuối giữ nguyên 100%.
+3. Thêm dòng in tiến độ mỗi 50 câu trong vòng lặp retrieval+rerank của dev-eval — trước đây
+   hoàn toàn im lặng, đúng nguyên nhân khiến một lượt chạy chậm trông giống bị treo.
+
+===============================================================================
 QUYẾT ĐỊNH THIẾT KẾ CÒN GIỮ NGUYÊN CHO RÀNG BUỘC 4GB VRAM
 ===============================================================================
 1. KHÔNG fine-tune/chạy LLM sinh câu trả lời (LoRA SFT/DPO) — 1.5B+ tham số dù QLoRA vẫn
@@ -590,13 +607,26 @@ def load_reranker():
             return None, None
 
 
+RERANK_SUBBATCH = 24
+# BẢN SỬA #6 (log thật: nvidia-smi lúc rerank cho GPU-Util 100% nhưng Power chỉ 19W/30W —
+# dấu hiệu kinh điển của nghẽn BĂNG THÔNG BỘ NHỚ, không phải nghẽn tính toán): nhồi cả
+# max_candidates=100 cặp vào MỘT forward pass duy nhất bắt GPU 4GB phải xử lý một tensor
+# rất lớn (100 × ~1024 token × 568M tham số) cùng lúc — trên card yếu, việc này chậm hơn
+# NHIỀU so với chia thành các lô nhỏ hơn chạy nối tiếp, dù tổng số phép tính là như nhau.
+# Quan trọng: ĐIỂM SỐ MỖI CẶP LÀ Y HỆT dù xử lý riêng lẻ hay theo lô — transformer không
+# có phép tính trộn giữa các example khác nhau trong batch (attention mask cô lập từng
+# example), nên chia lô KHÔNG đổi kết quả, chỉ đổi tốc độ. Lô nhỏ còn padding ít hơn (padding
+# theo chuỗi dài nhất TRONG LÔ, không phải trong cả 100), nên tính ít token thừa hơn nữa.
+
+
 def rerank(question: str, candidates: list, reranker_model, reranker_tokenizer,
-           max_candidates: int = 100, max_length: int = 1024):
+           max_candidates: int = 100, max_length: int = 1024, sub_batch: int = RERANK_SUBBATCH):
     """Chấm điểm lại top `max_candidates` bằng cross-encoder, trả về (list đã sắp xếp lại,
     mảng điểm số tương ứng — None nếu không rerank được). max_candidates=100 (=TOP_K_RETRIEVE):
     đo được Recall@30=78.3% nhưng Recall@100=85.0% — giới hạn 30 tự bỏ lỡ 6.7 điểm % chunk
     đúng nằm ở rank 31-100. max_length=1024 (không dùng hết 2304 model hỗ trợ) — cân bằng
-    tốc độ/VRAM.
+    tốc độ/VRAM. Xử lý theo LÔ NHỎ (`sub_batch`, mặc định 24) thay vì 1 lần cả 100 — xem
+    RERANK_SUBBATCH ở trên, kết quả điểm số không đổi, chỉ nhanh hơn trên GPU nhỏ.
     Trả thêm điểm số để adaptive_k_cutoff() có thể tìm điểm "gãy" tự nhiên trong phân phối
     điểm, thay vì luôn dùng top_n cố định."""
     import torch
@@ -605,22 +635,34 @@ def rerank(question: str, candidates: list, reranker_model, reranker_tokenizer,
     subset = candidates[:max_candidates]
     device = next(reranker_model.parameters()).device
     pairs = [[question, c["text"]] for c in subset]
-    try:
-        with torch.no_grad():
-            inputs = reranker_tokenizer(pairs, padding=True, truncation=True,
-                                         return_tensors="pt", max_length=max_length).to(device)
-            scores = reranker_model(**inputs, return_dict=True).logits.view(-1).float().cpu().numpy()
-        order = np.argsort(-scores)
-        reranked = [subset[i] for i in order]
-        sorted_scores = scores[order]
-        return reranked + candidates[max_candidates:], sorted_scores
-    except RuntimeError as e:
-        if "out of memory" in str(e).lower():
-            print(f"  [CUDA OOM lúc rerank] bỏ qua rerank cho câu hỏi này, dùng thứ hạng RRF.")
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache()
-            return candidates, None
-        raise
+    scores = np.empty(len(pairs), dtype=np.float32)
+    bs, i = max(1, sub_batch), 0
+    while i < len(pairs):
+        batch = pairs[i:i + bs]
+        try:
+            with torch.no_grad():
+                inputs = reranker_tokenizer(batch, padding=True, truncation=True,
+                                             return_tensors="pt", max_length=max_length).to(device)
+                out = reranker_model(**inputs, return_dict=True).logits.view(-1).float().cpu().numpy()
+            scores[i:i + len(batch)] = out
+            i += bs
+        except RuntimeError as e:
+            if "out of memory" in str(e).lower() and bs > 1:
+                print(f"  [CUDA OOM rerank] sub_batch={bs} -> thử {bs // 2}")
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+                bs = max(1, bs // 2)
+                continue
+            if "out of memory" in str(e).lower():
+                print(f"  [CUDA OOM lúc rerank] bỏ qua rerank cho câu hỏi này, dùng thứ hạng RRF.")
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+                return candidates, None
+            raise
+    order = np.argsort(-scores)
+    reranked = [subset[i2] for i2 in order]
+    sorted_scores = scores[order]
+    return reranked + candidates[max_candidates:], sorted_scores
 
 
 def adaptive_k_cutoff(scores, min_k: int = 1, max_k: int = 5, search_window: int = 15) -> int:
@@ -702,54 +744,20 @@ def answer_question(question: str, bm25, dense_model, dense_embeddings, all_chun
 
 
 # ==============================================================================
-# BƯỚC 7 — Dev-eval (METEOR/ROUGE-L) trên mẫu train.json để chọn TOP_N_ANSWER, và
-# BƯỚC 8 — Validate + đóng gói submission.zip
+# BƯỚC 6 — Dev-eval (METEOR/ROUGE-L) trên mẫu train.json để chọn TOP_N_ANSWER, ĐỒNG THỜI
+# đo Recall@k, và BƯỚC 7/8 — sinh câu trả lời + đóng gói submission.zip
 # ==============================================================================
-def measure_retrieval_recall(bm25, dense_model, dense_embeddings, all_chunks, train_data,
-                              train_positive, reranker_model=None, reranker_tokenizer=None,
-                              sample_size: int = 300) -> None:
-    """Đo TRỰC TIẾP retrieval có tìm đúng chunk hay không, tách biệt khỏi METEOR (vốn trộn
-    lẫn cả lỗi retrieval LẪN lỗi câu chữ). Dùng chính `train_positive` (chunk_id đúng, suy từ
-    citation trong answer thật) làm ground truth — đo Recall@k tại nhiều mức k, CÓ và KHÔNG
-    rerank, để biết chắc nút thắt nằm ở retriever hay ở thứ hạng cuối."""
-    ids = [qid for qid in random.sample(list(train_positive.keys()),
-                                          min(sample_size, len(train_positive)))]
-    print(f"  Đo Recall@k trên {len(ids)} câu hỏi có nhãn đúng (từ citation trong train.json)...")
-
-    ks = [1, 3, 5, 10, 30, 100]
-    hits_rrf = {k: 0 for k in ks}
-    hits_rerank = {k: 0 for k in ks} if reranker_model is not None else None
-
-    for qid in ids:
-        question = train_data[qid]["question"]
-        pos_id = train_positive[qid]
-        ranked = rrf_retrieve(question, bm25, dense_model, dense_embeddings, all_chunks)
-        ranked_ids = [c["id"] for c in ranked]
-        for k in ks:
-            if pos_id in ranked_ids[:k]:
-                hits_rrf[k] += 1
-        if reranker_model is not None and ranked:
-            reranked, _scores = rerank(question, ranked, reranker_model, reranker_tokenizer)
-            reranked_ids = [c["id"] for c in reranked]
-            for k in ks:
-                if pos_id in reranked_ids[:k]:
-                    hits_rerank[k] += 1
-
-    n = len(ids)
-    print("  --- Recall@k: BM25+dense (RRF, chưa rerank) ---")
-    for k in ks:
-        print(f"    Recall@{k:<3d} = {hits_rrf[k]}/{n} = {100*hits_rrf[k]/n:.1f}%")
-    if hits_rerank is not None:
-        print("  --- Recall@k: sau rerank ---")
-        for k in ks:
-            print(f"    Recall@{k:<3d} = {hits_rerank[k]}/{n} = {100*hits_rerank[k]/n:.1f}%")
-    print("  Diễn giải: Recall@100 thấp -> vấn đề ở retriever (BM25/dense không tìm thấy chunk "
-          "đúng trong 100 ứng viên đầu) -> cần cải thiện retriever, KHÔNG phải template/rerank. "
-          "Recall@100 cao nhưng Recall@5 thấp -> retriever tìm được nhưng xếp hạng chưa tốt -> "
-          "rerank/threshold là chỗ cần cải thiện.")
-
-
-def try_dev_eval(bm25, dense_model, dense_embeddings, all_chunks, train_data,
+# BẢN SỬA #6: gộp bước đo Recall@k (trước đây là Bước 5c riêng, `measure_retrieval_recall`)
+# VÀO ngay trong try_dev_eval() — cả hai đều chạy `rrf_retrieve` + `rerank` trên một mẫu câu
+# hỏi, khác nhau chỉ ở việc lấy mẫu từ đâu (train_positive vs train_data) và dùng kết quả để
+# làm gì (so chunk_id vs so METEOR). Bước Recall@k CŨ chạy lại TOÀN BỘ retrieval+rerank một
+# lần NỮA cho ~300 câu — trùng gần hết công sức với vòng lặp ranked_cache bên dưới, tốn thêm
+# cả một lượt rerank hạng nặng (chính là bước làm log của bạn "im lặng" hàng giờ). Giờ chỉ
+# cần lọc những câu trong mẫu dev-eval mà CŨNG có trong train_positive (có citation resolve
+# được), rồi tính Recall@k trực tiếp từ `ranked_cache` đã có sẵn — không retrieval+rerank lại
+# lần nào nữa. Không đổi kết quả chọn TOP_N_ANSWER/use_reranker/use_adaptive (logic đó giữ
+# nguyên 100%), chỉ bớt hẳn một lượt tính trùng.
+def try_dev_eval(bm25, dense_model, dense_embeddings, all_chunks, train_data, train_positive,
                   reranker_model=None, reranker_tokenizer=None) -> tuple:
     try:
         import nltk
@@ -764,12 +772,15 @@ def try_dev_eval(bm25, dense_model, dense_embeddings, all_chunks, train_data,
         from rouge_score import rouge_scorer
     except Exception as e:
         print(f"  Bỏ qua dev-eval (thiếu nltk/rouge_score: {e}). Dùng TOP_N_ANSWER=3, không rerank.")
-        return 3, False
+        return 3, False, False
 
     rouge = rouge_scorer.RougeScorer(["rougeL"], use_stemmer=False)
     random.seed(42)
     n_sample = min(DEV_EVAL_SAMPLE_SIZE, len(train_data))
     ids = random.sample(list(train_data.keys()), n_sample)
+    recall_ids = [q for q in ids if q in train_positive]
+    print(f"  Mẫu dev-eval: {len(ids)} câu ({len(recall_ids)} câu trong đó có citation resolve "
+          f"được -> dùng luôn để đo Recall@k, không chạy lại retrieval riêng).")
 
     # retrieval + rerank (bước ĐẮT nhất) chỉ chạy 1 LẦN/câu hỏi/config, rồi thử nhiều top_n
     # bằng cách CẮT list đã xếp hạng (render_answer rất rẻ).
@@ -777,11 +788,13 @@ def try_dev_eval(bm25, dense_model, dense_embeddings, all_chunks, train_data,
     if reranker_model is not None:
         configs.append(("BM25+dense+rerank", reranker_model, reranker_tokenizer))
 
+    ks = [1, 3, 5, 10, 30, 100]
     best_n, best_m, best_use_rerank, best_use_adaptive = 3, -1.0, False, False
     for label, rr_model, rr_tok in configs:
         print(f"  --- {label} ---")
         ranked_cache, scores_cache = {}, {}
-        for qid in ids:
+        t0 = time.time()
+        for i, qid in enumerate(ids):
             item = train_data[qid]
             ranked = rrf_retrieve(item["question"], bm25, dense_model, dense_embeddings, all_chunks)
             scores = None
@@ -789,6 +802,22 @@ def try_dev_eval(bm25, dense_model, dense_embeddings, all_chunks, train_data,
                 ranked, scores = rerank(item["question"], ranked, rr_model, rr_tok)
             ranked_cache[qid] = ranked
             scores_cache[qid] = scores
+            if (i + 1) % 50 == 0 or (i + 1) == len(ids):
+                print(f"    retrieval+rerank {i+1}/{len(ids)} ... {time.time()-t0:.0f}s "
+                      f"({elapsed()/60:.1f} phút)", flush=True)
+
+        if recall_ids:
+            hits = {k: 0 for k in ks}
+            for qid in recall_ids:
+                ranked_ids = [c["id"] for c in ranked_cache[qid]]
+                pos_id = train_positive[qid]
+                for k in ks:
+                    if pos_id in ranked_ids[:k]:
+                        hits[k] += 1
+            nr = len(recall_ids)
+            print(f"  Recall@k ({label}, n={nr}, tái dùng kết quả trên — không chạy lại):")
+            for k in ks:
+                print(f"    Recall@{k:<3d} = {hits[k]}/{nr} = {100*hits[k]/nr:.1f}%")
 
         for top_n in (1, 2, 3, 4, 5):  # đỉnh METEOR quan sát được quanh top_n=3
             ms, rs = [], []
@@ -881,15 +910,11 @@ def main() -> None:
     reranker_model, reranker_tokenizer = load_reranker()
     checkpoint("Xong tải reranker")
 
-    print("\n=== Bước 5c: Đo Recall@k — retrieval có tìm đúng chunk không? ===")
-    measure_retrieval_recall(bm25, dense_model, dense_embeddings, all_chunks, train_data,
-                              train_positive, reranker_model, reranker_tokenizer)
-    checkpoint("Xong đo Recall@k")
-
-    print("\n=== Bước 6: Dev-eval chọn TOP_N_ANSWER + xác nhận reranker có giúp ích không ===")
+    print("\n=== Bước 6: Dev-eval chọn TOP_N_ANSWER + đo Recall@k (gộp chung 1 lượt retrieval+rerank) ===")
     top_n_answer, use_reranker, use_adaptive = try_dev_eval(bm25, dense_model, dense_embeddings, all_chunks,
-                                                             train_data, reranker_model, reranker_tokenizer)
-    checkpoint("Xong dev-eval")
+                                                             train_data, train_positive,
+                                                             reranker_model, reranker_tokenizer)
+    checkpoint("Xong dev-eval + Recall@k")
 
     print("\n=== Bước 7: Sinh câu trả lời cho public-official.json ===")
     with PUBLIC_PATH.open(encoding="utf-8") as f:
