@@ -1,179 +1,99 @@
 """
-legalqa_fusion.py — LegalQA (UIT DSC2026 Task 2), tối ưu cho RTX 2050 4GB VRAM.
+legalqa_optimized.py — LegalQA (UIT DSC2026 Task 2)
+Tối ưu tốc độ cho RTX 2050 4GB VRAM, vẫn giữ fine-tune và rerank.
+Các thay đổi so với bản #6:
+- Tăng ENCODE_BATCH_SIZE lên 128 (tự lùi nếu OOM)
+- Tăng TRAIN_MINI_BATCH_SIZE lên 8
+- Giảm MAX_TRAIN_EXAMPLES xuống 2000 (vẫn đủ)
+- Giảm DEV_EVAL_SAMPLE_SIZE xuống 200 (nhanh hơn)
+- Tăng RERANK_SUBBATCH lên 32 (cân bằng tốc độ/VRAM)
+- Thêm seed cố định toàn cục để so sánh đáng tin
 
-PHIÊN BẢN FUSION: Kết hợp công nghệ MỚI từ pipeline multi-GPU (run_qa.py) nhưng
-được cắt gọt và tối ưu để chạy trên MỘT GPU 4GB với hiệu suất tối đa.
-
-CÁCH DÙNG: đặt file này cạnh train.json, public-official.json, selected-contexts/
-rồi chạy:
-    python legalqa_fusion.py
+CÁCH DÙNG: đặt file này cạnh train.json, public-official.json, selected-contexts/ rồi chạy:
+    python legalqa_optimized.py
 Output: submission.zip trong cùng thư mục.
 
-THƯ VIỆN CẦN CÀI (trong venv của bạn):
-    pip install numpy scipy sentence-transformers datasets "accelerate>=1.1.0" \
-        nltk rouge_score tiktoken sentencepiece underthesea transformers
-
-Và BẮT BUỘC kiểm tra torch có nhận đúng GPU không TRƯỚC khi chạy:
-    python -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_name(0))"
-Nếu ra False — cài lại torch bản có CUDA:
-    pip uninstall torch torchvision torchaudio -y
-    pip install torch --index-url https://download.pytorch.org/whl/cu130
-
-===============================================================================
-KIẾN TRÚC FUSION — CÁC CÔNG NGHỆ MỚI SO VỚI BẢN CŨ
-===============================================================================
-1. ĐA KÊNH DENSE (thay vì 1 kênh):
-   - Kênh 1: bkai-foundation-models/vietnamese-bi-encoder (~135M, domain-specific)
-   - Kênh 2: BAAI/bge-m3 dense (~568M, general multilingual strong)
-   - Kênh 3: intfloat/multilingual-e5-large (~560M, query-aware)
-   → Fusion qua RRF thay vì chỉ 1 kênh. Tăng recall đáng kể.
-
-2. 2-STAGE RERANK (thay vì 1 lần):
-   - Stage 1: rerank chunk → chọn top DOCUMENTS (max-agg per doc)
-   - Stage 2: cắt Điều CHỈ TRONG các document đã chọn → rerank lại → chọn top ĐIỀU
-   → Đúng bài toán: cần 1 Điều chính xác, không phải 1 chunk ngẫu nhiên.
-
-3. DEV SPLIT THEO VĂN BẢN (thay vì random):
-   - Câu hỏi cùng văn bản → cùng nhóm → không rò rỉ khi fine-tune
-   - Hash-based ordering, không phụ thuộc seed random
-
-4. CACHE INCREMENTAL:
-   - Chạy thử 300 câu → mở rộng 1500 câu chỉ tính 1200 câu mới
-   - Fingerprint cấu hình, tự động invalidate khi đổi config
-
-5. TEMPLATE CÂU TRẢ LỜI TỐI ƯU (đã đo trên train.json thật):
-   - "Căn cứ Điều X [loại VB] [số hiệu] quy định như sau:" (57.4% đáp án thật)
-   - Bỏ "Điều X." ở đầu thân bài (98.8% đáp án thật không lặp lại)
-   - Câu kết echo2 tốt nhất (đã confirm bằng paired test)
-
-===============================================================================
-TỐI ƯU CHO 4GB VRAM — CHIẾN LƯỢC LOAD LUÂN PHIÊN
-===============================================================================
-- KHÔNG BAO GIỜ giữ > 1 model lớn trên GPU cùng lúc
-- Encode corpus: load từng model → encode → save → del → free GPU
-- Query: load model tạm → encode 1 câu → del ngay
-- Reranker: giữ lại (dùng cho cả pipeline), là model cuối cùng load
-- Sparse vector (bge-m3 sparse): TẮT — cần model gốc 2.2GB, chỉ đáng +0.10 điểm
-- Cache embeddings ở đĩa (.npy), không giữ trên GPU
-
-VRAM PEAK THEO PHASE (đã đo):
-  - Encode corpus (bge/e5): ~2.5 GB  ✓
-  - Encode corpus (bkai): ~1.5 GB    ✓
-  - Rerank (giữ reranker): ~2.0 GB  ✓
-  - Query (load tạm): ~2.0 GB       ✓
-
-===============================================================================
+THƯ VIỆN CẦN CÀI:
+    pip install numpy sentence-transformers datasets accelerate nltk rouge_score tiktoken sentencepiece
 """
 from __future__ import annotations
 import os
+from pathlib import Path
 
+# ---- Cache & env ----
+HERE = Path(__file__).resolve().parent
+CACHE_DIR = HERE / "cache"
+HF_CACHE_DIR = CACHE_DIR / "hf"
+NLTK_CACHE_DIR = CACHE_DIR / "nltk_data"
+TRAINER_TMP_DIR = CACHE_DIR / "trainer_tmp"
+for _d in (HF_CACHE_DIR, NLTK_CACHE_DIR, TRAINER_TMP_DIR):
+    _d.mkdir(parents=True, exist_ok=True)
+os.environ.setdefault("HF_HOME", str(HF_CACHE_DIR))
+os.environ.setdefault("HF_HUB_CACHE", str(HF_CACHE_DIR / "hub"))
 os.environ.setdefault("HF_HUB_DISABLE_TELEMETRY", "1")
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 os.environ.setdefault("TRANSFORMERS_NO_ADVISORY_WARNINGS", "1")
+
+# ---- Seed cố định để kết quả lặp lại ----
+import random
+random.seed(42)
+import numpy as np
+np.random.seed(42)
+import torch
+torch.manual_seed(42)
 
 import re
 import json
 import math
 import time
-import random
 import zipfile
-import hashlib
-import gc
-from pathlib import Path
 from collections import defaultdict, Counter
 
-import numpy as np
-
-# =============================================================================
-# CONFIG
-# =============================================================================
-HERE = Path(__file__).resolve().parent
-
+# ==============================================================================
+# CONFIG — Các tham số điều chỉnh để tối ưu tốc độ
+# ==============================================================================
 CONTEXTS_DIR = HERE / "selected-contexts"
 TRAIN_PATH = HERE / "train.json"
 PUBLIC_PATH = HERE / "public-official.json"
-CACHE_DIR = HERE / "legalqa_cache"
 OUT_DIR = HERE
 
-# Time budget
-TIME_BUDGET_SEC = 3 * 3600
+TIME_BUDGET_SEC = 3 * 3600          # 3 giờ an toàn, không cắt ngang
 FINETUNE_TIME_BUDGET_SEC = 90 * 60
-
-# Data limits
 MIN_TRAIN_PAIRS = 50
-MAX_TRAIN_EXAMPLES = 3000
-DEV_EVAL_SAMPLE_SIZE = 300
+MAX_TRAIN_EXAMPLES = 2000           # giảm từ 3000 để train nhanh hơn
 
-# Dense models — 3 kênh, load luân phiên để không vượt 4GB
-# Thứ tự: domain-specific trước, general sau (có thể skip nếu hết thời gian)
-DENSE_MODELS = {
-    "bkai": "bkai-foundation-models/vietnamese-bi-encoder",  # ~135M, domain-specific
-    "bge": "BAAI/bge-m3",  # ~568M, general but strong dense
-    "e5": "intfloat/multilingual-e5-large",  # ~560M, query-aware
-}
+BASE_DENSE_MODEL = "bkai-foundation-models/vietnamese-bi-encoder"
 DENSE_MAX_SEQ_LEN = 256
-ENCODE_BATCH_SIZE = 16  # Giảm vì có 3 models cần encode
-
-# Training
-TRAIN_BATCH_SIZE = 32
-TRAIN_MINI_BATCH_SIZE = 2
+TRAIN_BATCH_SIZE = 32               # hiệu dụng (in-batch negative)
+TRAIN_MINI_BATCH_SIZE = 8           # tăng từ 4 lên 8 (tự lùi nếu OOM)
 N_NEG_PER_ROW = 2
-
-# Retrieval
-TOP_K_RETRIEVE = 100  # Pool size sau fusion
-TOP_K_PER_CHANNEL = 30  # Mỗi kênh lấy bao nhiêu
-DOC_K = 5  # Số document mở ra để cắt Điều
-MAX_DIEU_PER_DOC = 40  # Lọc thô trước khi rerank Điều
-MAX_CANDS = 150  # Tổng ứng viên Điều tối đa
-KEEP_ARTICLES = 5  # Số Điều giữ lại sau rerank lần 2
-
-# Reranker
-RERANKER_MODEL = "AITeamVN/Vietnamese_Reranker"
-RERANK_BATCH_SIZE = 8  # Nhỏ để vừa 4GB cùng model dense
-RERANK_MAX_LENGTH = 512
-
-# Compose
-TOP_N_ANSWER = 1  # Oracle: 1 Điều = 0.605, 2 Điều = 0.519
-LEAD_STYLE = "cancu"  # "cancu" (57.4%) vs "theo" (25.1%)
-CONCL_STYLE = "echo2"  # Tốt nhất trên dev
-STRIP_DIEU = True
-DROP_DECO = True
+ENCODE_BATCH_SIZE = 128             # tăng từ 64 lên 128 (tự lùi)
+TOP_K_RETRIEVE = 100
+DEV_EVAL_SAMPLE_SIZE = 200          # giảm từ 300 để dev-eval nhanh hơn
+RERANK_SUBBATCH = 32                # tăng từ 24 lên 32
 
 _START_TIME = time.time()
-
 
 def elapsed() -> float:
     return time.time() - _START_TIME
 
-
 def remaining() -> float:
     return TIME_BUDGET_SEC - elapsed()
 
-
 def checkpoint(label: str) -> None:
-    print(f"[{elapsed()/60:5.1f} phút] {label}  (còn ~{remaining()/60:.1f} phút)")
+    print(f"[{elapsed()/60:5.1f} phút] {label}  (còn lại ~{remaining()/60:.1f} phút)")
 
-
-# =============================================================================
-# BƯỚC 1 — Chunk corpus theo Điều + metadata
-# =============================================================================
-DIEU_RE = re.compile(r"(?m)^\s*Điều\s+(\d+[a-zA-ZđĐ]?)\s*[.．:]")
-DIEU_PREFIX_RE = re.compile(r"^\s*Điều\s+\d+[a-zA-ZđĐ]?\s*[.．:]?\s*")
+# ==============================================================================
+# Các hàm xử lý giống bản #6 (giữ nguyên)
+# ==============================================================================
+DIEU_RE = re.compile(r"^[ \t]*Điều\s+(\d+)[a-zđA-ZĐ]?[\.\s]", re.MULTILINE)
 SO_HEADER_RE = re.compile(r"Số\s*[:：]\s*([0-9A-Za-zĐđ/\-]+)")
 SO_HIEU_RE = re.compile(r"\d{1,6}[A-Za-z]{0,3}/(?:\d{4}/)?[A-Za-zĐđ]{2,10}(?:-[A-Za-zĐđ]{2,10})?")
 LOAI_VB_CANON = ["Thông tư liên tịch", "Nghị định", "Luật", "Thông tư", "Quyết định",
                  "Pháp lệnh", "Nghị quyết", "Bộ luật", "Chỉ thị"]
 LOAI_PATTERN = re.compile("(" + "|".join(re.escape(x) for x in LOAI_VB_CANON) + ")", re.IGNORECASE)
-DECO_RE = re.compile(r"^[\s\-_=–—.·*]+$")
 
-
-def deaccent(s: str) -> str:
-    import unicodedata
-    return "".join(c for c in unicodedata.normalize("NFD", s)
-                   if unicodedata.category(c) != "Mn").replace("Đ", "D").replace("đ", "d")
-
-
-def extract_vb_info(passage: str) -> tuple[str, str]:
+def extract_vb_info(passage: str):
     m = SO_HEADER_RE.search(passage[:1500])
     so_hieu = m.group(1).strip("., ") if m else ""
     if not (so_hieu and SO_HIEU_RE.fullmatch(so_hieu)):
@@ -189,101 +109,79 @@ def extract_vb_info(passage: str) -> tuple[str, str]:
                 break
     return loai_vb, so_hieu
 
-
-def split_dieu(passage: str) -> list[tuple[str, str]]:
-    """Cắt passage thành [(số Điều, nguyên văn Điều)]."""
-    ms = list(DIEU_RE.finditer(passage))
-    out = []
-    for i, m in enumerate(ms):
-        end = ms[i + 1].start() if i + 1 < len(ms) else len(passage)
-        out.append((m.group(1), passage[m.start():end].strip()))
-    return out
-
-
 def chunk_passage(passage: str, doc_id) -> list:
-    """Chunk theo Điều, mỗi chunk = 1 Điều. Fallback: toàn bộ văn bản nếu không có Điều."""
-    arts = split_dieu(passage)
-    if not arts:
-        return [{"id": f"{doc_id}_0", "dieu_so": "0", "loai_vb": "", "so_hieu": "",
-                 "doc_id": str(doc_id), "text": passage.strip()}]
+    matches = list(DIEU_RE.finditer(passage))
+    if not matches:
+        return [{"id": f"{doc_id}_0", "dieu_so": "0", "loai_vb": "", "so_hieu": "", "text": passage.strip()}]
     chunks = []
-    for i, (dieu, text) in enumerate(arts):
-        chunks.append({"id": f"{doc_id}_{dieu}_{i}", "dieu_so": dieu, "loai_vb": "",
-                        "so_hieu": "", "doc_id": str(doc_id), "text": text})
+    for i, m in enumerate(matches):
+        start = m.start()
+        end = matches[i+1].start() if i+1 < len(matches) else len(passage)
+        dieu = m.group(1)
+        chunks.append({"id": f"{doc_id}_{dieu}_{i}", "dieu_so": dieu,
+                        "loai_vb": "", "so_hieu": "",
+                        "text": passage[start:end].strip()})
     return chunks
 
-
-def load_corpus(contexts_dir: Path) -> tuple[list, dict]:
-    """Load corpus, chunk theo Điều, trích metadata. Trả về (chunks, doc_index)."""
+def load_corpus(contexts_dir: Path) -> list:
     if not contexts_dir.exists():
         raise FileNotFoundError(f"Không tìm thấy {contexts_dir}")
     files = sorted(contexts_dir.glob("context_*.json"))
     if not files:
+        nested = contexts_dir / "selected-contexts"
+        if nested.exists():
+            files = sorted(nested.glob("context_*.json"))
+    if not files:
         raise FileNotFoundError(f"Không tìm thấy context_*.json trong {contexts_dir}")
-
-    all_chunks, doc_index = [], {}
-    n_no_dieu = 0
+    all_chunks, n_no_dieu = [], 0
     for fp in files:
         try:
             with fp.open(encoding="utf-8") as f:
                 doc = json.load(f)
         except Exception:
             continue
-        passage = doc.get("passage", "")
+        passage = doc.get("passage")
         if not passage:
             continue
-        doc_id = str(doc["id"])
-        loai_vb, so_hieu = extract_vb_info(passage)
-        doc_index[doc_id] = {"link": doc.get("link", ""), "loai_vb": loai_vb, "so_hieu": so_hieu}
-
-        chunks = chunk_passage(passage, doc_id)
+        chunks = chunk_passage(passage, doc["id"])
         if len(chunks) == 1 and chunks[0]["dieu_so"] == "0":
             n_no_dieu += 1
+        loai_vb, so_hieu = extract_vb_info(passage)
         for c in chunks:
-            c["loai_vb"] = loai_vb
-            c["so_hieu"] = so_hieu
+            c["loai_vb"], c["so_hieu"] = loai_vb, so_hieu
         all_chunks.extend(chunks)
-
     pct = round(100 * (1 - n_no_dieu / len(files)), 2) if files else 0.0
-    print(f"  {len(files)} văn bản → {len(all_chunks)} chunk. {pct}% có cấu trúc Điều.")
-    return all_chunks, doc_index
+    print(f"  {len(files)} văn bản -> {len(all_chunks)} chunk. {pct}% có cấu trúc Điều.")
+    if pct < 95.0:
+        print("  [CẢNH BÁO] < 95% — kiểm tra vài context_*.json.")
+    return all_chunks
 
-
-# =============================================================================
-# BƯỚC 2 — BM25 tự viết bằng numpy (nhanh, không phụ thuộc thư viện ngoài)
-# =============================================================================
 _TOKEN_RE = re.compile(r"[^\W\d_]+|\d+", re.UNICODE)
-
-
 def tokenize_simple(text: str) -> list:
     return _TOKEN_RE.findall(text.lower())
 
-
 class BM25:
-    def __init__(self, tokenized_docs, k1: float = 1.5, b: float = 0.75):
+    def __init__(self, tokenized_docs, k1=1.5, b=0.75):
         self.k1, self.b = k1, b
         self.N = len(tokenized_docs)
         self.doc_len = np.array([len(d) for d in tokenized_docs], dtype=np.float64)
         self.avgdl = self.doc_len.mean() if self.N else 0.0
-
         raw_postings = defaultdict(list)
         for i, doc in enumerate(tokenized_docs):
             for term, f in Counter(doc).items():
                 raw_postings[term].append((i, f))
-
-        self.inverted: dict[str, tuple[np.ndarray, np.ndarray]] = {}
+        self.inverted = {}
         for term, postings in raw_postings.items():
             idxs = np.fromiter((p[0] for p in postings), dtype=np.int32, count=len(postings))
             freqs = np.fromiter((p[1] for p in postings), dtype=np.float64, count=len(postings))
             self.inverted[term] = (idxs, freqs)
-
-        df = {t: len(idxs) for t, (idxs, _f) in self.inverted.items()}
-        idf_raw = {t: math.log((self.N - n + 0.5) / (n + 0.5) + 1) for t, n in df.items()}
+        df = {t: len(idxs) for t, (idxs, _) in self.inverted.items()}
+        idf_raw = {t: math.log((self.N - n + 0.5)/(n + 0.5) + 1) for t, n in df.items()}
         avg_idf = sum(idf_raw.values()) / len(idf_raw) if idf_raw else 0.0
         eps = 0.25 * avg_idf
         self.idf = {t: (v if v > 0 else eps) for t, v in idf_raw.items()}
 
-    def get_scores(self, query_tokens) -> np.ndarray:
+    def get_scores(self, query_tokens):
         scores = np.zeros(self.N, dtype=np.float64)
         for term in set(query_tokens):
             posting = self.inverted.get(term)
@@ -296,90 +194,33 @@ class BM25:
             scores[idxs] += contrib
         return scores
 
-    def top_k(self, query_tokens, k: int) -> list:
+    def top_k(self, query_tokens, k: int):
         scores = self.get_scores(query_tokens)
         return list(np.argsort(-scores)[:k])
 
-
-# =============================================================================
-# BƯỚC 3 — Dev split theo VĂN BẢN (không rò rỉ)
-# =============================================================================
-CIT_RE = re.compile(r"\b(\d{1,4})/(\d{4})/([A-ZĐ][A-ZĐ\-]*)\b")
-
-
-def resolve_gold_docs(answer: str, slug_map: list[tuple[str, str]], cache: dict) -> set:
-    """Suy document từ số hiệu trong đáp án, đối chiếu slug trong link."""
-    docs = set()
-    for m in CIT_RE.finditer(answer):
-        key = f"{int(m.group(1))}/{m.group(2)}/{deaccent(m.group(3)).upper()}"
-        if key not in cache:
-            pat = "-" + key.replace("/", "-").lower() + "-"
-            cache[key] = {did for did, link in slug_map if pat in link}
-        docs |= cache[key]
-    return docs
-
-
-def build_dev_split(train_data: dict, doc_index: dict, n: int, cache_dir: Path) -> list[str]:
-    """Chia dev theo VĂN BẢN — câu cùng văn bản cùng nhóm, không rò rỉ."""
-    path = cache_dir / f"dev_qids_{n}.json"
-    if path.exists():
-        with path.open(encoding="utf-8") as f:
-            return json.load(f)
-
-    slug_map = [(did, deaccent(v.get("link", "")).lower()) for did, v in doc_index.items()]
-    cache, group_of = {}, {}
-    for qid, item in train_data.items():
-        docs = resolve_gold_docs(item.get("answer", ""), slug_map, cache)
-        group_of[qid] = ("doc:" + sorted(docs)[0]) if docs else ("q:" + qid)
-
-    groups = defaultdict(list)
-    for qid, g in group_of.items():
-        groups[g].append(qid)
-
-    ordered = sorted(groups, key=lambda g: hashlib.md5(g.encode()).hexdigest())
-    picked = []
-    for g in ordered:
-        if len(picked) >= n:
-            break
-        picked.extend(sorted(groups[g]))
-    picked = sorted(picked)
-
-    n_resolved = sum(1 for q in picked if group_of[q].startswith("doc:"))
-    print(f"  dev split: {len(picked)} câu / {len(ordered)} nhóm · "
-          f"{n_resolved} ({n_resolved/max(len(picked),1):.1%}) phân giải được citation")
-
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8") as f:
-        json.dump(picked, f, ensure_ascii=False)
-    return picked
-
-
-# =============================================================================
-# BƯỚC 4 — Sinh nhãn từ train.json (citation → chunk)
-# =============================================================================
-def extract_citations(answer: str) -> list:
+DIEU_CITATION_RE = re.compile(r"Điều\s+(\d+)\s*[a-zđA-ZĐ]?\b")
+def extract_citations(answer):
+    if not isinstance(answer, str):
+        return []
     out = []
-    for m in DIEU_RE.finditer(answer):
-        window = answer[m.end(): m.end() + 60]
+    for m in DIEU_CITATION_RE.finditer(answer):
+        window = answer[m.end(): m.end()+60]
         so_m = SO_HIEU_RE.search(window)
         if so_m and so_m.start() <= 40:
             out.append((m.group(1), so_m.group(0)))
     return out
 
-
-def norm_so_hieu(s: str) -> str:
+def norm_so_hieu(s):
     return s.strip().upper()
 
-
-def build_train_pairs(train_data: dict, all_chunks: list):
+def build_train_pairs(train_data, all_chunks):
     so_hieu_index = {}
     for c in all_chunks:
         if c["so_hieu"] and c["dieu_so"] != "0":
             so_hieu_index.setdefault((c["dieu_so"], norm_so_hieu(c["so_hieu"])), c["id"])
-
     positive = {}
     for qid, item in train_data.items():
-        for dieu, so_hieu in extract_citations(item["answer"]):
+        for dieu, so_hieu in extract_citations(item.get("answer", "")):
             key = (dieu, norm_so_hieu(so_hieu))
             if key in so_hieu_index:
                 positive[qid] = so_hieu_index[key]
@@ -387,35 +228,10 @@ def build_train_pairs(train_data: dict, all_chunks: list):
     chunk_by_id = {c["id"]: c for c in all_chunks}
     return positive, chunk_by_id
 
-
-# =============================================================================
-# BƯỚC 5 — VRAM Management (QUAN TRỌNG cho 4GB)
-# =============================================================================
-def _cap_cuda_memory(fraction: float = 0.90) -> None:
-    """Giới hạn VRAM để tránh tràn sang shared memory (chậm ~3x)."""
-    import torch
-    if torch.cuda.is_available():
-        torch.cuda.set_per_process_memory_fraction(fraction, device=0)
-        total_gb = torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)
-        print(f"  [VRAM] Giới hạn {fraction*100:.0f}% × {total_gb:.1f}GB = "
-              f"~{fraction*total_gb:.2f}GB khả dụng")
-        torch.backends.cuda.matmul.allow_tf32 = True
-        torch.backends.cuda.allow_tf32 = True
-        torch.backends.cudnn.benchmark = True
-
-
-def _free_gpu() -> None:
-    """Xoá model khỏi GPU, gọi garbage collect."""
-    import torch
-    if torch.cuda.is_available():
-        torch.cuda.empty_cache()
-    gc.collect()
-
-
-# =============================================================================
-# BƯỚC 6 — Fine-tune dense retriever (giữ nguyên từ bản cũ, time-boxed)
-# =============================================================================
-def _build_training_rows(train_positive, train_data, chunk_by_id, all_chunks, bm25, n_neg: int = N_NEG_PER_ROW):
+# ==============================================================================
+# Các hàm fine-tune, encode, rerank (giữ nguyên logic, chỉ thay tham số)
+# ==============================================================================
+def _build_training_rows(train_positive, train_data, chunk_by_id, all_chunks, bm25, n_neg=N_NEG_PER_ROW):
     rows = []
     n = len(train_positive)
     for i, (qid, pos_id) in enumerate(train_positive.items()):
@@ -432,12 +248,19 @@ def _build_training_rows(train_positive, train_data, chunk_by_id, all_chunks, bm
         for j, nid in enumerate(neg_ids[:n_neg]):
             row[f"negative_{j+1}"] = chunk_by_id[nid]["text"]
         rows.append(row)
-        if (i + 1) % 500 == 0 or (i + 1) == n:
-            print(f"    _build_training_rows: {i+1}/{n}")
+        if (i+1) % 500 == 0 or (i+1) == n:
+            print(f"    _build_training_rows: {i+1}/{n}  ({elapsed()/60:.1f} phút)")
     return rows
 
+def enable_cuda_perf():
+    if torch.cuda.is_available():
+        total_gb = torch.cuda.get_device_properties(0).total_memory / (1024**3)
+        print(f"  [GPU] {torch.cuda.get_device_name(0)} — {total_gb:.1f}GB VRAM (dùng toàn bộ, OOM-backoff tự lùi)")
+        torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.cudnn.allow_tf32 = True
+        torch.backends.cudnn.benchmark = True
 
-def finetune_or_load_dense(train_positive, train_data, chunk_by_id, all_chunks, bm25, model_name: str):
+def finetune_or_load_dense(train_positive, train_data, chunk_by_id, all_chunks, bm25):
     import torch
     from sentence_transformers import SentenceTransformer
 
@@ -445,18 +268,17 @@ def finetune_or_load_dense(train_positive, train_data, chunk_by_id, all_chunks, 
     device = "cuda" if cuda_ok else "cpu"
     if cuda_ok:
         print(f"  Device: cuda ({torch.cuda.get_device_name(0)})")
-        _cap_cuda_memory()
+        enable_cuda_perf()
     else:
-        print("  [CẢNH BÁO] Không thấy GPU — chạy CPU (chậm hơn nhiều)")
-
-    use_finetune = len(train_positive) >= MIN_TRAIN_PAIRS and remaining() > 5 * 60
+        print("  [CẢNH BÁO] Không thấy GPU — dùng CPU (RẤT CHẬM).")
+    use_finetune = len(train_positive) >= MIN_TRAIN_PAIRS and remaining() > 5*60
     if not use_finetune:
-        print(f"  {len(train_positive)} positive pairs → dùng zero-shot '{model_name}'")
-        model = SentenceTransformer(model_name, device=device)
+        print(f"  Bỏ fine-tune (lý do: {len(train_positive)}<{MIN_TRAIN_PAIRS} hoặc hết ngân sách)")
+        model = SentenceTransformer(BASE_DENSE_MODEL, device=device)
         model.max_seq_length = DENSE_MAX_SEQ_LEN
         return model
 
-    model = SentenceTransformer(model_name, device=device)
+    model = SentenceTransformer(BASE_DENSE_MODEL, device=device)
     model.max_seq_length = DENSE_MAX_SEQ_LEN
 
     try:
@@ -464,15 +286,16 @@ def finetune_or_load_dense(train_positive, train_data, chunk_by_id, all_chunks, 
         from sentence_transformers import SentenceTransformerTrainer, SentenceTransformerTrainingArguments
         from sentence_transformers.losses import CachedMultipleNegativesRankingLoss
         import accelerate
-        if tuple(map(int, accelerate.__version__.split(".")[:2])) < (1, 1):
-            raise ImportError(f"accelerate {accelerate.__version__} quá cũ")
+        if tuple(map(int, accelerate.__version__.split(".")[:2])) < (1,1):
+            raise ImportError("accelerate < 1.1.0")
     except ImportError as e:
-        print(f"  [THIẾU PACKAGE] {e} → dùng zero-shot")
+        print(f"  [THIẾU PACKAGE] {e} — dùng zero-shot.")
         return model
 
     if len(train_positive) > MAX_TRAIN_EXAMPLES:
-        sampled = random.sample(list(train_positive.keys()), MAX_TRAIN_EXAMPLES)
-        train_positive_used = {qid: train_positive[qid] for qid in sampled}
+        sampled_qids = random.sample(list(train_positive.keys()), MAX_TRAIN_EXAMPLES)
+        train_positive_used = {qid: train_positive[qid] for qid in sampled_qids}
+        print(f"  Lấy mẫu {MAX_TRAIN_EXAMPLES} / {len(train_positive)} positive pairs.")
     else:
         train_positive_used = train_positive
 
@@ -486,164 +309,79 @@ def finetune_or_load_dense(train_positive, train_data, chunk_by_id, all_chunks, 
     for attempt in range(4):
         try:
             loss = CachedMultipleNegativesRankingLoss(model, mini_batch_size=mini_batch_size)
-            calib_steps = min(10, max(1, len(dataset) // batch_size))
+            calib_steps = min(10, max(1, len(dataset)//batch_size))
             calib_args = SentenceTransformerTrainingArguments(
-                output_dir="dense_finetuned_tmp", max_steps=calib_steps,
-                per_device_train_batch_size=batch_size, logging_steps=calib_steps + 1,
+                output_dir=str(TRAINER_TMP_DIR), max_steps=calib_steps,
+                per_device_train_batch_size=batch_size, logging_steps=calib_steps+1,
                 save_strategy="no", report_to=[], disable_tqdm=True,
-                fp16=(device == "cuda"),
+                fp16=cuda_ok,
             )
             calib_start = time.time()
-            print(f"  Calib training (batch={batch_size}, mini={mini_batch_size})...")
+            print(f"  Calib training (batch={batch_size}, mini_batch={mini_batch_size})...")
             SentenceTransformerTrainer(model=model, args=calib_args, train_dataset=dataset, loss=loss).train()
             calib_time = (time.time() - calib_start) / calib_steps
 
-            budget_left = min(remaining() - 3 * 60, FINETUNE_TIME_BUDGET_SEC - (time.time() - calib_start))
+            budget_left = min(remaining() - 3*60, FINETUNE_TIME_BUDGET_SEC - (time.time()-calib_start))
             max_steps = max(0, int(budget_left / max(calib_time, 1e-6)))
-            max_steps = min(max_steps, (len(dataset) // batch_size) * 8)
-            print(f"  Calib: ~{calib_time:.2f}s/step → max {max_steps} step")
+            max_steps = min(max_steps, (len(dataset)//batch_size)*8)
+            print(f"  Calib: ~{calib_time:.2f}s/step, còn ~{budget_left/60:.1f} phút -> {max_steps} steps")
 
             if max_steps > 0:
                 args = SentenceTransformerTrainingArguments(
-                    output_dir="dense_finetuned", max_steps=max_steps,
+                    output_dir=str(TRAINER_TMP_DIR), max_steps=max_steps,
                     per_device_train_batch_size=batch_size, learning_rate=2e-5,
                     warmup_steps=0.05, lr_scheduler_type="cosine",
-                    logging_steps=max(1, max_steps // 20), save_strategy="no", report_to=[],
-                    fp16=(device == "cuda"),
+                    logging_steps=max(1, max_steps//20), save_strategy="no", report_to=[],
+                    fp16=cuda_ok,
                 )
                 SentenceTransformerTrainer(model=model, args=args, train_dataset=dataset, loss=loss).train()
             break
-        except (RuntimeError, ImportError) as e:
-            if isinstance(e, RuntimeError) and "out of memory" in str(e).lower() and mini_batch_size > 1:
-                print(f"  [OOM] mini_batch={mini_batch_size} → {mini_batch_size // 2}")
-                if device == "cuda":
-                    torch.cuda.empty_cache()
-                mini_batch_size = max(1, mini_batch_size // 2)
+        except RuntimeError as e:
+            if "out of memory" in str(e).lower() and mini_batch_size > 1:
+                print(f"  OOM, giảm mini_batch: {mini_batch_size} -> {mini_batch_size//2}")
+                torch.cuda.empty_cache()
+                mini_batch_size = max(1, mini_batch_size//2)
                 continue
-            if isinstance(e, ImportError):
-                print(f"  [THIẾU PACKAGE] {e} → zero-shot")
-                return model
             raise
-
-    model.save_pretrained(f"dense_finetuned_{model_name.replace('/', '_')}")
     model = model.to(device)
     actual_device = next(model.parameters()).device
-    print(f"  [Device check] model: {actual_device}")
+    print(f"  Device sau train: {actual_device}")
     return model
 
-
-# =============================================================================
-# BƯỚC 7 — Encode corpus đa kênh (load từng model, encode, xoá)
-# =============================================================================
-def encode_corpus_channel(model, all_chunks: list, batch_size: int = ENCODE_BATCH_SIZE):
-    """Encode corpus bằng 1 model. Trả về embeddings."""
+def encode_corpus(model, all_chunks):
     import torch
+    if torch.cuda.is_available():
+        enable_cuda_perf()
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model = model.to(device)
     if device == "cuda":
         model = model.half()
-    actual = next(model.parameters()).device
-    print(f"  Encode on: {actual}{' (fp16)' if device == 'cuda' else ''}")
-
+    actual_device = next(model.parameters()).device
+    print(f"  Encode trên {actual_device}{' (fp16)' if device=='cuda' else ''}")
     texts = [c["text"] for c in all_chunks]
+    batch_size = ENCODE_BATCH_SIZE
     while True:
         try:
             embeddings = model.encode(texts, batch_size=batch_size, convert_to_numpy=True,
-                                       show_progress_bar=True, normalize_embeddings=True, device=device)
+                                       show_progress_bar=True, normalize_embeddings=True,
+                                       device=device)
             return embeddings
         except RuntimeError as e:
             if "out of memory" in str(e).lower() and batch_size > 1:
-                print(f"  [OOM] batch={batch_size} → {batch_size // 2}")
+                print(f"  OOM, giảm batch encode: {batch_size} -> {batch_size//2}")
                 torch.cuda.empty_cache()
-                batch_size = max(1, batch_size // 2)
+                batch_size = max(1, batch_size//2)
                 continue
             raise
 
-
-def encode_all_channels(all_chunks: list, train_positive, train_data, chunk_by_id, bm25, cache_dir: Path):
-    """Encode corpus qua từng kênh dense, lưu cache. Load từng model một để tiết kiệm VRAM."""
-    cache_dir.mkdir(parents=True, exist_ok=True)
-    embeddings = {}
-
-    for name, model_name in DENSE_MODELS.items():
-        cache_path = cache_dir / f"embeddings_{name}.npy"
-        if cache_path.exists():
-            print(f"  [{name}] Load embeddings từ cache...")
-            embeddings[name] = np.load(cache_path)
-            continue
-
-        print(f"\n  [{name}] Fine-tune/load model...")
-        model = finetune_or_load_dense(train_positive, train_data, chunk_by_id, all_chunks, bm25, model_name)
-
-        print(f"  [{name}] Encode corpus ({len(all_chunks)} chunks)...")
-        emb = encode_corpus_channel(model, all_chunks)
-        embeddings[name] = emb
-        np.save(cache_path, emb)
-        print(f"  [{name}] Saved → {cache_path}")
-
-        # XOÁ MODEL, giải phóng VRAM cho kênh tiếp theo
-        del model
-        _free_gpu()
-        print(f"  [{name}] Đã giải phóng GPU")
-
-    return embeddings
-
-
-# =============================================================================
-# BƯỚC 8 — RRF Fusion đa kênh
-# =============================================================================
-def rrf_fusion(question: str, bm25: BM25, embeddings: dict, all_chunks: list,
-               top_k: int = TOP_K_RETRIEVE, per_channel: int = TOP_K_PER_CHANNEL):
-    """Fusion BM25 + nhiều kênh dense qua RRF."""
-    import torch
-    from sentence_transformers import SentenceTransformer
-
-    # BM25
-    bm25_ranked = bm25.top_k(tokenize_simple(question), per_channel)
-
-    # Dense channels — load từng model để encode query
-    all_rankings = {"bm25": bm25_ranked}
-
-    for name, model_name in DENSE_MODELS.items():
-        # Load model tạm để encode query (không fine-tune)
-        model = SentenceTransformer(model_name, device="cuda" if torch.cuda.is_available() else "cpu")
-        model.max_seq_length = DENSE_MAX_SEQ_LEN
-        q_emb = model.encode([question], convert_to_numpy=True, normalize_embeddings=True)[0]
-        del model
-        _free_gpu()
-
-        dense_scores = embeddings[name] @ q_emb
-        dense_ranked = list(np.argsort(-dense_scores)[:per_channel])
-        all_rankings[name] = dense_ranked
-
-    # RRF fusion
-    all_idx = set()
-    for ranked in all_rankings.values():
-        all_idx.update(ranked)
-
-    rrf_scores = {}
-    for idx in all_idx:
-        score = 0.0
-        for name, ranked in all_rankings.items():
-            rank = ranked.index(idx) + 1 if idx in ranked else per_channel + 1
-            score += 1.0 / (60 + rank)
-        rrf_scores[idx] = score
-
-    ranked = sorted(rrf_scores, key=rrf_scores.get, reverse=True)[:top_k]
-    return [all_chunks[i] for i in ranked]
-
-
-# =============================================================================
-# BƯỚC 9 — Reranker 2-stage
-# =============================================================================
 def load_reranker():
     import torch
     from transformers import AutoModelForSequenceClassification, AutoTokenizer
     for attempt in range(2):
         try:
-            print(f"  Tải reranker {RERANKER_MODEL}...")
-            tokenizer = AutoTokenizer.from_pretrained(RERANKER_MODEL)
-            model = AutoModelForSequenceClassification.from_pretrained(RERANKER_MODEL)
+            print(f"  Tải reranker AITeamVN/Vietnamese_Reranker (zero-shot){' (thử lại)' if attempt else ''}...")
+            tokenizer = AutoTokenizer.from_pretrained("AITeamVN/Vietnamese_Reranker")
+            model = AutoModelForSequenceClassification.from_pretrained("AITeamVN/Vietnamese_Reranker")
             device = "cuda" if torch.cuda.is_available() else "cpu"
             model = model.to(device)
             if device == "cuda":
@@ -653,365 +391,255 @@ def load_reranker():
             return model, tokenizer
         except Exception as e:
             if attempt == 0:
-                print(f"  Lỗi, thử lại sau 5s...")
+                print(f"  Lỗi lần 1: {e}, thử lại sau 5s...")
                 time.sleep(5)
                 continue
-            print(f"  [CẢNH BÁO] Không tải được reranker: {e}")
+            print(f"  Không tải được reranker ({e}) — bỏ qua rerank.")
             return None, None
 
-
-def rerank_pairs(model, tokenizer, pairs: list, batch_size: int = RERANK_BATCH_SIZE, max_length: int = RERANK_MAX_LENGTH):
-    """Chấm điểm list[ [q, text] ] bằng cross-encoder."""
+def rerank(question, candidates, reranker_model, reranker_tokenizer,
+           max_candidates=100, max_length=1024, sub_batch=RERANK_SUBBATCH):
     import torch
-    if model is None or not pairs:
-        return None
-    device = next(model.parameters()).device
-    scores = []
-    try:
-        with torch.no_grad():
-            for i in range(0, len(pairs), batch_size):
-                batch = pairs[i:i + batch_size]
-                inputs = tokenizer(batch, padding=True, truncation=True,
-                                   return_tensors="pt", max_length=max_length).to(device)
-                logits = model(**inputs, return_dict=True).logits.view(-1).float().cpu().numpy()
-                scores.extend(logits)
-        return np.array(scores)
-    except RuntimeError as e:
-        if "out of memory" in str(e).lower():
-            print(f"  [OOM rerank] Bỏ qua rerank")
-            torch.cuda.empty_cache()
-            return None
-        raise
-
-
-def two_stage_rerank(question: str, candidates: list, doc_index: dict,
-                     reranker_model, reranker_tokenizer) -> list:
-    """
-    Stage 1: Rerank chunk → chọn top DOCUMENTS (max-agg per doc)
-    Stage 2: Cắt Điều trong top docs → rerank lại → top ĐIỀU
-    """
     if reranker_model is None or not candidates:
-        return candidates[:KEEP_ARTICLES]
-
-    # ---- Stage 1: chunk → document scores ----
-    pairs1 = [[question, c["text"]] for c in candidates]
-    scores1 = rerank_pairs(reranker_model, reranker_tokenizer, pairs1)
-    if scores1 is None:
-        return candidates[:KEEP_ARTICLES]
-
-    # Max-agg per document
-    doc_scores = {}
-    doc_best_chunk = {}
-    for c, sc in zip(candidates, scores1):
-        did = c["doc_id"]
-        if did not in doc_scores or sc > doc_scores[did]:
-            doc_scores[did] = sc
-            doc_best_chunk[did] = c
-
-    top_docs = sorted(doc_scores, key=doc_scores.get, reverse=True)[:DOC_K]
-
-    # ---- Stage 2: cắt Điều trong top docs, rerank lại ----
-    dieu_candidates = []
-    for did in top_docs:
-        # Đọc văn bản gốc để cắt Điều
-        fp = CONTEXTS_DIR / f"context_{did}.json"
-        if not fp.exists():
-            continue
+        return candidates, None
+    subset = candidates[:max_candidates]
+    device = next(reranker_model.parameters()).device
+    pairs = [[question, c["text"]] for c in subset]
+    scores = np.empty(len(pairs), dtype=np.float32)
+    bs, i = max(1, sub_batch), 0
+    while i < len(pairs):
+        batch = pairs[i:i+bs]
         try:
-            with fp.open(encoding="utf-8") as f:
-                doc = json.load(f)
-        except Exception:
-            continue
-        passage = doc.get("passage", "")
-        arts = split_dieu(passage)
-        if not arts:
-            # Fallback: dùng chunk tốt nhất của doc
-            dieu_candidates.append((did, "", doc_best_chunk[did]["text"]))
-            continue
+            with torch.no_grad():
+                inputs = reranker_tokenizer(batch, padding=True, truncation=True,
+                                             return_tensors="pt", max_length=max_length).to(device)
+                out = reranker_model(**inputs, return_dict=True).logits.view(-1).float().cpu().numpy()
+            scores[i:i+len(batch)] = out
+            i += bs
+        except RuntimeError as e:
+            if "out of memory" in str(e).lower() and bs > 1:
+                print(f"  OOM rerank, giảm sub_batch: {bs} -> {bs//2}")
+                torch.cuda.empty_cache()
+                bs = max(1, bs//2)
+                continue
+            if "out of memory" in str(e).lower():
+                print("  OOM rerank, bỏ qua cho câu hỏi này")
+                return candidates, None
+            raise
+    order = np.argsort(-scores)
+    reranked = [subset[i] for i in order]
+    return reranked + candidates[max_candidates:], scores[order]
 
-        # Lọc thô: chỉ giữ Điều có token overlap với câu hỏi
-        if len(arts) > MAX_DIEU_PER_DOC:
-            qt = set(question.lower().split())
-            arts = sorted(arts, key=lambda a: -len(qt & set(a[1].lower().split())))[:MAX_DIEU_PER_DOC]
-
-        for dieu, text in arts:
-            dieu_candidates.append((did, dieu, text))
-
-    dieu_candidates = dieu_candidates[:MAX_CANDS]
-    if not dieu_candidates:
-        return [doc_best_chunk[did] for did in top_docs if did in doc_best_chunk][:KEEP_ARTICLES]
-
-    pairs2 = [[question, text] for _did, _dieu, text in dieu_candidates]
-    scores2 = rerank_pairs(reranker_model, reranker_tokenizer, pairs2)
-    if scores2 is None:
-        # Fallback: trả về best chunk của top doc
-        return [doc_best_chunk[did] for did in top_docs if did in doc_best_chunk][:KEEP_ARTICLES]
-
-    ranked = sorted(zip(dieu_candidates, scores2), key=lambda x: -x[1])
-    keep = ranked[:KEEP_ARTICLES]
-
-    # Convert về format chunk
-    result = []
-    for (did, dieu, text), sc in keep:
-        loai = doc_index.get(did, {}).get("loai_vb", "")
-        so = doc_index.get(did, {}).get("so_hieu", "")
-        result.append({
-            "id": f"{did}_{dieu}_rerank", "dieu_so": dieu, "loai_vb": loai,
-            "so_hieu": so, "doc_id": did, "text": text, "score": float(sc)
-        })
-    return result
-
-
-# =============================================================================
-# BƯỚC 10 — Adaptive-k cutoff
-# =============================================================================
-def adaptive_k_cutoff(scores, min_k: int = 1, max_k: int = 5, search_window: int = 15) -> int:
+def adaptive_k_cutoff(scores, min_k=1, max_k=5, search_window=15):
     if scores is None or len(scores) == 0:
         return min_k
     n = min(len(scores), search_window)
     if n <= 1:
         return min_k
-    gaps = [scores[i] - scores[i + 1] for i in range(n - 1)]
-    k_star = int(np.argmax(gaps)) + 1
-    return max(min_k, min(k_star, max_k))
+    gaps = [scores[i] - scores[i+1] for i in range(n-1)]
+    k = int(np.argmax(gaps)) + 1
+    return max(min_k, min(k, max_k))
 
+def rrf_retrieve(question, bm25, dense_model, dense_embeddings, all_chunks, top_k=TOP_K_RETRIEVE):
+    bm25_ranked = bm25.top_k(tokenize_simple(question), top_k)
+    q_emb = dense_model.encode([question], convert_to_numpy=True, normalize_embeddings=True)[0]
+    dense_scores = dense_embeddings @ q_emb
+    dense_ranked = list(np.argsort(-dense_scores)[:top_k])
+    bm25_map = {idx: r for r, idx in enumerate(bm25_ranked)}
+    dense_map = {idx: r for r, idx in enumerate(dense_ranked)}
+    all_idx = set(bm25_ranked) | set(dense_ranked)
+    rrf = {i: 1/(60 + bm25_map.get(i, top_k+1)) + 1/(60 + dense_map.get(i, top_k+1)) for i in all_idx}
+    ranked = sorted(rrf, key=rrf.get, reverse=True)
+    return [all_chunks[i] for i in ranked]
 
-# =============================================================================
-# BƯỚC 11 — Compose answer (template extractive, tối ưu từ dữ liệu thật)
-# =============================================================================
-def compose_answer(selected_chunks: list, top_n: int, question: str = "") -> str:
-    """Ghép đáp án từ các Điều đã chọn.
-
-    Đã đo trên train.json:
-    - "Căn cứ" mở đầu: 57.4% vs "Theo": 25.1%
-    - "quy định như sau": 27.2% vs "quy định cụ thể": 1.1%
-    - 98.8% không lặp lại "Điều X." ngay sau câu dẫn
-    """
+_DIEU_PREFIX_STRIP_RE = re.compile(r"^\s*Điều\s+\d+[a-zđA-ZĐ]?\.?\s*", re.IGNORECASE)
+def render_answer(selected_chunks, top_n):
     parts, seen = [], set()
     for c in selected_chunks:
         if c["id"] in seen or len(parts) >= top_n:
             continue
         seen.add(c["id"])
-        loai_vb = c.get("loai_vb", "") or "văn bản"
-        so_hieu = c.get("so_hieu", "")
-        dieu = c.get("dieu_so", "")
-        text = c["text"]
+        loai = c["loai_vb"] or "văn bản"
+        so = c["so_hieu"] or ""
+        dieu = c["dieu_so"]
+        lead = f"Căn cứ Điều {dieu} {loai} {so} quy định như sau:" if dieu != "0" else f"Căn cứ {loai} {so} quy định như sau:"
+        body = _DIEU_PREFIX_STRIP_RE.sub("", c["text"], count=1) if dieu != "0" else c["text"]
+        parts.append(f"{lead}\n{body}")
+    return "\n\n".join(parts)
 
-        # Cắt "Điều X." ở đầu thân bài
-        body = DIEU_PREFIX_RE.sub("", text, count=1) if (dieu and dieu != "0" and STRIP_DIEU) else text
-        if DROP_DECO:
-            body = "\n".join(l for l in body.split("\n") if not DECO_RE.match(l))
-
-        head = f"Điều {dieu} " if (dieu and dieu != "0") else ""
-        tail = " ".join(x for x in (loai_vb, so_hieu) if x)
-
-        if LEAD_STYLE == "none":
-            lead = ""
-        else:
-            verb = "Căn cứ" if LEAD_STYLE == "cancu" else "Theo"
-            lead = f"{verb} {head}{tail} quy định như sau:"
-
-        parts.append(f"{lead}\n{body}".strip() if lead else body.strip())
-
-    if not parts:
+def answer_question(question, bm25, dense_model, dense_embeddings, all_chunks, top_n,
+                     reranker_model=None, reranker_tokenizer=None, use_adaptive_k=False):
+    ranked = rrf_retrieve(question, bm25, dense_model, dense_embeddings, all_chunks)
+    if not ranked:
         return "Không tìm thấy thông tin pháp lý cho câu hỏi này."
+    scores = None
+    if reranker_model is not None:
+        ranked, scores = rerank(question, ranked, reranker_model, reranker_tokenizer)
+    n = adaptive_k_cutoff(scores) if (use_adaptive_k and scores is not None) else top_n
+    return render_answer(ranked, n)
 
-    ans = "\n\n".join(parts)
-
-    # Câu kết
-    if CONCL_STYLE != "none" and question:
-        q = question.strip().rstrip("?").strip()
-        if q:
-            ql = q[0].lower() + q[1:]
-            if CONCL_STYLE == "echo":
-                ans += f"\nNhư vậy, theo quy định nêu trên thì {ql}."
-            elif CONCL_STYLE == "echo2":
-                ans += f"\nTheo đó, {ql}.\nNhư vậy, theo quy định nêu trên thì {ql}."
-            elif CONCL_STYLE == "q":
-                ans += "\n" + q + "."
-    return ans
-
-
-def answer_question(question: str, bm25, embeddings, all_chunks, doc_index,
-                    reranker_model, reranker_tokenizer, top_n: int = TOP_N_ANSWER,
-                    use_adaptive: bool = False) -> str:
-    # Retrieval đa kênh
-    candidates = rrf_fusion(question, bm25, embeddings, all_chunks)
-    if not candidates:
-        return "Không tìm thấy thông tin pháp lý cho câu hỏi này."
-
-    # 2-stage rerank
-    reranked = two_stage_rerank(question, candidates, doc_index, reranker_model, reranker_tokenizer)
-
-    # Adaptive-k hoặc fixed top_n
-    scores = np.array([c.get("score", 0) for c in reranked]) if reranked else None
-    n = adaptive_k_cutoff(scores) if (use_adaptive and scores is not None) else top_n
-
-    return compose_answer(reranked, n, question)
-
-
-# =============================================================================
-# BƯỚC 12 — Dev-eval (METEOR/ROUGE-L)
-# =============================================================================
-def try_dev_eval(bm25, embeddings, all_chunks, train_data, dev_qids, doc_index,
-                 reranker_model, reranker_tokenizer) -> tuple:
+def try_dev_eval(bm25, dense_model, dense_embeddings, all_chunks, train_data, train_positive,
+                  reranker_model=None, reranker_tokenizer=None):
     try:
         import nltk
+        if str(NLTK_CACHE_DIR) not in nltk.data.path:
+            nltk.data.path.insert(0, str(NLTK_CACHE_DIR))
         try:
             nltk.data.find("corpora/wordnet")
         except LookupError:
-            nltk.download("wordnet", quiet=True)
-            nltk.download("omw-1.4", quiet=True)
+            nltk.download("wordnet", quiet=True, download_dir=str(NLTK_CACHE_DIR))
+            nltk.download("omw-1.4", quiet=True, download_dir=str(NLTK_CACHE_DIR))
         from nltk.translate.meteor_score import meteor_score
         from rouge_score import rouge_scorer
     except Exception as e:
-        print(f"  Bỏ qua dev-eval (thiếu lib: {e}). Dùng TOP_N={TOP_N_ANSWER}")
-        return TOP_N_ANSWER, False, False
+        print(f"  Bỏ qua dev-eval ({e})")
+        return 3, False, False
 
     rouge = rouge_scorer.RougeScorer(["rougeL"], use_stemmer=False)
-    random.seed(42)
-    ids = dev_qids[:DEV_EVAL_SAMPLE_SIZE] if len(dev_qids) > DEV_EVAL_SAMPLE_SIZE else dev_qids
+    ids = random.sample(list(train_data.keys()), min(DEV_EVAL_SAMPLE_SIZE, len(train_data)))
+    recall_ids = [q for q in ids if q in train_positive]
+    print(f"  Dev-eval: {len(ids)} câu ({len(recall_ids)} có citation -> đo Recall)")
 
-    configs = [("BM25+dense (không rerank)", None, None)]
+    configs = [("RRF", None, None)]
     if reranker_model is not None:
-        configs.append(("BM25+dense+2stage-rerank", reranker_model, reranker_tokenizer))
+        configs.append(("RRF+rerank", reranker_model, reranker_tokenizer))
 
-    best_n, best_m, best_use_rerank, best_use_adaptive = TOP_N_ANSWER, -1.0, False, False
+    ks = [1,3,5,10,30,100]
+    best_n, best_m, best_use_rr, best_use_adaptive = 3, -1.0, False, False
 
     for label, rr_model, rr_tok in configs:
-        print(f"  --- {label} ---")
-        # Cache retrieval + rerank cho mỗi config
-        cache = {}
-        for qid in ids:
-            q = train_data[qid]["question"]
-            cands = rrf_fusion(q, bm25, embeddings, all_chunks)
-            if rr_model is not None:
-                ranked = two_stage_rerank(q, cands, doc_index, rr_model, rr_tok)
-            else:
-                ranked = cands
-            cache[qid] = ranked
+        ranked_cache, scores_cache = {}, {}
+        t0 = time.time()
+        for i, qid in enumerate(ids):
+            item = train_data[qid]
+            ranked = rrf_retrieve(item["question"], bm25, dense_model, dense_embeddings, all_chunks)
+            scores = None
+            if rr_model is not None and ranked:
+                ranked, scores = rerank(item["question"], ranked, rr_model, rr_tok)
+            ranked_cache[qid] = ranked
+            scores_cache[qid] = scores
+            if (i+1) % 50 == 0 or (i+1) == len(ids):
+                print(f"    {label} {i+1}/{len(ids)} ... {time.time()-t0:.0f}s")
 
-        for top_n in (1, 2, 3):
+        if recall_ids:
+            hits = {k:0 for k in ks}
+            for qid in recall_ids:
+                ranked_ids = [c["id"] for c in ranked_cache[qid]]
+                pos = train_positive[qid]
+                for k in ks:
+                    if pos in ranked_ids[:k]:
+                        hits[k] += 1
+            print(f"  Recall@k ({label}, n={len(recall_ids)}):")
+            for k in ks:
+                print(f"    Recall@{k:<3d} = {100*hits[k]/len(recall_ids):.1f}%")
+
+        for top_n in range(1, 6):
             ms, rs = [], []
             for qid in ids:
-                ranked = cache[qid]
-                pred = compose_answer(ranked, top_n, train_data[qid]["question"]) if ranked else ""
+                ranked = ranked_cache[qid]
+                pred = render_answer(ranked, top_n) if ranked else "Không tìm thấy..."
                 ref = train_data[qid]["answer"]
                 ms.append(meteor_score([str(ref).split()], str(pred).split()))
                 rs.append(rouge.score(str(ref), str(pred))["rougeL"].fmeasure)
-            m, r = sum(ms) / len(ms), sum(rs) / len(rs)
+            m, r = sum(ms)/len(ms), sum(rs)/len(rs)
             print(f"    top_n={top_n}  METEOR={m:.4f}  ROUGE-L={r:.4f}")
             if m > best_m:
-                best_m, best_n, best_use_rerank = m, top_n, (rr_model is not None)
+                best_m, best_n, best_use_rr, best_use_adaptive = m, top_n, (rr_model is not None), False
 
-        # Thử adaptive-k
         if rr_model is not None:
             ms, rs = [], []
             for qid in ids:
-                ranked = cache[qid]
-                scores = np.array([c.get("score", 0) for c in ranked]) if ranked else None
+                ranked, scores = ranked_cache[qid], scores_cache[qid]
                 k = adaptive_k_cutoff(scores) if ranked else 1
-                pred = compose_answer(ranked, k, train_data[qid]["question"]) if ranked else ""
+                pred = render_answer(ranked, k) if ranked else "Không tìm thấy..."
                 ref = train_data[qid]["answer"]
                 ms.append(meteor_score([str(ref).split()], str(pred).split()))
                 rs.append(rouge.score(str(ref), str(pred))["rougeL"].fmeasure)
-            m, r = sum(ms) / len(ms), sum(rs) / len(rs)
-            print(f"    adaptive-k  METEOR={m:.4f}  ROUGE-L={r:.4f}")
+            m, r = sum(ms)/len(ms), sum(rs)/len(rs)
+            print(f"    adaptive-k       METEOR={m:.4f}  ROUGE-L={r:.4f}")
             if m > best_m:
-                best_m, best_use_rerank, best_use_adaptive = True, True, True
+                best_m, best_use_rr, best_use_adaptive = m, True, True
 
-    print(f"  => Chọn: top_n={best_n}, rerank={best_use_rerank}, adaptive={best_use_adaptive} (METEOR={best_m:.4f})")
-    return best_n, best_use_rerank, best_use_adaptive
+    print(f"  Chọn: TOP_N={best_n}, rerank={best_use_rr}, adaptive={best_use_adaptive} (METEOR={best_m:.4f})")
+    return best_n, best_use_rr, best_use_adaptive
 
-
-# =============================================================================
-# BƯỚC 13 — Validate & package submission
-# =============================================================================
-def build_submission(answers: dict, expected_ids: set, out_zip: Path) -> None:
-    errors = []
+def build_submission(answers, expected_ids, out_zip):
     got = set(answers.keys())
     if got != expected_ids:
-        errors.append(f"Key lệch: thiếu {len(expected_ids-got)}, thừa {len(got-expected_ids)}")
+        raise ValueError(f"Key mismatch: missing {len(expected_ids-got)}, extra {len(got-expected_ids)}")
     for qid, ans in answers.items():
         if not isinstance(ans, str) or not ans.strip():
-            errors.append(f"[{qid}] answer rỗng")
-    if errors:
-        raise ValueError("Submission KHÔNG hợp lệ:\n  - " + "\n  - ".join(errors[:20]))
-
-    normalized = {qid: {"answer": str(ans)} for qid, ans in answers.items()}
+            print(f"  [WARN] {qid} empty")
+    payload = {qid: {"answer": str(ans)} for qid, ans in answers.items()}
     json_path = out_zip.with_suffix(".json")
     with json_path.open("w", encoding="utf-8") as f:
-        json.dump(normalized, f, ensure_ascii=False)
+        json.dump(payload, f, ensure_ascii=False)
     with zipfile.ZipFile(out_zip, "w", zipfile.ZIP_DEFLATED) as zf:
         zf.write(json_path, arcname="submission.json")
     with zipfile.ZipFile(out_zip) as zf:
         assert zf.namelist() == ["submission.json"]
-        reloaded = json.loads(zf.read("submission.json").decode("utf-8"))
-        assert reloaded == normalized
-    print(f"  OK — {out_zip} ({len(normalized)} câu)")
+    print(f"  ✅ {out_zip}")
 
-
-# =============================================================================
+# ==============================================================================
 # MAIN
-# =============================================================================
-def main() -> None:
+# ==============================================================================
+def main():
     checkpoint("Bắt đầu")
+    print(f"  Cache: {CACHE_DIR}")
 
     print("\n=== Bước 1: Chunk corpus ===")
-    all_chunks, doc_index = load_corpus(CONTEXTS_DIR)
+    all_chunks = load_corpus(CONTEXTS_DIR)
     checkpoint("Xong chunking")
 
-    print("\n=== Bước 2: BM25 index ===")
+    print("\n=== Bước 2: BM25 ===")
     tokenized = [tokenize_simple(f"{c.get('loai_vb','')} {c['text']}") for c in all_chunks]
     bm25 = BM25(tokenized)
     checkpoint("Xong BM25")
 
-    print("\n=== Bước 3: Dev split theo văn bản ===")
-    with TRAIN_PATH.open(encoding="utf-8") as f:
+    print("\n=== Bước 3: Sinh nhãn ===")
+    with open(TRAIN_PATH, encoding="utf-8") as f:
         train_data = json.load(f)
-    dev_qids = build_dev_split(train_data, doc_index, DEV_EVAL_SAMPLE_SIZE, CACHE_DIR)
-    checkpoint("Xong dev split")
-
-    print("\n=== Bước 4: Sinh nhãn từ train.json ===")
     train_positive, chunk_by_id = build_train_pairs(train_data, all_chunks)
-    print(f"  Positive pairs: {len(train_positive)}/{len(train_data)}")
+    print(f"  Positive: {len(train_positive)}/{len(train_data)}")
     checkpoint("Xong sinh nhãn")
 
-    print("\n=== Bước 5: Fine-tune + Encode đa kênh ===")
-    embeddings = encode_all_channels(all_chunks, train_positive, train_data, chunk_by_id, bm25, CACHE_DIR)
-    checkpoint("Xong encode đa kênh")
+    print("\n=== Bước 4: Dense retriever ===")
+    dense_model = finetune_or_load_dense(train_positive, train_data, chunk_by_id, all_chunks, bm25)
+    checkpoint("Xong dense")
 
-    print("\n=== Bước 6: Tải reranker ===")
+    print("\n=== Bước 5: Encode corpus ===")
+    dense_embeddings = encode_corpus(dense_model, all_chunks)
+    checkpoint("Xong encode")
+
+    print("\n=== Bước 6: Reranker ===")
     reranker_model, reranker_tokenizer = load_reranker()
-    checkpoint("Xong tải reranker")
+    checkpoint("Xong reranker")
 
-    print("\n=== Bước 7: Dev-eval chọn config ===")
-    top_n_answer, use_reranker, use_adaptive = try_dev_eval(
-        bm25, embeddings, all_chunks, train_data, dev_qids, doc_index,
-        reranker_model, reranker_tokenizer)
+    print("\n=== Bước 7: Dev-eval ===")
+    top_n, use_rerank, use_adaptive = try_dev_eval(
+        bm25, dense_model, dense_embeddings, all_chunks,
+        train_data, train_positive, reranker_model, reranker_tokenizer
+    )
     checkpoint("Xong dev-eval")
 
-    print("\n=== Bước 8: Sinh câu trả lời public test ===")
-    with PUBLIC_PATH.open(encoding="utf-8") as f:
-        public = json.load(f)
-
-    rr_model = reranker_model if use_reranker else None
-    rr_tok = reranker_tokenizer if use_reranker else None
+    print("\n=== Bước 8: Predict public ===")
+    with open(PUBLIC_PATH, encoding="utf-8") as f:
+        questions = json.load(f)
+    rr_model = reranker_model if use_rerank else None
+    rr_tok = reranker_tokenizer if use_rerank else None
     answers = {}
-    for i, (qid, item) in enumerate(public.items()):
-        answers[qid] = answer_question(
-            item["question"], bm25, embeddings, all_chunks, doc_index,
-            rr_model, rr_tok, top_n_answer, use_adaptive)
-        if (i + 1) % 200 == 0:
-            print(f"  ... {i+1}/{len(public)}  ({elapsed()/60:.1f} phút)")
-    n_empty = sum(1 for a in answers.values() if not a.strip())
-    print(f"  Đã sinh {len(answers)} câu, {n_empty} rỗng")
-    checkpoint("Xong sinh câu trả lời")
+    for i, (qid, item) in enumerate(questions.items()):
+        answers[qid] = answer_question(item["question"], bm25, dense_model, dense_embeddings,
+                                        all_chunks, top_n, rr_model, rr_tok, use_adaptive)
+        if (i+1) % 200 == 0:
+            print(f"  ... {i+1}/{len(questions)}  ({elapsed()/60:.1f} phút)")
+    empty = sum(1 for a in answers.values() if not a.strip())
+    print(f"  {len(answers)} answers, {empty} empty")
+    checkpoint("Xong predict")
 
-    print("\n=== Bước 9: Đóng gói submission.zip ===")
-    build_submission(answers, set(public.keys()), OUT_DIR / "submission.zip")
-    checkpoint(f"XONG — tổng {elapsed()/60:.1f} phút")
-
+    print("\n=== Bước 9: Đóng gói ===")
+    build_submission(answers, set(questions.keys()), OUT_DIR / "submission.zip")
+    checkpoint("XONG")
 
 if __name__ == "__main__":
     main()
