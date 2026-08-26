@@ -1072,6 +1072,12 @@ def main() -> None:
         print(f"  Đã ghi thêm 1 dòng vào {EXPERIMENT_LOG_PATH} (sổ thí nghiệm — không ghi đè).")
     except OSError as e:
         print(f"  [CẢNH BÁO] Không ghi được sổ thí nghiệm ({e}) — không ảnh hưởng submission.zip.")
+    # SỬA (mất log thật: Kaggle reset session, EXPERIMENT_LOG_PATH mất theo, không đọc lại
+    # được): LUÔN in JSON đầy đủ ra console dù ghi file có thành công hay không — output cell
+    # Kaggle vẫn còn ngay cả khi /kaggle/temp hay /kaggle/working bị dọn giữa các lần "Save
+    # Version" khác nhau. Copy dòng này lại là đủ để chẩn đoán, không cần mở lại file.
+    print("  [SỔ THÍ NGHIỆM — copy dòng dưới đây nếu cần đối chiếu sau này]")
+    print("  " + json.dumps(record, ensure_ascii=False))
 
 
 if __name__ == "__main__":
