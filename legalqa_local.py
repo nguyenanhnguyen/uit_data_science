@@ -1,17 +1,22 @@
 #!/usr/bin/env python
 """
-legalqa_dual_encoder.py — LegalQA (UIT DSC2026 Task 2), kiến trúc "mạnh nhất":
+legalqa_dual_encoder.py — LegalQA (UIT DSC2026 Task 2), kiến trúc "mạnh nhất" v2:
 2 dense encoder khác họ (BAAI/bge-m3 + intfloat/multilingual-e5-large) fine-tune SONG
-SONG trên 2 GPU riêng (subprocess), fusion RRF 3 kênh (BM25 + bge-m3-ft + e5-ft-large).
+SONG trên 2 GPU riêng (subprocess) + fusion RRF 3 kênh (BM25 + bge-m3-ft + e5-ft-large)
++ FINE-TUNE RERANKER (AITeamVN/Vietnamese_Reranker, margin ranking loss trên chính nhãn
+citation Task 2) — thêm sau khi đo được dual-encoder-only chỉ nhích rất ít (0.5215/0.4829
+so với 0.5199/0.4806 single-encoder), kết luận trần điểm nằm ở reranker zero-shot chứ
+không phải retrieval. Xem PHAN_TICH_KY_THUAT.md để biết đầy đủ phân tích/lý do.
 
 Đây là bản .py TRÍCH XUẤT Y HỆT logic của legalqa_kaggle_t4x2.ipynb (không viết lại tay,
 để tránh lệch giữa 2 bản) — dùng khi muốn chạy như một script thuần (vd qua `python
 legalqa_dual_encoder.py`, cron job, hoặc máy đa-GPU khác ngoài Kaggle) thay vì notebook.
 
 CẦN MÁY THẬT SỰ CÓ ÍT NHẤT 1 GPU ~16GB (lý tưởng 2 GPU, kiểu Kaggle T4x2) — kiến trúc 2
-encoder không phù hợp GPU 4GB (dùng bản `legalqa_local.py` — 1 encoder nhẹ — cho trường
-hợp đó). Nếu chỉ có 1 GPU, script tự chuyển fine-tune 2 encoder sang chạy TUẦN TỰ thay vì
-song song (xem "run_parallel" ở Bước 4) — vẫn chạy đúng, chỉ chậm hơn.
+encoder + fine-tune reranker không phù hợp GPU 4GB (dùng bản `legalqa_local.py` — 1
+encoder nhẹ, reranker zero-shot — cho trường hợp đó). Nếu chỉ có 1 GPU, script tự chuyển
+fine-tune 2 encoder sang chạy TUẦN TỰ thay vì song song (xem "run_parallel" ở Bước 4) —
+vẫn chạy đúng, chỉ chậm hơn; fine-tune reranker luôn chạy trên GPU đầu tiên (1 GPU đã đủ).
 
 CÁCH DÙNG:
     pip install -q -U sentence-transformers datasets "accelerate>=1.1.0" nltk rouge_score sentencepiece
@@ -23,35 +28,31 @@ Kaggle, sửa 4 dòng đó cho khớp layout máy bạn rồi chạy như bình 
 
 KHÔNG dùng ký hiệu `!pip install` (cú pháp riêng của Jupyter) — cài thư viện bằng lệnh
 pip ở trên TRƯỚC khi chạy file này.
-
-Xem đầy đủ bối cảnh, phân tích, và lý do đổi kiến trúc: PHAN_TICH_KY_THUAT.md.
 """
 
 
 def main() -> None:
     # Cell 2: Đường dẫn và tham số
     import os
-    from pathlib import Path
 
-    BASE_DIR = Path(__file__).resolve().parent
-    DATA_DIR = str(BASE_DIR)
-    CONTEXT_DIR = BASE_DIR / "selected-contexts"
-    TRAIN_PATH = BASE_DIR / "train.json"
-    WARMUP_PATH = BASE_DIR / "warmup.json"
-    PUBLIC_PATH = BASE_DIR / "public-official.json"
-    OUT_DIR = BASE_DIR
+    DATA_DIR = "/kaggle/input/datasets/anhnguyen7508/uit-data-science-dataset/"
+    CONTEXT_DIR = os.path.join(DATA_DIR, "selected-contexts/selected-contexts/")
+    TRAIN_PATH = os.path.join(DATA_DIR, "train.json")
+    WARMUP_PATH = os.path.join(DATA_DIR, "warmup.json")
+    PUBLIC_PATH = os.path.join(DATA_DIR, "public-official.json")
 
-    CACHE_DIR = BASE_DIR / "cache"
-    HF_CACHE_DIR = CACHE_DIR / "hf"
-    NLTK_CACHE_DIR = CACHE_DIR / "nltk_data"
-    TRAINER_TMP_DIR = CACHE_DIR / "trainer_tmp"
-
+    # /kaggle/input CHỈ ĐỌC. Mọi thứ ghi ra phải nằm ở /kaggle/working (được lưu khi
+    # "Save Version" — đây là nơi submission.zip phải nằm) hoặc /kaggle/temp (KHÔNG được
+    # lưu, mất khi session kết thúc — dùng cho cache/model tải về, đỡ tốn quota output).
+    OUT_DIR = "/kaggle/working"
+    CACHE_DIR = "/kaggle/temp/legalqa_cache"
+    HF_CACHE_DIR = os.path.join(CACHE_DIR, "hf")
+    NLTK_CACHE_DIR = os.path.join(CACHE_DIR, "nltk_data")
+    TRAINER_TMP_DIR = os.path.join(CACHE_DIR, "trainer_tmp")
     for _d in (OUT_DIR, HF_CACHE_DIR, NLTK_CACHE_DIR, TRAINER_TMP_DIR):
         os.makedirs(_d, exist_ok=True)
-
-    # SỬA: ép kiểu str cho các biến môi trường
-    os.environ.setdefault("HF_HOME", str(HF_CACHE_DIR))
-    os.environ.setdefault("HF_HUB_CACHE", str(HF_CACHE_DIR / "hub"))
+    os.environ.setdefault("HF_HOME", HF_CACHE_DIR)
+    os.environ.setdefault("HF_HUB_CACHE", os.path.join(HF_CACHE_DIR, "hub"))
     os.environ.setdefault("HF_HUB_DISABLE_TELEMETRY", "1")
     os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
     os.environ.setdefault("TRANSFORMERS_NO_ADVISORY_WARNINGS", "1")
@@ -109,6 +110,21 @@ def main() -> None:
     SEED = 42
     USE_WARMUP = True   # đặt False để ablation: chỉ dùng train.json, không gộp warmup.json
     EXPERIMENT_LOG_PATH = os.path.join(OUT_DIR, "experiment_log.jsonl")
+
+    # BẢN SỬA (kết quả thật: dual-encoder 0.5215/0.4829 chỉ nhích rất ít so với single-encoder
+    # 0.5199/0.4806 dù retrieval mạnh hơn nhiều -> retrieval không còn là nút thắt chính, reranker
+    # ZERO-SHOT giờ nhiều khả năng là trần chặn điểm. Fine-tune reranker trên chính nhãn citation
+    # Task 2 -- tái dùng `rows` đã build cho Bước 4, KHÔNG cần dữ liệu thêm.
+    USE_RERANKER_FINETUNE = True
+    RERANKER_BASE = "AITeamVN/Vietnamese_Reranker"
+    RERANKER_FT_TIME_BUDGET_SEC = 60 * 60   # 1 tiếng — reranker nhỏ hơn 2 dense encoder cộng lại,
+                                             # không cần ngân sách bằng FINETUNE_TIME_BUDGET_SEC
+    RERANKER_FT_BATCH_SIZE = 8              # số CÂU HỎI/batch (mỗi câu có 1 positive + N_NEG_PER_ROW
+                                             # negative -> batch thật cho reranker lớn hơn số này)
+    RERANKER_FT_LR = 1e-5
+    RERANKER_FT_MARGIN = 1.0                # margin ranking loss: điểm(positive) phải > điểm(negative)
+                                             # + margin -- không cần thang điểm chuẩn hoá, chỉ cần đúng
+                                             # THỨ TỰ, ổn định hơn BCE/MSE cho reranker logit thô.
 
     print(f"OUT_DIR   = {OUT_DIR}")
     print(f"CACHE_DIR = {CACHE_DIR}  (tạm, mất khi session kết thúc)")
@@ -553,15 +569,36 @@ def main() -> None:
 
     finetune_info = {"used_finetune": False, "reason": None, "n_pairs_available": len(train_positive),
                       "n_pairs_used": 0, "models": {}}
-
-    use_finetune = USE_FINETUNE and len(train_positive) >= MIN_TRAIN_PAIRS and remaining() > 10 * 60
     DENSE_CHANNELS = []  # điền ở cuối cell; embeddings điền ở Cell 9
 
+    # BẢN SỬA: build `rows` (anchor/positive/negative) MỘT LẦN, KHÔNG PHỤ THUỘC USE_FINETUNE của
+    # dense encoder — Cell 10 (fine-tune reranker) cần dùng lại đúng `rows` này. Trước đây rows chỉ
+    # được build bên trong nhánh "if use_finetune" của dense encoder, nên nếu USE_FINETUNE=False thì
+    # Cell 10 không có gì để fine-tune reranker dù USE_RERANKER_FINETUNE=True.
+    rows_needed = (USE_FINETUNE or USE_RERANKER_FINETUNE) and len(train_positive) >= MIN_TRAIN_PAIRS \
+                  and remaining() > 10 * 60
+    rows, rows_path = [], None
+    if rows_needed:
+        train_positive_used = train_positive
+        if len(train_positive) > MAX_TRAIN_EXAMPLES:
+            sampled_qids = random.sample(list(train_positive.keys()), MAX_TRAIN_EXAMPLES)
+            train_positive_used = {qid: train_positive[qid] for qid in sampled_qids}
+            print(f"  Có {len(train_positive)} positive pairs, lấy mẫu {MAX_TRAIN_EXAMPLES} "
+                  f"(tái lập được nhờ SEED={SEED}).")
+        finetune_info["n_pairs_used"] = len(train_positive_used)
+
+        print(f"  Đang tạo training rows (dùng chung cho encoder + reranker)...")
+        rows = _build_training_rows(train_positive_used, train_data_for_pairs, chunk_by_id, all_chunks, bm25)
+        rows_path = os.path.join(CACHE_DIR, "train_rows.json")
+        with open(rows_path, "w", encoding="utf-8") as f:
+            json.dump(rows, f, ensure_ascii=False)
+        print(f"  {len(rows)} rows -> {rows_path}")
+
+    use_finetune = USE_FINETUNE and bool(rows)
     if not use_finetune:
-        reason = "USE_FINETUNE=False" if not USE_FINETUNE else (
-            f"{len(train_positive)} positive pairs < {MIN_TRAIN_PAIRS}" if len(train_positive) < MIN_TRAIN_PAIRS
-            else "hết ngân sách thời gian")
-        print(f"  {reason} -> dùng zero-shot cho cả 2 encoder, không fine-tune.")
+        reason = ("USE_FINETUNE=False" if not USE_FINETUNE else
+                   ("chưa có rows (xem lý do rows_needed=False ở trên)" if not rows else "?"))
+        print(f"  {reason} -> dùng zero-shot cho cả 2 dense encoder, không fine-tune.")
         finetune_info["reason"] = reason
         from sentence_transformers import SentenceTransformer
         m_a = SentenceTransformer(BASE_DENSE_MODEL_A, device=DEVICES[0]); m_a.max_seq_length = DENSE_MAX_SEQ_LEN
@@ -571,21 +608,6 @@ def main() -> None:
             {"name": "e5-large", "model": m_b, "embeddings": None, "query_prefix": "query: ", "passage_prefix": "passage: "},
         ]
     else:
-        train_positive_used = train_positive
-        if len(train_positive) > MAX_TRAIN_EXAMPLES:
-            sampled_qids = random.sample(list(train_positive.keys()), MAX_TRAIN_EXAMPLES)
-            train_positive_used = {qid: train_positive[qid] for qid in sampled_qids}
-            print(f"  Có {len(train_positive)} positive pairs, lấy mẫu {MAX_TRAIN_EXAMPLES} "
-                  f"(tái lập được nhờ SEED={SEED}).")
-        finetune_info["n_pairs_used"] = len(train_positive_used)
-
-        print(f"  Đang tạo training rows (dùng chung cho cả 2 encoder)...")
-        rows = _build_training_rows(train_positive_used, train_data_for_pairs, chunk_by_id, all_chunks, bm25)
-        rows_path = os.path.join(CACHE_DIR, "train_rows.json")
-        with open(rows_path, "w", encoding="utf-8") as f:
-            json.dump(rows, f, ensure_ascii=False)
-        print(f"  {len(rows)} rows -> {rows_path}")
-
         specs = [
             {"name": "bge-m3", "base_model": BASE_DENSE_MODEL_A, "gpu": DEVICES[0].split(":")[-1],
              "out": os.path.join(CHECKPOINT_DIR, "bge-m3-ft"), "query_prefix": "", "passage_prefix": ""},
@@ -698,17 +720,29 @@ def main() -> None:
     checkpoint("Xong encode corpus (2 encoder)")
 
 
-    # Cell 10: Bước 5b — Tải reranker (1 bản MỖI GPU, để rerank được ở Bước 6/7 song song thật —
-    # xem lý do dùng AITeamVN/Vietnamese_Reranker ở docstring rerank() tại Cell 11)
+    # Cell 10: Bước 5b — Fine-tune reranker (nếu USE_RERANKER_FINETUNE, tái dùng `rows` của
+    # Bước 4) RỒI tải 1 bản MỖI GPU để rerank song song thật ở Bước 6/7 (xem Cell 11)
+    #
+    # LÝ DO: kết quả dual-encoder thật (0.5215/0.4829) chỉ nhích rất ít so với single-encoder
+    # (0.5199/0.4806) dù retrieval mạnh hơn nhiều -> retrieval không còn là nút thắt chính,
+    # reranker ZERO-SHOT (AITeamVN/Vietnamese_Reranker, train trên Legal Zalo 2021 — KHÔNG phải
+    # đúng format "Điều X" của bài này) nhiều khả năng đang là trần chặn điểm tiếp theo.
+    #
+    # Huấn luyện bằng vòng lặp PyTorch thuần (KHÔNG dùng CrossEncoderTrainer của
+    # sentence-transformers) — tránh phụ thuộc API cross-encoder mới có thể không có ở mọi
+    # phiên bản cài qua Cell 1; margin ranking loss (điểm(positive) phải lớn hơn điểm(negative)
+    # ít nhất RERANKER_FT_MARGIN) — không cần thang điểm chuẩn hoá, chỉ cần đúng THỨ TỰ, ổn
+    # định hơn BCE/MSE cho một đầu hồi quy logit thô như model này.
     from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
-    def load_reranker_on(device: str):
+
+    def load_reranker_on(device: str, source: str):
         for attempt in range(2):
             try:
-                print(f"  Đang tải reranker AITeamVN/Vietnamese_Reranker lên {device}"
+                print(f"  Đang tải reranker {source} lên {device}"
                       f"{' — thử lại lần 2' if attempt else ''}...")
-                tok = AutoTokenizer.from_pretrained("AITeamVN/Vietnamese_Reranker")
-                mdl = AutoModelForSequenceClassification.from_pretrained("AITeamVN/Vietnamese_Reranker")
+                tok = AutoTokenizer.from_pretrained(source)
+                mdl = AutoModelForSequenceClassification.from_pretrained(source)
                 mdl = mdl.to(device)
                 if device.startswith("cuda"):
                     mdl = mdl.half()
@@ -724,18 +758,100 @@ def main() -> None:
                 return None, None
 
 
-    print("=== Bước 5b: Tải reranker (mỗi GPU 1 bản) ===")
+    # finetune_reranker: trả về (model đã .eval(), tokenizer, meta dict). KHÔNG raise nếu OOM —
+    # tự giảm batch_size và thử lại, giống pattern OOM-backoff đã dùng cho dense encoder/rerank.
+    def finetune_reranker(rows, base_model: str, device: str, time_budget_sec: float,
+                           batch_size: int, lr: float, margin: float, seed: int):
+        tok = AutoTokenizer.from_pretrained(base_model)
+        model = AutoModelForSequenceClassification.from_pretrained(base_model).to(device)
+        model.train()
+        opt = torch.optim.AdamW(model.parameters(), lr=lr)
+        scaler = torch.cuda.amp.GradScaler(enabled=device.startswith("cuda"))
+
+        g = random.Random(seed)  # RNG RIÊNG — không đụng vào random toàn cục (đã seed cho Bước 3/4)
+        order = list(range(len(rows)))
+        bs = batch_size
+        t0 = time.time()
+        step, n_neg = 0, N_NEG_PER_ROW
+        while time.time() - t0 < time_budget_sec:
+            g.shuffle(order)
+            for i in range(0, len(order), bs):
+                batch_idx = order[i:i + bs]
+                if not batch_idx:
+                    continue
+                batch_rows = [rows[j] for j in batch_idx]
+                pos_pairs = [[r["anchor"], r["positive"]] for r in batch_rows]
+                neg_pairs = [[r["anchor"], r[f"negative_{k+1}"]] for r in batch_rows for k in range(n_neg)]
+                try:
+                    pos_in = tok(pos_pairs, padding=True, truncation=True, max_length=512,
+                                 return_tensors="pt").to(device)
+                    neg_in = tok(neg_pairs, padding=True, truncation=True, max_length=512,
+                                 return_tensors="pt").to(device)
+                    with torch.cuda.amp.autocast(enabled=device.startswith("cuda")):
+                        pos_scores = model(**pos_in).logits.view(-1)
+                        neg_scores = model(**neg_in).logits.view(len(batch_rows), n_neg)
+                        pos_exp = pos_scores.unsqueeze(1).expand_as(neg_scores)
+                        loss = torch.relu(margin - (pos_exp - neg_scores)).mean()
+                    opt.zero_grad(set_to_none=True)
+                    scaler.scale(loss).backward()
+                    scaler.step(opt)
+                    scaler.update()
+                    step += 1
+                except RuntimeError as e:
+                    if "out of memory" in str(e).lower() and bs > 1:
+                        torch.cuda.empty_cache()
+                        bs = max(1, bs // 2)
+                        print(f"  [CUDA OOM reranker-ft] batch_size -> {bs}")
+                        continue
+                    raise
+                if time.time() - t0 >= time_budget_sec:
+                    break
+                if step % 100 == 0:
+                    print(f"    reranker-ft step {step}, loss={loss.item():.4f}, "
+                          f"{(time.time()-t0)/60:.1f} phút", flush=True)
+
+        model.eval()
+        meta = {"steps": step, "batch_size_final": bs, "elapsed_s": time.time() - t0}
+        return model, tok, meta
+
+
+    print("=== Bước 5b: Fine-tune reranker (nếu bật) + tải mỗi GPU 1 bản ===")
+    reranker_finetune_info = {"used": False, "reason": None, "steps": 0, "elapsed_s": 0.0}
+    reranker_source = RERANKER_BASE
+    use_reranker_finetune = USE_RERANKER_FINETUNE and bool(rows) and remaining() > 15 * 60
+    if not use_reranker_finetune:
+        reason = ("USE_RERANKER_FINETUNE=False" if not USE_RERANKER_FINETUNE else
+                  ("không có rows (xem Bước 4)" if not rows else "hết ngân sách thời gian"))
+        print(f"  {reason} -> reranker giữ ZERO-SHOT ({RERANKER_BASE}).")
+        reranker_finetune_info["reason"] = reason
+    else:
+        t0 = time.time()
+        ft_model, ft_tok, meta = finetune_reranker(
+            rows, RERANKER_BASE, DEVICES[0], RERANKER_FT_TIME_BUDGET_SEC,
+            RERANKER_FT_BATCH_SIZE, RERANKER_FT_LR, RERANKER_FT_MARGIN, SEED)
+        reranker_ckpt = os.path.join(CHECKPOINT_DIR, "reranker-ft")
+        ft_model.half().save_pretrained(reranker_ckpt)  # lưu fp16 — nhất quán với cách nạp lại để rerank
+        ft_tok.save_pretrained(reranker_ckpt)
+        del ft_model
+        torch.cuda.empty_cache()
+        reranker_source = reranker_ckpt
+        reranker_finetune_info.update({"used": True, **meta})
+        print(f"  Fine-tune reranker xong: {meta['steps']} step, {meta['elapsed_s']/60:.1f} phút "
+              f"-> checkpoint {reranker_ckpt}")
+
     reranker_models, reranker_tokenizers = {}, {}
     for dev in DEVICES:
-        m, t = load_reranker_on(dev)
+        m, t = load_reranker_on(dev, reranker_source)
         if m is not None:
             reranker_models[dev] = m
             reranker_tokenizers[dev] = t
 
     HAS_RERANKER = len(reranker_models) > 0
     RERANK_DEVICES = list(reranker_models.keys())
-    print(f"  Reranker sẵn sàng trên: {RERANK_DEVICES or '(không tải được — sẽ chạy không rerank)'}")
+    print(f"  Reranker ({'fine-tuned' if reranker_finetune_info['used'] else 'zero-shot'}) sẵn sàng "
+          f"trên: {RERANK_DEVICES or '(không tải được — sẽ chạy không rerank)'}")
     checkpoint("Xong tải reranker")
+
 
     # Cell 11: Hàm retrieval (RRF fusion N kênh — BM25 + N encoder) + rerank theo lô
     # + hạ tầng chạy song song 2 GPU
@@ -1069,8 +1185,10 @@ def main() -> None:
         "n_train_pairs_used": finetune_info["n_pairs_used"],
         "used_finetune": finetune_info["used_finetune"], "finetune_reason": finetune_info["reason"],
         "finetune_models": finetune_info["models"],  # {"bge-m3": {max_steps,...}, "e5-large": {...}}
-        "reranker_finetuned": False,  # TODO: bản này reranker vẫn zero-shot, xem ghi chú Cell 10
-        "checkpoint_dir": CHECKPOINT_DIR if finetune_info["used_finetune"] else None,
+        "reranker_finetuned": reranker_finetune_info["used"],
+        "reranker_finetune_steps": reranker_finetune_info["steps"],
+        "reranker_finetune_elapsed_min": round(reranker_finetune_info["elapsed_s"] / 60, 1),
+        "checkpoint_dir": CHECKPOINT_DIR if (finetune_info["used_finetune"] or reranker_finetune_info["used"]) else None,
         "top_n_answer": top_n_answer, "use_reranker": use_reranker, "use_adaptive_k": use_adaptive,
         "dev_meteor": eval_info["meteor"], "dev_rouge_l": eval_info["rouge_l"],
         "dev_n": eval_info["n_dev"], "dev_recall_at_k": eval_info["recall_at_k"],
