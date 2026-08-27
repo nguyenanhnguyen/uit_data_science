@@ -18,44 +18,43 @@ CÁCH DÙNG:
     python legalqa_dual_encoder.py
 
 ĐƯỜNG DẪN: mặc định viết theo layout Kaggle (/kaggle/input/..., /kaggle/working,
-/kaggle/temp/...) — xem khối DATA_DIR/OUT_DIR/CACHE_DIR ngay đầu main(). Nếu chạy ngoài
-Kaggle, sửa 4 dòng đó cho khớp layout máy bạn rồi chạy như bình thường.
-
-KHÔNG dùng ký hiệu `!pip install` (cú pháp riêng của Jupyter) — cài thư viện bằng lệnh
-pip ở trên TRƯỚC khi chạy file này.
-
-Xem đầy đủ bối cảnh, phân tích, và lý do đổi kiến trúc: PHAN_TICH_KY_THUAT.md.
+/kaggle/temp/...) — xem khối DATA_DIR/OUT_DIR/CACHE_DIR. Nếu chạy ngoài Kaggle,
+sửa các dòng đó cho khớp layout máy bạn rồi chạy như bình thường.
 """
+
+import os
+from pathlib import Path
+
+# ==============================================================================
+# ĐƯA CẤU HÌNH ĐƯỜNG DẪN & BIẾN MÔI TRƯỜNG RA GLOBAL SCOPE
+# Sửa lỗi: Đặt ở đây để đảm bảo mọi process con (do multiprocessing/subprocess 
+# sinh ra) đều thừa kế đúng cấu hình HF_HOME và CACHE_DIR, không tải nhầm.
+# ==============================================================================
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = str(BASE_DIR)
+CONTEXT_DIR = BASE_DIR / "selected-contexts"
+TRAIN_PATH = BASE_DIR / "train.json"
+WARMUP_PATH = BASE_DIR / "warmup.json"
+PUBLIC_PATH = BASE_DIR / "public-official.json"
+OUT_DIR = BASE_DIR
+
+CACHE_DIR = BASE_DIR / "cache"
+HF_CACHE_DIR = CACHE_DIR / "hf"
+NLTK_CACHE_DIR = CACHE_DIR / "nltk_data"
+TRAINER_TMP_DIR = CACHE_DIR / "trainer_tmp"
+
+for _d in (OUT_DIR, HF_CACHE_DIR, NLTK_CACHE_DIR, TRAINER_TMP_DIR):
+    os.makedirs(_d, exist_ok=True)
+
+# Ép kiểu str cho các biến môi trường
+os.environ.setdefault("HF_HOME", str(HF_CACHE_DIR))
+os.environ.setdefault("HF_HUB_CACHE", str(HF_CACHE_DIR / "hub"))
+os.environ.setdefault("HF_HUB_DISABLE_TELEMETRY", "1")
+os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
+os.environ.setdefault("TRANSFORMERS_NO_ADVISORY_WARNINGS", "1")
 
 
 def main() -> None:
-    # Cell 2: Đường dẫn và tham số
-    import os
-    from pathlib import Path
-
-    BASE_DIR = Path(__file__).resolve().parent
-    DATA_DIR = str(BASE_DIR)
-    CONTEXT_DIR = BASE_DIR / "selected-contexts"
-    TRAIN_PATH = BASE_DIR / "train.json"
-    WARMUP_PATH = BASE_DIR / "warmup.json"
-    PUBLIC_PATH = BASE_DIR / "public-official.json"
-    OUT_DIR = BASE_DIR
-
-    CACHE_DIR = BASE_DIR / "cache"
-    HF_CACHE_DIR = CACHE_DIR / "hf"
-    NLTK_CACHE_DIR = CACHE_DIR / "nltk_data"
-    TRAINER_TMP_DIR = CACHE_DIR / "trainer_tmp"
-
-    for _d in (OUT_DIR, HF_CACHE_DIR, NLTK_CACHE_DIR, TRAINER_TMP_DIR):
-        os.makedirs(_d, exist_ok=True)
-
-    # SỬA: ép kiểu str cho các biến môi trường
-    os.environ.setdefault("HF_HOME", str(HF_CACHE_DIR))
-    os.environ.setdefault("HF_HUB_CACHE", str(HF_CACHE_DIR / "hub"))
-    os.environ.setdefault("HF_HUB_DISABLE_TELEMETRY", "1")
-    os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
-    os.environ.setdefault("TRANSFORMERS_NO_ADVISORY_WARNINGS", "1")
-
     # Tham số
     CHUNK_SIZE = 512      # không sử dụng — chunk theo Điều (xem Bước 1), giữ lại đúng như đề bài
     TOP_K_RETRIEVE = 100  # số ứng viên lấy ra sau RRF fusion (BM25 + dense)
@@ -64,51 +63,32 @@ def main() -> None:
                            # còn ràng buộc 4GB như máy cá nhân. Đặt False nếu muốn chạy thử nhanh
                            # hoặc đang tiết kiệm quota GPU (30h/tuần trên tài khoản free).
 
-    # BẢN SỬA (kiến trúc "mạnh nhất" — 2 dense encoder khác họ, fine-tune SONG SONG trên 2 GPU
-    # riêng, fusion RRF 3 kênh với BM25, thay cho 1 bi-encoder 135M tự train trước đây). Không có
-    # nhãn document-level của Task 1 nên train HOÀN TOÀN từ nhãn citation của Task 2 (như cũ) —
-    # chỉ đổi SỐ LƯỢNG và ĐỘ MẠNH encoder, không cần dữ liệu ngoài.
     BASE_DENSE_MODEL_A = "BAAI/bge-m3"                        # ~568M, đa ngôn ngữ, không cần tiền tố
     BASE_DENSE_MODEL_B = "intfloat/multilingual-e5-large"     # ~560M, CẦN tiền tố "query: "/"passage: "
-                                                                # — bẫy kinh điển: quên tiền tố thì
-                                                                # recall tụt mà KHÔNG có lỗi nào bắn ra
-                                                                # (embedding vẫn ra số, chỉ lệch hệ toạ độ).
     DENSE_MAX_SEQ_LEN = 256
-    CHECKPOINT_DIR = os.path.join(OUT_DIR, "checkpoints")   # 1 thư mục duy nhất, giữ lại khi Save
-                                                              # Version — bạn tự tải về theo yêu cầu.
+    
+    # SỬA: Đảm bảo path truyền vào cấu hình lưu/load thành str tuyệt đối
+    CHECKPOINT_DIR = str(OUT_DIR / "checkpoints")   
     os.makedirs(CHECKPOINT_DIR, exist_ok=True)
+    
     MIN_TRAIN_PAIRS = 50
     MAX_TRAIN_EXAMPLES = 3000
     N_NEG_PER_ROW = 2
 
-    TRAIN_BATCH_SIZE = 64        # batch HIỆU DỤNG (số in-batch negative) — nâng từ 32 (bản 4GB)
-                                  # lên 64 vì có nhiều VRAM hơn để mine/giữ nhiều negative hơn.
-    TRAIN_MINI_BATCH_SIZE = 32   # batch THẬT mỗi forward — nâng từ 4 (bản 4GB) lên 32: 16GB của
-                                  # MỘT thẻ T4 đã dư sức cho model 135M tham số ở mini-batch này.
-    ENCODE_BATCH_SIZE = 256      # batch encode corpus mỗi tiến trình GPU — nâng nhiều vì 16GB/thẻ.
-    RERANK_SUBBATCH = 64         # reranker VẪN zero-shot ở bản này (chưa fine-tune — xem TODO ở
-                                  # Cell 10, việc tiếp theo sau khi xác nhận retrieval mạnh hơn có tác
-                                  # dụng). batch xử lý mỗi lần forward (568M) — nâng từ 24
-                                  # (bản 4GB) lên 64; vẫn xử lý theo lô thay vì nhồi hết 100 cùng
-                                  # lúc, vì lô vừa phải luôn nhanh hơn 1 lô khổng lồ (padding ít
-                                  # hơn, không nghẽn băng thông bộ nhớ) — xem Cell 11.
+    TRAIN_BATCH_SIZE = 64        # batch HIỆU DỤNG (số in-batch negative)
+    TRAIN_MINI_BATCH_SIZE = 32   # batch THẬT mỗi forward
+    ENCODE_BATCH_SIZE = 256      # batch encode corpus mỗi tiến trình GPU
+    RERANK_SUBBATCH = 64         # reranker VẪN zero-shot ở bản này
 
-    TIME_BUDGET_SEC = 8 * 3600         # Kaggle GPU session thường giới hạn ~9-12h liên tục — đặt
-                                        # trần an toàn 8h, chừa thời gian cho các bước sau + lưu output.
+    TIME_BUDGET_SEC = 8 * 3600         # Kaggle GPU session thường giới hạn ~9-12h liên tục
     FINETUNE_TIME_BUDGET_SEC = 3 * 3600
     DEV_EVAL_SAMPLE_SIZE = 300
 
-    # BẢN SỬA (tái lập được kết quả + ablation warmup + sổ thí nghiệm — theo phân tích
-    # chênh lệch điểm .py-vs-Kaggle, xem PHAN_TICH_KY_THUAT.md): trước đây random.seed(42) chỉ
-    # đặt ngay trước lúc lấy mẫu dev-eval (Bước 6) — random.sample/random.choice ở Bước 4 (chọn
-    # tập con để fine-tune, chọn hard-negative dự phòng) chạy TRƯỚC đó với random state KHÔNG
-    # seed, nên 2 lần chạy cùng code vẫn fine-tune trên 2 tập con khác nhau. SEED được set_all_seeds()
-    # NGAY SAU khi import xong (Cell 4) — trước Bước 3/4 — để tái lập được. USE_WARMUP cho phép
-    # ablation có/không warmup.json ở CÙNG seed. EXPERIMENT_LOG_PATH nằm trong /kaggle/working nên
-    # được giữ lại khi "Save Version" (khác cache/ ở /kaggle/temp, mất khi session kết thúc).
     SEED = 42
     USE_WARMUP = True   # đặt False để ablation: chỉ dùng train.json, không gộp warmup.json
-    EXPERIMENT_LOG_PATH = os.path.join(OUT_DIR, "experiment_log.jsonl")
+    
+    # SỬA: Đảm bảo path lưu experiment thành string 
+    EXPERIMENT_LOG_PATH = str(OUT_DIR / "experiment_log.jsonl")
 
     print(f"OUT_DIR   = {OUT_DIR}")
     print(f"CACHE_DIR = {CACHE_DIR}  (tạm, mất khi session kết thúc)")
@@ -159,7 +139,6 @@ def main() -> None:
     import math
     import random
     import zipfile
-    from pathlib import Path
     from collections import defaultdict, Counter
 
     import numpy as np
@@ -199,8 +178,6 @@ def main() -> None:
     def norm_so_hieu(s: str) -> str:
         return s.strip().upper()
 
-    # BẢN SỬA: seed toàn cục NGAY SAU khi import xong (trước Bước 3 ở Cell 7, trước Bước 4 ở
-    # Cell 8 — hai nơi duy nhất gọi random.sample/random.choice) — xem giải thích đầy đủ ở Cell 2.
     def set_all_seeds(seed: int) -> None:
         random.seed(seed)
         np.random.seed(seed)
@@ -208,13 +185,11 @@ def main() -> None:
         if torch.cuda.is_available():
             torch.cuda.manual_seed_all(seed)
 
-
     set_all_seeds(SEED)
     print(f"  Đã seed toàn cục với SEED={SEED} (random/numpy/torch) — trước mọi lời gọi random "
           f"ở Bước 3/4, để nhiều lần chạy cùng code fine-tune trên cùng 1 tập con, tái lập được.")
 
-    # Cell 5: Bước 1 — Chunk corpus theo Điều (neo đầu dòng — tránh rách nội dung khi 1 Điều
-    # trích dẫn Điều khác trong thân bài) + trích so_hieu/loai_vb từ NỘI DUNG (không phải tên file)
+    # Cell 5: Bước 1 — Chunk corpus theo Điều
     def chunk_passage(passage: str, doc_id) -> list:
         matches = list(DIEU_RE.finditer(passage))
         if not matches:
@@ -232,7 +207,7 @@ def main() -> None:
     def load_corpus(contexts_dir) -> list:
         contexts_dir = Path(contexts_dir)
         if not contexts_dir.exists():
-            raise FileNotFoundError(f"Không tìm thấy {contexts_dir} — kiểm tra lại CONTEXT_DIR ở Cell 2.")
+            raise FileNotFoundError(f"Không tìm thấy {contexts_dir} — kiểm tra lại CONTEXT_DIR ở đầu file.")
         files = sorted(contexts_dir.glob("context_*.json"))
         if not files:
             nested = contexts_dir / "selected-contexts"
@@ -270,7 +245,7 @@ def main() -> None:
     all_chunks = load_corpus(CONTEXT_DIR)
     checkpoint("Xong chunking")
 
-    # Cell 6: Bước 2 — BM25 tự viết bằng numpy (inverted index vector hoá — nhanh trên corpus lớn)
+    # Cell 6: Bước 2 — BM25
     class BM25:
         def __init__(self, tokenized_docs, k1: float = 1.5, b: float = 0.75):
             self.k1, self.b = k1, b
@@ -318,12 +293,8 @@ def main() -> None:
     bm25 = BM25(tokenized)
     checkpoint("Xong BM25 index")
 
-    # Cell 7: Bước 3 — Sinh nhãn (question -> chunk) từ citation trong train.json (+ warmup.json
-    # nếu USE_WARMUP=True, cùng schema — gộp thêm dữ liệu train, KHÔNG gộp vào mẫu dev-eval để
-    # tránh lẫn chất lượng nhãn chưa kiểm chứng vào lúc CHỌN cấu hình cuối cùng)
+    # Cell 7: Bước 3 — Sinh nhãn (question -> chunk)
     def extract_citations(answer) -> list:
-        # answer có thể KHÔNG phải string (đã gặp thật: warmup.json có answer kiểu list ở một số
-        # câu, khác train.json toàn string) — bỏ qua câu đó thay vì crash cả pipeline.
         if not isinstance(answer, str):
             return []
         out = []
@@ -353,8 +324,7 @@ def main() -> None:
                     positive[qid] = so_hieu_index[key]
                     break
         if n_skipped_type:
-            print(f"  [CẢNH BÁO] {n_skipped_type} câu có answer KHÔNG phải string -> bỏ qua khi "
-                  f"sinh nhãn, không tính vào positive pairs.")
+            print(f"  [CẢNH BÁO] {n_skipped_type} câu có answer KHÔNG phải string -> bỏ qua.")
         chunk_by_id = {c["id"]: c for c in all_chunks}
         return positive, chunk_by_id
 
@@ -364,10 +334,6 @@ def main() -> None:
         train_data = json.load(f)
     print(f"  train.json: {len(train_data)} câu")
 
-    # warmup.json: gộp thêm CHỈ KHI USE_WARMUP=True VÀ file tồn tại VÀ đúng schema
-    # {qid: {"question": str, "answer": str}} — lọc chặt cả kiểu dữ liệu. KHÔNG gộp vào mẫu
-    # dev-eval ở Bước 6 — dev-eval chỉ dùng train.json gốc để giữ tín hiệu chọn cấu hình đáng tin
-    # (xem phần 2.2 trong PHAN_TICH_KY_THUAT.md). USE_WARMUP=False cho phép ablation có kiểm soát.
     train_data_for_pairs = dict(train_data)
     n_warmup_used = 0
     if USE_WARMUP and os.path.exists(WARMUP_PATH):
@@ -400,26 +366,15 @@ def main() -> None:
     checkpoint("Xong sinh nhãn")
 
 
-    # Cell 8: Bước 4 — Fine-tune 2 dense encoder SONG SONG THẬT trên 2 GPU riêng (subprocess)
-    #
-    # CHỦ Ý dùng subprocess (không phải threading/multiprocessing.Process kiểu fork): Cell 3 đã
-    # init CUDA context trong tiến trình notebook (gọi torch.cuda.get_device_properties) — fork
-    # SAU khi CUDA đã init là lỗi kinh điển ("Cannot re-initialize CUDA in forked subprocess").
-    # subprocess.Popen luôn khởi động tiến trình Python HOÀN TOÀN MỚI (tương đương spawn), mỗi
-    # tiến trình con tự import torch riêng, tự nhận CUDA_VISIBLE_DEVICES riêng — an toàn tuyệt
-    # đối, đúng pattern `run_shards` của bản gốc `run_qa.py` đầu dự án.
-    #
-    # Checkpoint ĐƯỢC LƯU lần này (khác các bản trước) — bạn cần dùng lại qua nhiều phiên Kaggle,
-    # và vì tiến trình con/cha là 2 process riêng, cách DUY NHẤT đưa model đã train về tiến trình
-    # cha là qua đĩa (`model.save_pretrained()` rồi `SentenceTransformer(path)` load lại).
+    # Cell 8: Bước 4 — Fine-tune 2 dense encoder SONG SONG THẬT trên 2 GPU riêng
     import subprocess
-    import sys  # SỬA: sys.executable dùng để gọi WORKER_SCRIPT bên dưới — thiếu import này\n# là bug thật (Python vẫn cho phép dùng module chưa import NẾU nó tình cờ đã có trong\n# builtins/đã import ở cell khác cùng kernel session — dễ chạy "trót lọt" trong notebook\n# rồi lỗi khó hiểu khi chạy .py độc lập; luôn import tường minh module mình dùng).
+    import sys
 
-    print("=== Bước 4: Fine-tune 2 dense encoder song song (bge-m3 @ cuda:0, e5-large @ cuda:1) ===")
-
-    WORKER_SCRIPT = os.path.join(CACHE_DIR, "_train_encoder_worker.py")
-    # Worker con — fine-tune MOT SentenceTransformer tren MOT GPU, chay qua subprocess.Popen,
-    # nhan tham so qua argv, khong phu thuoc bien toan cuc cua notebook.
+    print("=== Bước 4: Fine-tune 2 dense encoder song song ===")
+    
+    # SỬA: Đảm bảo path string
+    WORKER_SCRIPT = str(CACHE_DIR / "_train_encoder_worker.py")
+    
     worker_code = '''
     import argparse, json, os, sys, time
 
@@ -528,7 +483,6 @@ def main() -> None:
     with open(WORKER_SCRIPT, "w", encoding="utf-8") as f:
         f.write(worker_code)
 
-    # ---- Tạo training rows 1 LẦN trong tiến trình cha (dùng chung cho cả 2 encoder) ----
     def _build_training_rows(train_positive, train_data, chunk_by_id, all_chunks, bm25, n_neg=N_NEG_PER_ROW):
         rows = []
         n = len(train_positive)
@@ -555,7 +509,7 @@ def main() -> None:
                       "n_pairs_used": 0, "models": {}}
 
     use_finetune = USE_FINETUNE and len(train_positive) >= MIN_TRAIN_PAIRS and remaining() > 10 * 60
-    DENSE_CHANNELS = []  # điền ở cuối cell; embeddings điền ở Cell 9
+    DENSE_CHANNELS = []
 
     if not use_finetune:
         reason = "USE_FINETUNE=False" if not USE_FINETUNE else (
@@ -581,19 +535,21 @@ def main() -> None:
 
         print(f"  Đang tạo training rows (dùng chung cho cả 2 encoder)...")
         rows = _build_training_rows(train_positive_used, train_data_for_pairs, chunk_by_id, all_chunks, bm25)
-        rows_path = os.path.join(CACHE_DIR, "train_rows.json")
+        
+        # SỬA: Ép chuỗi string để dùng cho Worker Popen args an toàn
+        rows_path = str(CACHE_DIR / "train_rows.json")
         with open(rows_path, "w", encoding="utf-8") as f:
             json.dump(rows, f, ensure_ascii=False)
         print(f"  {len(rows)} rows -> {rows_path}")
 
+        # SỬA: Ép chuỗi string cho output dict an toàn truyền đi 
         specs = [
             {"name": "bge-m3", "base_model": BASE_DENSE_MODEL_A, "gpu": DEVICES[0].split(":")[-1],
-             "out": os.path.join(CHECKPOINT_DIR, "bge-m3-ft"), "query_prefix": "", "passage_prefix": ""},
+             "out": str(Path(CHECKPOINT_DIR) / "bge-m3-ft"), "query_prefix": "", "passage_prefix": ""},
             {"name": "e5-large", "base_model": BASE_DENSE_MODEL_B, "gpu": DEVICES[-1].split(":")[-1],
-             "out": os.path.join(CHECKPOINT_DIR, "e5-large-ft"), "query_prefix": "query: ", "passage_prefix": "passage: "},
+             "out": str(Path(CHECKPOINT_DIR) / "e5-large-ft"), "query_prefix": "query: ", "passage_prefix": "passage: "},
         ]
-        # Chỉ chạy THẬT SỰ song song nếu có >= 2 GPU riêng biệt cho 2 spec — nếu chỉ 1 GPU, cả 2
-        # subprocess sẽ tranh cùng 1 thẻ nếu phóng cùng lúc (dễ OOM cả hai) -> chạy TUẦN TỰ.
+        
         run_parallel = len(DEVICES) > 1 and specs[0]["gpu"] != specs[1]["gpu"]
         time_budget_each = max(600.0, min(remaining() - 5 * 60, FINETUNE_TIME_BUDGET_SEC)
                                 / (1.0 if run_parallel else 2.0))
@@ -601,7 +557,7 @@ def main() -> None:
               f"— ngân sách mỗi encoder ~{time_budget_each/60:.0f} phút.")
 
         def _launch(spec):
-            log_path = os.path.join(CACHE_DIR, f"train_{spec['name']}.log")
+            log_path = str(CACHE_DIR / f"train_{spec['name']}.log")
             cmd = [sys.executable, WORKER_SCRIPT,
                    "--base-model", spec["base_model"], "--gpu-index", spec["gpu"],
                    "--rows-path", rows_path, "--output-dir", spec["out"],
@@ -631,7 +587,7 @@ def main() -> None:
                     failed.append(spec["name"])
                 lf.close()
         if failed:
-            raise SystemExit(f"Fine-tune lỗi: {failed} — xem log trong {CACHE_DIR}/train_<tên>.log")
+            raise SystemExit(f"Fine-tune lỗi: {failed} — xem log trong thư mục cache.")
 
         from sentence_transformers import SentenceTransformer
         for spec in specs:
@@ -654,9 +610,7 @@ def main() -> None:
     checkpoint("Xong Bước 4 (2 dense encoder)")
 
 
-    # Cell 9: Bước 5 — Encode toàn bộ corpus CHO CẢ 2 ENCODER (mỗi encoder dùng multi-process
-    # pool riêng, chạy TUẦN TỰ giữa 2 encoder — mỗi lần encode đã tận dụng CẢ 2 GPU, chạy đồng
-    # thời 2 pool cùng lúc sẽ tranh nhau GPU chứ không nhanh hơn)
+    # Cell 9: Bước 5 — Encode toàn bộ corpus CHO CẢ 2 ENCODER
     print(f"=== Bước 5: Encode toàn bộ corpus cho {len(DENSE_CHANNELS)} encoder ===")
     texts_raw = [c["text"] for c in all_chunks]
 
@@ -698,8 +652,7 @@ def main() -> None:
     checkpoint("Xong encode corpus (2 encoder)")
 
 
-    # Cell 10: Bước 5b — Tải reranker (1 bản MỖI GPU, để rerank được ở Bước 6/7 song song thật —
-    # xem lý do dùng AITeamVN/Vietnamese_Reranker ở docstring rerank() tại Cell 11)
+    # Cell 10: Bước 5b — Tải reranker
     from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
     def load_reranker_on(device: str):
@@ -737,17 +690,12 @@ def main() -> None:
     print(f"  Reranker sẵn sàng trên: {RERANK_DEVICES or '(không tải được — sẽ chạy không rerank)'}")
     checkpoint("Xong tải reranker")
 
-    # Cell 11: Hàm retrieval (RRF fusion N kênh — BM25 + N encoder) + rerank theo lô
-    # + hạ tầng chạy song song 2 GPU
+    # Cell 11: Hàm retrieval + rerank theo lô
     from concurrent.futures import ThreadPoolExecutor
 
     _print_lock = __import__("threading").Lock()
 
     def rrf_retrieve(question: str, bm25, dense_channels, all_chunks, top_k: int = TOP_K_RETRIEVE):
-        """RRF fusion N kênh: BM25 + mỗi encoder trong `dense_channels` (list of {"model",
-        "embeddings", "query_prefix"}). Mỗi encoder có thể cần tiền tố khác nhau lúc encode QUERY
-        (vd e5: "query: ") — PHẢI khớp tiền tố đã dùng lúc encode CORPUS ở Cell 9, nếu không
-        embedding lệch hệ toạ độ mà không lỗi nào báo (bẫy đã ghi ở Cell 2/8)."""
         bm25_ranked = bm25.top_k(tokenize_simple(question), top_k)
         rank_maps = [{idx: r for r, idx in enumerate(bm25_ranked)}]
         all_idx = set(bm25_ranked)
@@ -765,10 +713,6 @@ def main() -> None:
 
     def rerank(question: str, candidates: list, reranker_model, reranker_tokenizer,
                max_candidates: int = TOP_K_RETRIEVE, max_length: int = 1024, sub_batch: int = RERANK_SUBBATCH):
-        """Chấm điểm lại top `max_candidates` bằng cross-encoder, xử lý theo LÔ NHỎ (`sub_batch`)
-        thay vì nhồi hết `max_candidates` vào 1 forward — kết quả điểm số KHÔNG đổi (transformer
-        không trộn phép tính giữa các example trong batch, chỉ có padding — lô nhỏ padding ít
-        hơn), chỉ nhanh hơn và ổn định VRAM hơn. Trả thêm điểm số cho adaptive_k_cutoff()."""
         if reranker_model is None or not candidates:
             return candidates, None
         subset = candidates[:max_candidates]
@@ -800,8 +744,6 @@ def main() -> None:
 
 
     def adaptive_k_cutoff(scores, min_k: int = 1, max_k: int = TOP_K_RERANK, search_window: int = 15) -> int:
-        """Adaptive-k (Taguchi et al. 2025, arXiv:2506.08479): tìm điểm "gãy" tự nhiên trong
-        phân phối điểm reranker đã sort giảm dần thay vì luôn cắt ở top_n cố định."""
         if scores is None or len(scores) == 0:
             return min_k
         n = min(len(scores), search_window)
@@ -813,9 +755,6 @@ def main() -> None:
 
 
     def render_answer(selected_chunks: list, top_n: int) -> str:
-        """Câu dẫn "Căn cứ Điều X <loại VB> <số hiệu> quy định như sau:" — khuôn phổ biến nhất
-        đo được trên answer thật (57.4% mở đầu "Căn cứ", 24.6% có "quy định như sau"). Cắt bỏ
-        "Điều X." lặp lại ở đầu thân bài (98.8% answer thật không lặp)."""
         parts, seen = [], set()
         for c in selected_chunks:
             if c["id"] in seen or len(parts) >= top_n:
@@ -849,11 +788,6 @@ def main() -> None:
 
 
     def parallel_process(ids, worker_fn, devices, label: str = "", progress_every: int = 50):
-        """Chia `ids` đều cho từng thiết bị trong `devices`, chạy worker_fn(ids_chunk, device)
-        ĐỒNG THỜI trên các luồng riêng. PyTorch giải phóng GIL trong lúc chờ CUDA hoàn thành nên
-        2 luồng ghim vào 2 GPU vật lý khác nhau chạy song song THẬT (không phải giả song song do
-        GIL) — đây là chỗ mang lại tốc độ x~2 cho phần rerank ở Bước 6/7.
-        worker_fn(ids_chunk, device, worker_idx) -> dict {qid: kết quả}."""
         ids = list(ids)
         devices = list(devices) if devices else ["cpu"]
         chunks = split_evenly(ids, len(devices))
@@ -872,9 +806,7 @@ def main() -> None:
             with _print_lock:
                 print(f"    [{label} · luồng {worker_idx}] {i+1}/{n}")
 
-    # Cell 12: Bước 6 — Dev-eval (chọn TOP_N_ANSWER, có dùng reranker không, adaptive-k hay
-    # không) ĐỒNG THỜI đo Recall@k — gộp chung 1 lượt retrieval+rerank, không chạy lại 2 lần
-    # (xem lý do gộp trong bản máy cá nhân — nguyên tắc giữ nguyên, giờ thêm chạy song song 2 GPU)
+    # Cell 12: Bước 6 — Dev-eval
     import nltk
     if str(NLTK_CACHE_DIR) not in nltk.data.path:
         nltk.data.path.insert(0, str(NLTK_CACHE_DIR))
@@ -887,10 +819,6 @@ def main() -> None:
     from rouge_score import rouge_scorer
 
     rouge = rouge_scorer.RougeScorer(["rougeL"], use_stemmer=False)
-    # BẢN SỬA: re-seed CỐ Ý ở đây (dùng SEED chung, không phải số 42 rời rạc) — đảm bảo mẫu
-    # dev-eval LUÔN CỐ ĐỊNH bất kể USE_WARMUP/USE_FINETUNE bật hay tắt (số lời gọi random.*
-    # trước đó thay đổi tuỳ cấu hình sẽ làm lệch state nếu không re-seed ở đây) — cần thiết để
-    # ablation so sánh đúng nghĩa "cùng 300 câu, chỉ khác 1 biến". Xem PHAN_TICH_KY_THUAT.md §5.2.
     random.seed(SEED)
 
     print("=== Bước 6: Dev-eval chọn TOP_N_ANSWER + đo Recall@k ===")
@@ -905,8 +833,6 @@ def main() -> None:
     if HAS_RERANKER:
         configs.append(("BM25+dense+rerank", True))
 
-    # BẢN SỬA: theo dõi thêm best_r (ROUGE-L của cấu hình thắng) + recall_at_k_by_label — để Cell 14
-    # ghi đủ vào sổ thí nghiệm (trước đây các con số này chỉ in ra console rồi mất).
     best_n, best_m, best_r, best_use_rerank, best_use_adaptive = 3, -1.0, None, False, False
     recall_at_k_by_label = {}
     for label, use_rr in configs:
@@ -928,7 +854,6 @@ def main() -> None:
             ranked_cache = {q: v[0] for q, v in merged.items()}
             scores_cache = {q: v[1] for q, v in merged.items()}
         else:
-            # Không rerank (rẻ, tuần tự đủ nhanh) hoặc chỉ 1 GPU cho reranker.
             rr_dev = RERANK_DEVICES[0] if (use_rr and RERANK_DEVICES) else None
             ranked_cache, scores_cache = {}, {}
             t0 = time.time()
@@ -994,7 +919,7 @@ def main() -> None:
     checkpoint("Xong dev-eval + Recall@k")
 
 
-    # Cell 13: Bước 7 — Sinh câu trả lời cho public-official.json (song song 2 GPU nếu dùng reranker)
+    # Cell 13: Bước 7 — Sinh câu trả lời cho public-official.json
     print("=== Bước 7: Sinh câu trả lời cho public-official.json ===")
     with open(PUBLIC_PATH, encoding="utf-8") as f:
         questions = json.load(f)
@@ -1028,7 +953,7 @@ def main() -> None:
     print(f"  Đã sinh {len(answers)} câu trả lời, {n_empty} câu rỗng")
     checkpoint("Xong sinh câu trả lời")
 
-    # Cell 14: Bước 8 — Validate + đóng gói submission.zip (vào /kaggle/working) + ghi sổ thí nghiệm
+    # Cell 14: Bước 8 — Validate + đóng gói submission.zip
     def build_submission(answers: dict, expected_ids: set, out_zip: Path) -> None:
         errors = []
         got = set(answers.keys())
@@ -1057,10 +982,6 @@ def main() -> None:
     build_submission(answers, set(questions.keys()), Path(OUT_DIR) / "submission.zip")
     checkpoint(f"XONG — tổng thời gian {elapsed()/60:.1f} phút (trần an toàn {TIME_BUDGET_SEC/3600:.0f} giờ)")
 
-    # BẢN SỬA — "sổ thí nghiệm": 1 dòng JSON/lần chạy, APPEND vào EXPERIMENT_LOG_PATH (nằm ở
-    # /kaggle/working nên được giữ lại khi "Save Version", khác cache/ ở /kaggle/temp bị xoá khi
-    # session kết thúc). Đủ để so sánh nhiều lần chạy sau này (khác seed, khác USE_WARMUP, khác
-    # USE_FINETUNE...) mà không phải lục lại log console — xem PHAN_TICH_KY_THUAT.md §5.8.
     n_empty = sum(1 for a in answers.values() if not a.strip())
     record = {
         "ts": time.strftime("%Y-%m-%d %H:%M:%S"), "seed": SEED, "use_warmup": USE_WARMUP,
@@ -1068,8 +989,8 @@ def main() -> None:
         "n_train_pairs_available": finetune_info["n_pairs_available"],
         "n_train_pairs_used": finetune_info["n_pairs_used"],
         "used_finetune": finetune_info["used_finetune"], "finetune_reason": finetune_info["reason"],
-        "finetune_models": finetune_info["models"],  # {"bge-m3": {max_steps,...}, "e5-large": {...}}
-        "reranker_finetuned": False,  # TODO: bản này reranker vẫn zero-shot, xem ghi chú Cell 10
+        "finetune_models": finetune_info["models"],
+        "reranker_finetuned": False,
         "checkpoint_dir": CHECKPOINT_DIR if finetune_info["used_finetune"] else None,
         "top_n_answer": top_n_answer, "use_reranker": use_reranker, "use_adaptive_k": use_adaptive,
         "dev_meteor": eval_info["meteor"], "dev_rouge_l": eval_info["rouge_l"],
@@ -1083,11 +1004,6 @@ def main() -> None:
               f"giữ lại khi Save Version).")
     except OSError as e:
         print(f"  [CẢNH BÁO] Không ghi được sổ thí nghiệm ({e}) — không ảnh hưởng submission.zip.")
-    # SỬA (mất log thật: session Kaggle bị reset, /kaggle/working và /kaggle/temp mất theo, không
-    # đọc lại được experiment_log.jsonl): LUÔN in JSON đầy đủ ra console dù ghi file thành công hay
-    # không. Nếu bạn dùng "Save Version" > "Save & Run All (Commit)", output cell này được giữ lại
-    # trong tab Output/Logs của version đó ngay cả khi bạn reset editor sau này — an toàn hơn nhiều
-    # so với chỉ trông vào file trong /kaggle/working, vốn cũng có thể mất nếu không commit đúng cách.
     print("  [SỔ THÍ NGHIỆM — copy dòng dưới đây nếu cần đối chiếu sau này]")
     print("  " + json.dumps(record, ensure_ascii=False))
 
