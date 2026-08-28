@@ -1,33 +1,37 @@
 #!/usr/bin/env python
 """
-legalqa_dual_encoder.py — LegalQA (UIT DSC2026 Task 2), kiến trúc "mạnh nhất" v2:
+legalqa_dual_encoder.py — LegalQA (UIT DSC2026 Task 2), kiến trúc "mạnh nhất" v3:
 2 dense encoder khác họ (BAAI/bge-m3 + intfloat/multilingual-e5-large) fine-tune SONG
-SONG trên 2 GPU riêng (subprocess) + fusion RRF 3 kênh (BM25 + bge-m3-ft + e5-ft-large)
-+ FINE-TUNE RERANKER (AITeamVN/Vietnamese_Reranker, margin ranking loss trên chính nhãn
-citation Task 2) — thêm sau khi đo được dual-encoder-only chỉ nhích rất ít (0.5215/0.4829
-so với 0.5199/0.4806 single-encoder), kết luận trần điểm nằm ở reranker zero-shot chứ
-không phải retrieval. Xem PHAN_TICH_KY_THUAT.md để biết đầy đủ phân tích/lý do.
+SONG trên 2 GPU riêng (subprocess, tự lùi tuần tự nếu chỉ 1 GPU) + fusion RRF 3 kênh
+(BM25 + bge-m3-ft + e5-ft-large) + FINE-TUNE RERANKER (margin ranking loss trên chính
+nhãn citation Task 2).
+
+BẢN SỬA v3: TỰ NHẬN DIỆN MÔI TRƯỜNG (Kaggle vs máy cá nhân) qua sự tồn tại của
+/kaggle/input — cùng MỘT nguồn code (chia sẻ với legalqa_kaggle_t4x2.ipynb) giờ chạy
+đúng đường dẫn ở CẢ HAI nơi: Kaggle dùng /kaggle/input/..., máy cá nhân đặt file .py
+CẠNH train.json/public-official.json/selected-contexts/ (đúng quy ước legalqa_local.py).
+Trên máy cá nhân, KHÔNG có trần thời gian phiên như Kaggle nên TIME_BUDGET_SEC/
+FINETUNE_TIME_BUDGET_SEC/RERANKER_FT_TIME_BUDGET_SEC được nới rất rộng (không phải để
+ép nhanh, chỉ để không treo vĩnh viễn nếu có bug). Batch khởi điểm GIỮ NGUYÊN mức cho
+GPU nhiều VRAM — OOM-backoff đã có sẵn ở mọi bước tự lùi khi máy yếu hơn, không cần hạ
+tay trước (đúng triết lý "dùng tối đa tài nguyên, chỉ lùi khi thật sự hết" đã áp dụng
+xuyên suốt từ legalqa_local.py).
 
 Đây là bản .py TRÍCH XUẤT Y HỆT logic của legalqa_kaggle_t4x2.ipynb (không viết lại tay,
 để tránh lệch giữa 2 bản) — dùng khi muốn chạy như một script thuần (vd qua `python
-legalqa_dual_encoder.py`, cron job, hoặc máy đa-GPU khác ngoài Kaggle) thay vì notebook.
+legalqa_dual_encoder.py`) thay vì notebook, trên Kaggle hoặc máy riêng.
 
-CẦN MÁY THẬT SỰ CÓ ÍT NHẤT 1 GPU ~16GB (lý tưởng 2 GPU, kiểu Kaggle T4x2) — kiến trúc 2
-encoder + fine-tune reranker không phù hợp GPU 4GB (dùng bản `legalqa_local.py` — 1
-encoder nhẹ, reranker zero-shot — cho trường hợp đó). Nếu chỉ có 1 GPU, script tự chuyển
-fine-tune 2 encoder sang chạy TUẦN TỰ thay vì song song (xem "run_parallel" ở Bước 4) —
-vẫn chạy đúng, chỉ chậm hơn; fine-tune reranker luôn chạy trên GPU đầu tiên (1 GPU đã đủ).
-
-CÁCH DÙNG:
+CÁCH DÙNG (đặt cạnh train.json, public-official.json, selected-contexts/ nếu chạy ngoài
+Kaggle):
     pip install -q -U sentence-transformers datasets "accelerate>=1.1.0" nltk rouge_score sentencepiece
     python legalqa_dual_encoder.py
 
-ĐƯỜNG DẪN: mặc định viết theo layout Kaggle (/kaggle/input/..., /kaggle/working,
-/kaggle/temp/...) — xem khối DATA_DIR/OUT_DIR/CACHE_DIR ngay đầu main(). Nếu chạy ngoài
-Kaggle, sửa 4 dòng đó cho khớp layout máy bạn rồi chạy như bình thường.
-
 KHÔNG dùng ký hiệu `!pip install` (cú pháp riêng của Jupyter) — cài thư viện bằng lệnh
 pip ở trên TRƯỚC khi chạy file này.
+
+VRAM: kiến trúc 2 encoder (~568M+560M) + reranker fine-tune (~568M) chạy được cả trên
+GPU nhỏ (đã có OOM-backoff), nhưng sẽ CHẬM hơn nhiều so với 16GB/thẻ của Kaggle — chấp
+nhận được nếu không có giới hạn thời gian phiên (đúng trường hợp máy cá nhân).
 """
 
 
@@ -35,17 +39,39 @@ def main() -> None:
     # Cell 2: Đường dẫn và tham số
     import os
 
-    DATA_DIR = "/kaggle/input/datasets/anhnguyen7508/uit-data-science-dataset/"
-    CONTEXT_DIR = os.path.join(DATA_DIR, "selected-contexts/selected-contexts/")
-    TRAIN_PATH = os.path.join(DATA_DIR, "train.json")
-    WARMUP_PATH = os.path.join(DATA_DIR, "warmup.json")
-    PUBLIC_PATH = os.path.join(DATA_DIR, "public-official.json")
+    # BẢN SỬA (log lỗi thật: chạy trên máy cá nhân RTX 2050 4GB nhưng CONTEXT_DIR trước đây cứng
+    # đường dẫn Kaggle /kaggle/input/... -> FileNotFoundError): tự nhận diện MÔI TRƯỜNG thay vì
+    # cứng 1 kiểu đường dẫn — /kaggle/input CHỈ tồn tại thật trên Kaggle, nên dùng chính nó làm
+    # điều kiện phát hiện. Nhờ vậy CÙNG MỘT nguồn code chạy đúng trên cả 2 nơi (notebook Kaggle
+    # tự lấy đường dẫn Kaggle, .py trên máy cá nhân tự lấy đường dẫn CẠNH SCRIPT — đúng quy ước
+    # HERE-relative của legalqa_local.py, dữ liệu đặt cùng thư mục file .py).
+    IS_KAGGLE = os.path.isdir("/kaggle/input")
 
-    # /kaggle/input CHỈ ĐỌC. Mọi thứ ghi ra phải nằm ở /kaggle/working (được lưu khi
-    # "Save Version" — đây là nơi submission.zip phải nằm) hoặc /kaggle/temp (KHÔNG được
-    # lưu, mất khi session kết thúc — dùng cho cache/model tải về, đỡ tốn quota output).
-    OUT_DIR = "/kaggle/working"
-    CACHE_DIR = "/kaggle/temp/legalqa_cache"
+    if IS_KAGGLE:
+        DATA_DIR = "/kaggle/input/datasets/anhnguyen7508/uit-data-science-dataset/"
+        CONTEXT_DIR = os.path.join(DATA_DIR, "selected-contexts/selected-contexts/")
+        TRAIN_PATH = os.path.join(DATA_DIR, "train.json")
+        WARMUP_PATH = os.path.join(DATA_DIR, "warmup.json")
+        PUBLIC_PATH = os.path.join(DATA_DIR, "public-official.json")
+        # /kaggle/input CHỈ ĐỌC. Mọi thứ ghi ra phải nằm ở /kaggle/working (được lưu khi
+        # "Save Version" — đây là nơi submission.zip phải nằm) hoặc /kaggle/temp (KHÔNG được
+        # lưu, mất khi session kết thúc — dùng cho cache/model tải về, đỡ tốn quota output).
+        OUT_DIR = "/kaggle/working"
+        CACHE_DIR = "/kaggle/temp/legalqa_cache"
+    else:
+        # Máy cá nhân (hoặc bất kỳ máy nào không phải Kaggle): đặt file .py CẠNH train.json,
+        # public-official.json, selected-contexts/ — đúng quy ước của legalqa_local.py, không có
+        # trần thời gian phiên nào để lo (khác Kaggle) nên OUT_DIR/CACHE_DIR cũng nằm ngay cạnh
+        # script, dễ tìm dễ dọn.
+        HERE = os.path.dirname(os.path.abspath(__file__)) if "__file__" in globals() else os.getcwd()
+        DATA_DIR = HERE
+        CONTEXT_DIR = os.path.join(HERE, "selected-contexts")
+        TRAIN_PATH = os.path.join(HERE, "train.json")
+        WARMUP_PATH = os.path.join(HERE, "warmup.json")
+        PUBLIC_PATH = os.path.join(HERE, "public-official.json")
+        OUT_DIR = HERE
+        CACHE_DIR = os.path.join(HERE, "cache")
+
     HF_CACHE_DIR = os.path.join(CACHE_DIR, "hf")
     NLTK_CACHE_DIR = os.path.join(CACHE_DIR, "nltk_data")
     TRAINER_TMP_DIR = os.path.join(CACHE_DIR, "trainer_tmp")
@@ -61,42 +87,45 @@ def main() -> None:
     CHUNK_SIZE = 512      # không sử dụng — chunk theo Điều (xem Bước 1), giữ lại đúng như đề bài
     TOP_K_RETRIEVE = 100  # số ứng viên lấy ra sau RRF fusion (BM25 + dense)
     TOP_K_RERANK = 5      # trần trên cho số Điều đưa vào 1 câu trả lời (top_n tĩnh VÀ trần adaptive-k)
-    USE_FINETUNE = True   # SỬA cho Kaggle T4x2: bật mặc định — 16GB/thẻ dư sức fine-tune, không
-                           # còn ràng buộc 4GB như máy cá nhân. Đặt False nếu muốn chạy thử nhanh
-                           # hoặc đang tiết kiệm quota GPU (30h/tuần trên tài khoản free).
+    USE_FINETUNE = True   # bật mặc định — có đủ VRAM (16GB/thẻ Kaggle, hoặc OOM-backoff tự lùi
+                           # trên máy yếu hơn) thì fine-tune, không cần đắn đo trước. Đặt False nếu
+                           # muốn chạy thử nhanh hoặc đang tiết kiệm quota GPU trên Kaggle.
 
-    # BẢN SỬA (kiến trúc "mạnh nhất" — 2 dense encoder khác họ, fine-tune SONG SONG trên 2 GPU
-    # riêng, fusion RRF 3 kênh với BM25, thay cho 1 bi-encoder 135M tự train trước đây). Không có
-    # nhãn document-level của Task 1 nên train HOÀN TOÀN từ nhãn citation của Task 2 (như cũ) —
-    # chỉ đổi SỐ LƯỢNG và ĐỘ MẠNH encoder, không cần dữ liệu ngoài.
+    # Kiến trúc "mạnh nhất" — 2 dense encoder khác họ, fine-tune SONG SONG trên 2 GPU riêng (nếu
+    # có; tự lùi về tuần tự nếu chỉ 1 GPU — xem Bước 4), fusion RRF 3 kênh với BM25, thay cho 1
+    # bi-encoder 135M tự train trước đây. Không có nhãn document-level của Task 1 nên train HOÀN
+    # TOÀN từ nhãn citation của Task 2 — chỉ đổi SỐ LƯỢNG và ĐỘ MẠNH encoder, không cần dữ liệu ngoài.
     BASE_DENSE_MODEL_A = "BAAI/bge-m3"                        # ~568M, đa ngôn ngữ, không cần tiền tố
     BASE_DENSE_MODEL_B = "intfloat/multilingual-e5-large"     # ~560M, CẦN tiền tố "query: "/"passage: "
                                                                 # — bẫy kinh điển: quên tiền tố thì
                                                                 # recall tụt mà KHÔNG có lỗi nào bắn ra
                                                                 # (embedding vẫn ra số, chỉ lệch hệ toạ độ).
     DENSE_MAX_SEQ_LEN = 256
-    CHECKPOINT_DIR = os.path.join(OUT_DIR, "checkpoints")   # 1 thư mục duy nhất, giữ lại khi Save
-                                                              # Version — bạn tự tải về theo yêu cầu.
+    CHECKPOINT_DIR = os.path.join(OUT_DIR, "checkpoints")   # 1 thư mục duy nhất — Kaggle: giữ lại
+                                                              # khi Save Version, tự tải về; máy cá
+                                                              # nhân: nằm cạnh script như mọi output khác.
     os.makedirs(CHECKPOINT_DIR, exist_ok=True)
     MIN_TRAIN_PAIRS = 50
     MAX_TRAIN_EXAMPLES = 3000
     N_NEG_PER_ROW = 2
 
-    TRAIN_BATCH_SIZE = 64        # batch HIỆU DỤNG (số in-batch negative) — nâng từ 32 (bản 4GB)
-                                  # lên 64 vì có nhiều VRAM hơn để mine/giữ nhiều negative hơn.
-    TRAIN_MINI_BATCH_SIZE = 32   # batch THẬT mỗi forward — nâng từ 4 (bản 4GB) lên 32: 16GB của
-                                  # MỘT thẻ T4 đã dư sức cho model 135M tham số ở mini-batch này.
-    ENCODE_BATCH_SIZE = 256      # batch encode corpus mỗi tiến trình GPU — nâng nhiều vì 16GB/thẻ.
-    RERANK_SUBBATCH = 64         # reranker VẪN zero-shot ở bản này (chưa fine-tune — xem TODO ở
-                                  # Cell 10, việc tiếp theo sau khi xác nhận retrieval mạnh hơn có tác
-                                  # dụng). batch xử lý mỗi lần forward (568M) — nâng từ 24
-                                  # (bản 4GB) lên 64; vẫn xử lý theo lô thay vì nhồi hết 100 cùng
-                                  # lúc, vì lô vừa phải luôn nhanh hơn 1 lô khổng lồ (padding ít
-                                  # hơn, không nghẽn băng thông bộ nhớ) — xem Cell 11.
+    # BẢN SỬA (theo yêu cầu — chạy trên máy cá nhân, không cần đắn đo ngân sách còn lại): batch
+    # khởi điểm GIỮ NGUYÊN mức đã tối ưu cho GPU nhiều VRAM (Kaggle T4 16GB); trên máy VRAM nhỏ
+    # hơn (vd RTX 2050 4GB), OOM-backoff đã có sẵn ở mọi bước (Bước 4/5/6/7/5b) tự lùi batch khi
+    # OOM thật xảy ra — KHÔNG cần hạ tay trước, đúng triết lý "dùng tối đa tài nguyên, chỉ lùi khi
+    # thật sự hết" đã áp dụng xuyên suốt từ legalqa_local.py.
+    TRAIN_BATCH_SIZE = 64        # batch HIỆU DỤNG (số in-batch negative)
+    TRAIN_MINI_BATCH_SIZE = 32   # batch THẬT mỗi forward — OOM-backoff tự giảm nếu máy yếu hơn Kaggle.
+    ENCODE_BATCH_SIZE = 256      # batch encode corpus mỗi tiến trình GPU.
+    RERANK_SUBBATCH = 64         # batch xử lý mỗi lần forward reranker (568M) — xử lý theo lô thay
+                                  # vì lô vừa phải luôn nhanh hơn 1 lô khổng lồ (padding ít hơn,
+                                  # không nghẽn băng thông bộ nhớ) — xem Cell 11.
 
-    TIME_BUDGET_SEC = 8 * 3600         # Kaggle GPU session thường giới hạn ~9-12h liên tục — đặt
-                                        # trần an toàn 8h, chừa thời gian cho các bước sau + lưu output.
-    FINETUNE_TIME_BUDGET_SEC = 3 * 3600
+    # BẢN SỬA: TIME_BUDGET chỉ thật sự cần trên Kaggle (trần phiên GPU ~9-12h). Máy cá nhân KHÔNG
+    # có giới hạn phiên nào — đặt trần RẤT RỘNG (không phải vô hạn, để tránh treo vĩnh viễn nếu có
+    # bug logic nào đó) thay vì ép chạy nhanh/cắt ngắn không cần thiết.
+    TIME_BUDGET_SEC = (8 * 3600) if IS_KAGGLE else (48 * 3600)
+    FINETUNE_TIME_BUDGET_SEC = (3 * 3600) if IS_KAGGLE else (16 * 3600)
     DEV_EVAL_SAMPLE_SIZE = 300
 
     # BẢN SỬA (tái lập được kết quả + ablation warmup + sổ thí nghiệm — theo phân tích
@@ -105,8 +134,9 @@ def main() -> None:
     # tập con để fine-tune, chọn hard-negative dự phòng) chạy TRƯỚC đó với random state KHÔNG
     # seed, nên 2 lần chạy cùng code vẫn fine-tune trên 2 tập con khác nhau. SEED được set_all_seeds()
     # NGAY SAU khi import xong (Cell 4) — trước Bước 3/4 — để tái lập được. USE_WARMUP cho phép
-    # ablation có/không warmup.json ở CÙNG seed. EXPERIMENT_LOG_PATH nằm trong /kaggle/working nên
-    # được giữ lại khi "Save Version" (khác cache/ ở /kaggle/temp, mất khi session kết thúc).
+    # ablation có/không warmup.json ở CÙNG seed. EXPERIMENT_LOG_PATH nằm trong OUT_DIR — trên
+    # Kaggle được giữ lại khi "Save Version" (khác cache/ ở /kaggle/temp, mất khi session kết
+    # thúc); trên máy cá nhân nằm cạnh script như submission.zip.
     SEED = 42
     USE_WARMUP = True   # đặt False để ablation: chỉ dùng train.json, không gộp warmup.json
     EXPERIMENT_LOG_PATH = os.path.join(OUT_DIR, "experiment_log.jsonl")
@@ -117,8 +147,7 @@ def main() -> None:
     # Task 2 -- tái dùng `rows` đã build cho Bước 4, KHÔNG cần dữ liệu thêm.
     USE_RERANKER_FINETUNE = True
     RERANKER_BASE = "AITeamVN/Vietnamese_Reranker"
-    RERANKER_FT_TIME_BUDGET_SEC = 60 * 60   # 1 tiếng — reranker nhỏ hơn 2 dense encoder cộng lại,
-                                             # không cần ngân sách bằng FINETUNE_TIME_BUDGET_SEC
+    RERANKER_FT_TIME_BUDGET_SEC = (60 * 60) if IS_KAGGLE else (6 * 3600)
     RERANKER_FT_BATCH_SIZE = 8              # số CÂU HỎI/batch (mỗi câu có 1 positive + N_NEG_PER_ROW
                                              # negative -> batch thật cho reranker lớn hơn số này)
     RERANKER_FT_LR = 1e-5
@@ -126,8 +155,11 @@ def main() -> None:
                                              # + margin -- không cần thang điểm chuẩn hoá, chỉ cần đúng
                                              # THỨ TỰ, ổn định hơn BCE/MSE cho reranker logit thô.
 
+    print(f"Môi trường: {'Kaggle' if IS_KAGGLE else 'máy cá nhân (không phải Kaggle)'}")
+    print(f"DATA_DIR  = {DATA_DIR}")
     print(f"OUT_DIR   = {OUT_DIR}")
-    print(f"CACHE_DIR = {CACHE_DIR}  (tạm, mất khi session kết thúc)")
+    print(f"CACHE_DIR = {CACHE_DIR}" + ("  (tạm, mất khi session kết thúc)" if IS_KAGGLE else ""))
+
 
     # Cell 3: Kiểm tra GPU (mong đợi 2x Tesla T4) + tiện ích thời gian
     import time
