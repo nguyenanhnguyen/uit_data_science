@@ -1,6 +1,14 @@
 #!/usr/bin/env python
 """
-legalqa_local_rtx2050_v4_2.py — LegalQA (UIT DSC2026 Task 2), bản hotfix thực tế cho RTX 2050 4GB.
+legalqa_local_rtx2050_v4_3.py — LegalQA (UIT DSC2026 Task 2), RTX 2050 4GB — fix AMP reranker + reuse dense checkpoint.
+
+V4.3 HOTFIX:
+- sửa ValueError 'Attempting to unscale FP16 gradients' ở reranker fine-tune;
+- dùng HYBRID PRECISION trên local4gb: frozen base lưu FP16, 13.6M trainable params giữ FP32;
+  autocast FP16 + GradScaler lúc forward/backward => tiết kiệm VRAM nhưng scaler vẫn hợp lệ;
+- in dtype trainable/frozen để chẩn đoán;
+- tự tái sử dụng dense checkpoint đã train thành công trong cache/checkpoints nếu có,
+  tránh mất lại ~84 phút; set FORCE_DENSE_FINETUNE=1 nếu muốn ép train lại.
 
 V4.2 HOTFIX:
 - sửa worker subprocess bị IndentationError do chuỗi worker_code giữ indentation của main();
@@ -47,7 +55,7 @@ legalqa_dual_encoder.py`) thay vì notebook, trên Kaggle hoặc máy riêng.
 CÁCH DÙNG (đặt cạnh train.json, public-official.json, selected-contexts/ nếu chạy ngoài
 Kaggle):
     pip install -q -U sentence-transformers datasets "accelerate>=1.1.0" nltk rouge_score sentencepiece
-    python legalqa_local_rtx2050_v4.py
+    python legalqa_local_rtx2050_v4_3.py
 
 KHÔNG dùng ký hiệu `!pip install` (cú pháp riêng của Jupyter) — cài thư viện bằng lệnh
 pip ở trên TRƯỚC khi chạy file này.
@@ -157,6 +165,9 @@ def main() -> None:
     # Không tạo folder checkpoints riêng cạnh script nữa. Mọi checkpoint tạm nằm trong cache/.
     CHECKPOINT_DIR = os.path.join(CACHE_DIR, "checkpoints")
     os.makedirs(CHECKPOINT_DIR, exist_ok=True)
+    # Sau khi một run crash ở bước sau, không cần train lại dense encoder 84+ phút.
+    # Chỉ ép train lại khi set: $env:FORCE_DENSE_FINETUNE="1"
+    FORCE_DENSE_FINETUNE = os.environ.get("FORCE_DENSE_FINETUNE", "0").strip() == "1"
 
     MIN_TRAIN_PAIRS = 50
     MAX_TRAIN_EXAMPLES = 9000          # 3000 -> 9000 để tận dụng nhãn Task 1 mới
@@ -896,13 +907,33 @@ def main() -> None:
                 "query_prefix": spec["query_prefix"], "passage_prefix": spec["passage_prefix"],
             })
     else:
-        # Chỉ song song khi thật sự có nhiều GPU vật lý. RTX2050 1 GPU -> tuần tự.
-        run_parallel = (len(specs) > 1 and len(DEVICES) > 1
-                        and len({s["gpu"] for s in specs}) == len(specs))
-        divisor = 1.0 if run_parallel else max(1, len(specs))
-        time_budget_each = max(600.0, min(remaining() - 5 * 60, FINETUNE_TIME_BUDGET_SEC) / divisor)
-        print(f"  Fine-tune {len(specs)} encoder — "
-              f"{'song song' if run_parallel else 'tuần tự'}; ~{time_budget_each/60:.0f} phút/model.")
+        # Tái sử dụng checkpoint dense đã train xong ở run trước (nếu meta + folder đều còn).
+        cached_specs, train_specs = [], []
+        for spec in specs:
+            meta_path = spec["out"] + "_meta.json"
+            valid_cache = os.path.isdir(spec["out"]) and os.path.isfile(meta_path)
+            if valid_cache and not FORCE_DENSE_FINETUNE:
+                cached_specs.append(spec)
+            else:
+                train_specs.append(spec)
+
+        if cached_specs:
+            print("  [CACHE] Tái sử dụng dense checkpoint đã có:")
+            for spec in cached_specs:
+                print(f"    - {spec['name']} -> {spec['out']}")
+        if FORCE_DENSE_FINETUNE and any(os.path.isdir(s["out"]) for s in specs):
+            print("  FORCE_DENSE_FINETUNE=1 -> bỏ qua checkpoint cũ và train lại.")
+
+        # Chỉ song song khi thật sự có nhiều GPU vật lý và còn >=2 model cần train.
+        run_parallel = (len(train_specs) > 1 and len(DEVICES) > 1
+                        and len({s["gpu"] for s in train_specs}) == len(train_specs))
+        divisor = 1.0 if run_parallel else max(1, len(train_specs))
+        time_budget_each = max(600.0, min(remaining() - 5 * 60, FINETUNE_TIME_BUDGET_SEC) / divisor)                            if train_specs else 0.0
+        if train_specs:
+            print(f"  Fine-tune {len(train_specs)} encoder — "
+                  f"{'song song' if run_parallel else 'tuần tự'}; ~{time_budget_each/60:.0f} phút/model.")
+        else:
+            print("  Không cần fine-tune dense lại — tất cả checkpoint cần thiết đã có.")
 
         def _tail_log(path, n=100):
             try:
@@ -927,7 +958,7 @@ def main() -> None:
 
         failed = []
         if run_parallel:
-            procs = [(spec, *_launch(spec)) for spec in specs]
+            procs = [(spec, *_launch(spec)) for spec in train_specs]
             for spec, proc, lf in procs:
                 rc = proc.wait()
                 lf.close()
@@ -935,7 +966,7 @@ def main() -> None:
                 if rc != 0:
                     failed.append(spec["name"])
         else:
-            for spec in specs:
+            for spec in train_specs:
                 proc, lf = _launch(spec)
                 rc = proc.wait()
                 lf.close()
@@ -1111,13 +1142,25 @@ def main() -> None:
             model, RERANKER_FT_MODE
         )
 
-        # Local 4GB: fp16 weights để giảm ~1/2 VRAM. Chỉ các param được mở mới có gradient/state.
+        # Local 4GB: HYBRID PRECISION.
+        # - frozen base: FP16 để tiết kiệm ~1/2 VRAM;
+        # - trainable layer cuối + head: FP32 để GradScaler có thể unscale gradient hợp lệ.
+        #
+        # Bug v4.2: model.half() biến CẢ trainable params thành FP16. PyTorch GradScaler
+        # cố unscale FP16 gradients và raise:
+        #   ValueError: Attempting to unscale FP16 gradients.
+        # Giữ trainable params FP32 giải quyết đúng nguyên nhân, không cần tắt AMP.
         if device.startswith("cuda") and MODEL_PROFILE == "local4gb":
             model = model.half()
+            for p in model.parameters():
+                if p.requires_grad:
+                    p.data = p.data.float()
+
         model = model.to(device)
         model.train()
 
         trainable = [p for p in model.parameters() if p.requires_grad]
+        frozen = [p for p in model.parameters() if not p.requires_grad]
         n_trainable = sum(p.numel() for p in trainable)
         n_total = sum(p.numel() for p in model.parameters())
         print(
@@ -1125,6 +1168,13 @@ def main() -> None:
             f"{n_total/1e6:.1f}M"
             + (f", layer_list={layer_list_name}" if layer_list_name else "")
         )
+        train_dtypes = sorted({str(p.dtype) for p in trainable})
+        frozen_dtypes = sorted({str(p.dtype) for p in frozen})
+        print(f"  reranker-ft dtype: trainable={train_dtypes}, frozen={frozen_dtypes}")
+        if device.startswith("cuda") and any(p.dtype == torch.float16 for p in trainable):
+            raise RuntimeError(
+                "Trainable reranker params vẫn là FP16 trước GradScaler; hybrid-precision setup lỗi."
+            )
 
         if RERANKER_FT_OPTIMIZER == "adafactor":
             from transformers.optimization import Adafactor
@@ -1205,6 +1255,13 @@ def main() -> None:
                     scaler.update()
                     step += 1
 
+                except ValueError as e:
+                    if "unscale FP16 gradients" in str(e):
+                        raise RuntimeError(
+                            "AMP dtype invariant bị vi phạm: GradScaler nhận FP16 trainable gradients. "
+                            "Bản v4.3 yêu cầu trainable reranker params ở FP32."
+                        ) from e
+                    raise
                 except RuntimeError as e:
                     if "out of memory" in str(e).lower() and bs > 1:
                         bs = max(1, bs // 2)
@@ -1236,6 +1293,8 @@ def main() -> None:
             "max_length": RERANKER_FT_MAX_LENGTH,
             "trainable_params": n_trainable,
             "total_params": n_total,
+            "trainable_dtypes": train_dtypes,
+            "frozen_dtypes": frozen_dtypes,
         }
         return model, tok, meta
 
