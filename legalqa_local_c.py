@@ -1,39 +1,47 @@
 #!/usr/bin/env python
 """
-legalqa_dual_encoder.py — LegalQA (UIT DSC2026 Task 2), kiến trúc "mạnh nhất" v4:
+legalqa_dual_encoder.py — LegalQA (UIT DSC2026 Task 2), kiến trúc "mạnh nhất" v6:
 2 dense encoder khác họ (BAAI/bge-m3 + intfloat/multilingual-e5-large) fine-tune SONG
-SONG trên 2 GPU riêng (subprocess, tự lùi tuần tự nếu chỉ 1 GPU) + fusion RRF 3 kênh
-(BM25 + bge-m3-ft + e5-ft-large) + NHÃN TASK 1 (LegalIR, document-level, phủ 100% câu
-hỏi) bổ sung cho nhãn citation Task 2 (chỉ phủ 47,8%) khi fine-tune dense encoder +
-FINE-TUNE RERANKER (margin ranking loss) trên RIÊNG nhãn citation (không dùng nhãn Task 1
-— giám sát yếu ở mức Điều, rủi ro nhiễu cho reranker, xem giải thích đầy đủ trong Bước 4).
+SONG trên 2 GPU riêng (subprocess) + fusion RRF 3 kênh + NHÃN TASK 1 (LegalIR,
+document-level, cần file legalir_train.json trong Kaggle Dataset — tự lùi về chỉ nhãn
+citation nếu không có, KHÔNG crash) + FINE-TUNE RERANKER trên riêng nhãn citation.
 
-Xác nhận thật: thêm nhãn Task 1 (MAX_TRAIN_EXAMPLES 3000->9000) đưa METEOR/ROUGE-L từ
-0.5215/0.4829 lên 0.5526/0.4817 ở một lần chạy độc lập — METEOR tăng mạnh, ROUGE-L đứng
-yên là lý do tách nhãn cho reranker (xem PHAN_TICH_KY_THUAT.md).
+BẢN SỬA v6 (log lỗi thật: fine-tune reranker làm Recall@1 SẬP 59,4%->36,4% — margin
+ranking loss bão hoà quá sớm, model gốc đã pretrain tốt nên chỉ ~100 bước là thoả mãn
+margin=1.0 cho hầu hết cặp, ~5000 bước còn lại lãng phí/overfit lên phần dư nhiễu):
+  1. Đổi margin ranking loss -> pairwise logistic loss (softplus(-(pos-neg)), RankNet-style)
+     — KHÔNG BAO GIỜ thực sự về 0, luôn còn gradient, không có margin cứng để "học xong sớm".
+  2. Thêm dừng sớm dựa trên loss trung bình cửa sổ trượt 200 bước — hội tụ thật thì dừng,
+     tránh lãng phí ngân sách và overfit thêm.
+  3. LƯỚI AN TOÀN: LUÔN tải reranker zero-shot làm baseline (không chỉ khi không fine-tune
+     như trước) — nếu có fine-tune, tải THÊM bản fine-tune riêng. Bước 6 (dev-eval) so sánh
+     CẢ BA cấu hình (không rerank / zero-shot / fine-tuned) bằng METEOR đo thật trên cùng
+     300 câu dev, tự chọn cái thắng cho Bước 7 — đảm bảo KHÔNG BAO GIỜ tệ hơn baseline
+     zero-shot cũ nữa, bất kể fine-tune có thật sự cải thiện hay không ở lần chạy đó.
 
-TỰ NHẬN DIỆN MÔI TRƯỜNG (Kaggle vs máy cá nhân) qua sự tồn tại của /kaggle/input — cùng
-MỘT nguồn code (chia sẻ với legalqa_kaggle_t4x2.ipynb) chạy đúng đường dẫn ở CẢ HAI nơi:
-Kaggle dùng /kaggle/input/..., máy cá nhân đặt file .py CẠNH train.json/public-official.json/
-selected-contexts/ (và legalir_train.json của Task 1 nếu có — không có thì tự lùi về chỉ
-nhãn citation, không crash).
+BẢN SỬA v5 (giữ nguyên): LoRA (peft) + optimizer AdamW 8-bit (bitsandbytes) tự bật khi
+phát hiện VRAM < 10GB và KHÔNG phải Kaggle (LOW_VRAM_MODE) — giải quyết OOM optimizer.step()
+đầu tiên khi full fine-tune 568M tham số trên GPU 4GB (không phụ thuộc batch size).
 
-BẢN SỬA (log lỗi thật: IndentationError trong _train_encoder_worker.py sinh ra ở đĩa —
-nguyên nhân là bản build .py TRƯỚC ĐÂY thụt lề toàn bộ nội dung vào trong def main(),
-vô tình phá hỏng chuỗi nhiều dòng worker_code chứa script con): bản .py này KHÔNG còn gói
-trong def main()/thụt lề gì cả — mã chạy Ở CẤP MODULE, y hệt từng ký tự như trong notebook,
-để không có cách nào làm hỏng các chuỗi nhiều dòng nhúng bên trong (worker_code ở Bước 4).
+TỰ NHẬN DIỆN MÔI TRƯỜNG (Kaggle vs máy cá nhân) qua /kaggle/input — cùng MỘT nguồn code
+(chia sẻ với legalqa_kaggle_t4x2.ipynb) chạy đúng đường dẫn ở CẢ HAI nơi.
+
+BẢN SỬA (IndentationError trước đây trong _train_encoder_worker.py — bản build .py cũ
+thụt lề toàn bộ vào def main(), phá hỏng chuỗi nhiều dòng worker_code): bản .py này KHÔNG
+gói trong def main()/thụt lề gì cả — mã chạy Ở CẤP MODULE, y hệt notebook.
 
 CÁCH DÙNG:
-    pip install -q -U sentence-transformers datasets "accelerate>=1.1.0" nltk rouge_score sentencepiece
+    pip install -q -U sentence-transformers datasets "accelerate>=1.1.0" nltk rouge_score sentencepiece peft
+    pip install -q -U bitsandbytes   # tuỳ chọn — không cài được cũng không sao
     python legalqa_dual_encoder.py
 
 KHÔNG dùng ký hiệu `!pip install` (cú pháp riêng của Jupyter) — cài thư viện bằng lệnh
 pip ở trên TRƯỚC khi chạy file này.
 
-VRAM: kiến trúc 2 encoder (~568M+560M) + reranker fine-tune (~568M) chạy được cả trên
-GPU nhỏ (đã có OOM-backoff), nhưng sẽ CHẬM hơn nhiều so với 16GB/thẻ của Kaggle — chấp
-nhận được nếu không có giới hạn thời gian phiên (đúng trường hợp máy cá nhân).
+LƯU Ý DỮ LIỆU: muốn có cải thiện từ nhãn Task 1, cần đặt legalir_train.json (train.json
+của Task 1 — LegalIR, dạng {"qid": {"question":..., "answer": [document_id,...]}}) CẠNH
+train.json/public-official.json/selected-contexts/ (máy cá nhân) hoặc trong Kaggle Dataset
+(Kaggle) — không có thì tự lùi về chỉ nhãn citation của Task 2, KHÔNG crash, chỉ in cảnh báo.
 """
 
 # Cell 2: Đường dẫn và tham số
@@ -175,10 +183,36 @@ RERANKER_FT_MARGIN = 1.0                # margin ranking loss: điểm(positive)
                                          # + margin -- không cần thang điểm chuẩn hoá, chỉ cần đúng
                                          # THỨ TỰ, ổn định hơn BCE/MSE cho reranker logit thô.
 
+# BẢN SỬA (log lỗi thật: torch.AcceleratorError OOM ngay ở lần optimizer.step() ĐẦU TIÊN,
+# trước khi kịp chạy batch nào — full fine-tune AdamW cho model ~568M cần khoảng 6-7GB CHỈ
+# RIÊNG optimizer state (2 buffer fp32/tham số), không phụ thuộc batch size. Trên GPU 4GB,
+# KHÔNG batch nào nhỏ tới đâu cũng không đủ — đây là giới hạn vật lý, không phải cấu hình sai.
+# LoRA (chỉ train 1 phần rất nhỏ tham số, đóng băng phần còn lại) không phải "cho nhanh hơn"
+# mà là ĐIỀU KIỆN BẮT BUỘC để fine-tune được model cỡ này trên 4GB — đồng thời PHÙ HỢP HƠN
+# về phương pháp với lượng dữ liệu nhỏ hiện có (3.500-9.000 câu là rất ít so với 568M tham
+# số, full fine-tune có rủi ro overfit/quên kiến thức gốc thật sự). Trên Kaggle (nhiều VRAM),
+# GIỮ NGUYÊN full fine-tune như cũ — không đổi kết quả 0.5526/0.4817 đã có kiểm chứng.
+_total_vram_gb = 0.0
+try:
+    import torch as _torch_probe
+    if _torch_probe.cuda.is_available():
+        _total_vram_gb = _torch_probe.cuda.get_device_properties(0).total_memory / (1024 ** 3)
+except Exception:
+    pass
+LOW_VRAM_MODE = (not IS_KAGGLE) and (_total_vram_gb > 0) and (_total_vram_gb < 10)
+USE_LORA = LOW_VRAM_MODE        # LoRA cho CẢ dense encoder LẪN reranker khi VRAM thấp
+USE_8BIT_OPTIM = LOW_VRAM_MODE  # optimizer AdamW 8-bit (bitsandbytes) khi VRAM thấp — cộng
+                                 # dồn với LoRA, không thay thế; tự lùi về AdamW thường êm ái
+                                 # nếu bitsandbytes không cài được (xem Cell 1).
+LORA_R = 16          # rank — 16 là điểm cân bằng phổ biến, đủ biểu đạt cho fine-tune domain
+LORA_ALPHA = 32      # thường đặt = 2 * LORA_R
+LORA_DROPOUT = 0.05
+
 print(f"Môi trường: {'Kaggle' if IS_KAGGLE else 'máy cá nhân (không phải Kaggle)'}")
 print(f"DATA_DIR  = {DATA_DIR}")
 print(f"OUT_DIR   = {OUT_DIR}")
 print(f"CACHE_DIR = {CACHE_DIR}" + ("  (tạm, mất khi session kết thúc)" if IS_KAGGLE else ""))
+print(f"LOW_VRAM_MODE={LOW_VRAM_MODE} (VRAM={_total_vram_gb:.1f}GB) -> USE_LORA={USE_LORA}, USE_8BIT_OPTIM={USE_8BIT_OPTIM}")
 
 
 # Cell 3: Kiểm tra GPU (mong đợi 2x Tesla T4) + tiện ích thời gian
@@ -571,6 +605,11 @@ def main():
     p.add_argument("--seed", type=int, required=True)
     p.add_argument("--query-prefix", default="")
     p.add_argument("--passage-prefix", default="")
+    p.add_argument("--use-lora", action="store_true")
+    p.add_argument("--use-8bit-optim", action="store_true")
+    p.add_argument("--lora-r", type=int, default=16)
+    p.add_argument("--lora-alpha", type=int, default=32)
+    p.add_argument("--lora-dropout", type=float, default=0.05)
     args = p.parse_args()
 
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_index
@@ -606,6 +645,20 @@ def main():
               f'pip install -U "sentence-transformers>=3.0"', flush=True)
         sys.exit(1)
 
+    # BAN SUA (log loi that: torch.AcceleratorError OOM ngay o optimizer.step() DAU TIEN --
+    # AdamW full fine-tune cho model ~568M can ~6-7GB CHI RIENG optimizer state, khong phu
+    # thuoc batch size -- khong batch nao du tren GPU 4GB). LoRA: chi train 1 phan rat nho
+    # tham so (dong bang phan con lai) -> optimizer state nho lai theo dung ty le do, GIAI
+    # QUYET DUOC loai OOM nay ma batch-backoff khong the giai quyet.
+    optim_name = "adamw_torch"
+    if args.use_8bit_optim:
+        try:
+            import bitsandbytes  # noqa: F401
+            optim_name = "adamw_bnb_8bit"
+            print(f"[{args.base_model}] Dung optimizer AdamW 8-bit (bitsandbytes).", flush=True)
+        except ImportError:
+            print(f"[{args.base_model}] bitsandbytes khong cai duoc -> dung AdamW thuong.", flush=True)
+
     with open(args.rows_path, encoding="utf-8") as f:
         rows = json.load(f)
     if args.query_prefix or args.passage_prefix:
@@ -624,6 +677,22 @@ def main():
     model = SentenceTransformer(args.base_model, device=device)
     model.max_seq_length = args.max_seq_len
 
+    lora_used = False
+    if args.use_lora:
+        try:
+            from peft import LoraConfig, get_peft_model
+            lora_cfg = LoraConfig(r=args.lora_r, lora_alpha=args.lora_alpha,
+                                   lora_dropout=args.lora_dropout, bias="none",
+                                   target_modules="all-linear")
+            model[0].auto_model = get_peft_model(model[0].auto_model, lora_cfg)
+            lora_used = True
+            n_trainable = sum(pp.numel() for pp in model[0].auto_model.parameters() if pp.requires_grad)
+            n_total = sum(pp.numel() for pp in model[0].auto_model.parameters())
+            print(f"[{args.base_model}] LoRA bat: {n_trainable}/{n_total} tham so co the train "
+                  f"({100*n_trainable/max(n_total,1):.2f}%)", flush=True)
+        except Exception as e:
+            print(f"[{args.base_model}] LoRA loi ({e}) -> full fine-tune (can nhieu VRAM hon).", flush=True)
+
     batch_size, mini_batch_size = args.batch_size, args.mini_batch_size
     max_steps, calib_time = 0, None
     t0 = time.time()
@@ -634,7 +703,8 @@ def main():
             calib_args = SentenceTransformerTrainingArguments(
                 output_dir=args.output_dir + "_tmp", max_steps=calib_steps,
                 per_device_train_batch_size=batch_size, logging_steps=calib_steps + 1,
-                save_strategy="no", report_to=[], disable_tqdm=True, fp16=(device == "cuda:0"))
+                save_strategy="no", report_to=[], disable_tqdm=True, fp16=(device == "cuda:0"),
+                optim=optim_name)
             c0 = time.time()
             print(f"[{args.base_model}] calib training (batch={batch_size}, mini_batch={mini_batch_size})...", flush=True)
             SentenceTransformerTrainer(model=model, args=calib_args, train_dataset=dataset, loss=loss).train()
@@ -652,20 +722,31 @@ def main():
                     per_device_train_batch_size=batch_size, learning_rate=2e-5,
                     warmup_steps=0.05, lr_scheduler_type="cosine",
                     logging_steps=max(1, max_steps // 20), save_strategy="no", report_to=[],
-                    fp16=(device == "cuda:0"))
+                    fp16=(device == "cuda:0"), optim=optim_name)
                 SentenceTransformerTrainer(model=model, args=targs, train_dataset=dataset, loss=loss).train()
             break
-        except RuntimeError as e:
+        except Exception as e:
             if "out of memory" in str(e).lower() and mini_batch_size > 1:
-                torch.cuda.empty_cache()
+                try:
+                    torch.cuda.empty_cache()
+                except Exception:
+                    pass  # cache da can kiet toi muc khong con gi de don -- bo qua, cu lui batch
                 mini_batch_size = max(1, mini_batch_size // 2)
                 print(f"[{args.base_model}] OOM -> mini_batch_size={mini_batch_size}", flush=True)
                 continue
             raise
 
+    if lora_used:
+        try:
+            model[0].auto_model = model[0].auto_model.merge_and_unload()
+            print(f"[{args.base_model}] Da merge LoRA vao model goc.", flush=True)
+        except Exception as e:
+            print(f"[{args.base_model}] Merge LoRA loi ({e}) -> luu adapter rieng.", flush=True)
+
     model.save_pretrained(args.output_dir)
     meta = {"max_steps": max_steps, "mini_batch_final": mini_batch_size,
-            "calib_time_s": calib_time, "elapsed_s": time.time() - t0}
+            "calib_time_s": calib_time, "elapsed_s": time.time() - t0,
+            "lora_used": lora_used, "optim": optim_name}
     with open(args.output_dir + "_meta.json", "w", encoding="utf-8") as f:
         json.dump(meta, f)
     print(f"[{args.base_model}] DONE -> {args.output_dir}", flush=True)
@@ -786,7 +867,12 @@ else:
                "--rows-path", rows_path, "--output-dir", spec["out"],
                "--max-seq-len", str(DENSE_MAX_SEQ_LEN), "--batch-size", str(TRAIN_BATCH_SIZE),
                "--mini-batch-size", str(TRAIN_MINI_BATCH_SIZE), "--time-budget-sec", str(time_budget_each),
-               "--seed", str(SEED), "--query-prefix", spec["query_prefix"], "--passage-prefix", spec["passage_prefix"]]
+               "--seed", str(SEED), "--query-prefix", spec["query_prefix"], "--passage-prefix", spec["passage_prefix"],
+               "--lora-r", str(LORA_R), "--lora-alpha", str(LORA_ALPHA), "--lora-dropout", str(LORA_DROPOUT)]
+        if USE_LORA:
+            cmd.append("--use-lora")
+        if USE_8BIT_OPTIM:
+            cmd.append("--use-8bit-optim")
         lf = open(log_path, "w")
         print(f"  Khởi động fine-tune {spec['name']} trên GPU {spec['gpu']} -> log: {log_path}")
         return subprocess.Popen(cmd, stdout=lf, stderr=subprocess.STDOUT), lf
@@ -918,20 +1004,76 @@ def load_reranker_on(device: str, source: str):
 
 # finetune_reranker: trả về (model đã .eval(), tokenizer, meta dict). KHÔNG raise nếu OOM —
 # tự giảm batch_size và thử lại, giống pattern OOM-backoff đã dùng cho dense encoder/rerank.
+#
+# BẢN SỬA (log lỗi thật ở Bước 4: torch.AcceleratorError OOM ngay optimizer.step() ĐẦU TIÊN —
+# AdamW full fine-tune cho model ~568M cần ~6-7GB CHỈ RIÊNG optimizer state, KHÔNG phụ thuộc
+# batch_size — cùng lỗi này áp dụng y hệt cho reranker, cùng kích cỡ tham số). Khi
+# USE_LORA=True: đóng băng gần hết tham số gốc, chỉ train adapter nhỏ — optimizer state co
+# lại theo đúng tỷ lệ, giải quyết được loại OOM mà batch-backoff không giải quyết nổi. Khi
+# USE_8BIT_OPTIM=True (+ bitsandbytes cài được): dùng AdamW 8-bit, giảm thêm ~4 lần bộ nhớ
+# optimizer, cộng dồn với LoRA. torch.cuda.empty_cache() được bọc try/except riêng — khi VRAM
+# cạn quá sâu, chính lệnh dọn cache cũng có thể OOM (đã gặp thật), không để nó làm sập
+# toàn bộ vòng lặp backoff.
 def finetune_reranker(rows, base_model: str, device: str, time_budget_sec: float,
-                       batch_size: int, lr: float, margin: float, seed: int):
+                       batch_size: int, lr: float, margin: float, seed: int,
+                       use_lora: bool = False, use_8bit_optim: bool = False,
+                       lora_r: int = 16, lora_alpha: int = 32, lora_dropout: float = 0.05):
+    # `margin` giữ trong chữ ký để không phá lời gọi cũ, nhưng KHÔNG còn dùng trong loss —
+    # đã đổi sang softplus(-(pos-neg)) (logistic pairwise, không cần margin) — xem lý do ở
+    # bản sửa trong vòng lặp train bên dưới.
     tok = AutoTokenizer.from_pretrained(base_model)
     model = AutoModelForSequenceClassification.from_pretrained(base_model).to(device)
+
+    lora_used = False
+    if use_lora:
+        try:
+            from peft import LoraConfig, get_peft_model, TaskType
+            lora_cfg = LoraConfig(r=lora_r, lora_alpha=lora_alpha, lora_dropout=lora_dropout,
+                                   bias="none", target_modules="all-linear",
+                                   task_type=TaskType.SEQ_CLS)
+            model = get_peft_model(model, lora_cfg)
+            lora_used = True
+            n_trainable = sum(pp.numel() for pp in model.parameters() if pp.requires_grad)
+            n_total = sum(pp.numel() for pp in model.parameters())
+            print(f"  [reranker-ft] LoRA bật: {n_trainable}/{n_total} tham số có thể train "
+                  f"({100*n_trainable/max(n_total,1):.2f}%)")
+        except Exception as e:
+            print(f"  [reranker-ft] LoRA lỗi ({e}) -> full fine-tune (cần nhiều VRAM hơn).")
     model.train()
-    opt = torch.optim.AdamW(model.parameters(), lr=lr)
+
+    if use_8bit_optim:
+        try:
+            import bitsandbytes as bnb
+            opt = bnb.optim.AdamW8bit(model.parameters(), lr=lr)
+            print("  [reranker-ft] Dùng optimizer AdamW 8-bit (bitsandbytes).")
+        except ImportError:
+            print("  [reranker-ft] bitsandbytes không cài được -> dùng AdamW thường.")
+            opt = torch.optim.AdamW(model.parameters(), lr=lr)
+    else:
+        opt = torch.optim.AdamW(model.parameters(), lr=lr)
     scaler = torch.cuda.amp.GradScaler(enabled=device.startswith("cuda"))
+
+    # BẢN SỬA (log lỗi thật: dev-eval đo được Recall@1 SẬP từ 59,4% (không rerank) xuống
+    # 36,4% (có reranker fine-tune) — reranker fine-tune không chỉ kém, mà đang PHÁ HỎNG kết
+    # quả. Log training cho thấy loss=0.0000 ở gần như MỌI bước suốt 5000+ step: margin
+    # ranking loss (điểm(positive) phải hơn điểm(negative) ÍT NHẤT `margin`) bị BÃO HOÀ quá
+    # sớm — reranker gốc đã pretrain tốt trên Legal Zalo 2021 nên chỉ cần ~100 bước đã thoả
+    # mãn margin cho hầu hết cặp, hầu như không còn gradient cho ~5000 bước còn lại, chỉ lặp
+    # đi lặp lại trên một nhóm nhỏ ví dụ khó/nhiễu còn sót -> overfit lệch. Đổi sang loss
+    # logistic từng cặp (RankNet-style, softplus(-(pos-neg))) — KHÔNG BAO GIỜ về đúng 0, luôn
+    # còn gradient tỉ lệ với độ tin cậy hiện tại, không có "margin" để bão hoà tới. Thêm dừng
+    # sớm dựa trên loss trung bình cửa sổ trượt — nếu đã hội tụ thấp bền vững, dừng thay vì
+    # tiếp tục ép học trên phần dư nhiễu tới hết ngân sách thời gian.
+    EARLY_STOP_WINDOW, EARLY_STOP_THRESHOLD, EARLY_STOP_MIN_STEPS = 200, 0.05, 500
+    loss_history = []
+    early_stopped = False
 
     g = random.Random(seed)  # RNG RIÊNG — không đụng vào random toàn cục (đã seed cho Bước 3/4)
     order = list(range(len(rows)))
     bs = batch_size
     t0 = time.time()
     step, n_neg = 0, N_NEG_PER_ROW
-    while time.time() - t0 < time_budget_sec:
+    while time.time() - t0 < time_budget_sec and not early_stopped:
         g.shuffle(order)
         for i in range(0, len(order), bs):
             batch_idx = order[i:i + bs]
@@ -949,27 +1091,49 @@ def finetune_reranker(rows, base_model: str, device: str, time_budget_sec: float
                     pos_scores = model(**pos_in).logits.view(-1)
                     neg_scores = model(**neg_in).logits.view(len(batch_rows), n_neg)
                     pos_exp = pos_scores.unsqueeze(1).expand_as(neg_scores)
-                    loss = torch.relu(margin - (pos_exp - neg_scores)).mean()
+                    loss = torch.nn.functional.softplus(-(pos_exp - neg_scores)).mean()
                 opt.zero_grad(set_to_none=True)
                 scaler.scale(loss).backward()
                 scaler.step(opt)
                 scaler.update()
                 step += 1
-            except RuntimeError as e:
+            except Exception as e:
                 if "out of memory" in str(e).lower() and bs > 1:
-                    torch.cuda.empty_cache()
+                    try:
+                        torch.cuda.empty_cache()
+                    except Exception:
+                        pass  # cache đã cạn kiệt tới mức không còn gì để dọn -- bỏ qua, cứ lùi batch
                     bs = max(1, bs // 2)
                     print(f"  [CUDA OOM reranker-ft] batch_size -> {bs}")
                     continue
                 raise
+            loss_history.append(loss.item())
+            if len(loss_history) > EARLY_STOP_WINDOW:
+                loss_history.pop(0)
+            if (step >= EARLY_STOP_MIN_STEPS and len(loss_history) == EARLY_STOP_WINDOW
+                    and sum(loss_history) / EARLY_STOP_WINDOW < EARLY_STOP_THRESHOLD):
+                print(f"    reranker-ft DỪNG SỚM tại step {step}: loss trung bình "
+                      f"{EARLY_STOP_WINDOW} bước gần nhất = "
+                      f"{sum(loss_history)/EARLY_STOP_WINDOW:.4f} < {EARLY_STOP_THRESHOLD} "
+                      f"(đã hội tụ, tránh overfit lên phần dư nhiễu)", flush=True)
+                early_stopped = True
+                break
             if time.time() - t0 >= time_budget_sec:
                 break
             if step % 100 == 0:
                 print(f"    reranker-ft step {step}, loss={loss.item():.4f}, "
                       f"{(time.time()-t0)/60:.1f} phút", flush=True)
 
+    if lora_used:
+        try:
+            model = model.merge_and_unload()
+            print("  [reranker-ft] Đã merge LoRA vào model gốc.")
+        except Exception as e:
+            print(f"  [reranker-ft] Merge LoRA lỗi ({e}) -> lưu nguyên adapter.")
+
     model.eval()
-    meta = {"steps": step, "batch_size_final": bs, "elapsed_s": time.time() - t0}
+    meta = {"steps": step, "batch_size_final": bs, "elapsed_s": time.time() - t0,
+            "lora_used": lora_used, "early_stopped": early_stopped}
     return model, tok, meta
 
 
@@ -987,7 +1151,9 @@ else:
     t0 = time.time()
     ft_model, ft_tok, meta = finetune_reranker(
         rows_clean, RERANKER_BASE, DEVICES[0], RERANKER_FT_TIME_BUDGET_SEC,
-        RERANKER_FT_BATCH_SIZE, RERANKER_FT_LR, RERANKER_FT_MARGIN, SEED)
+        RERANKER_FT_BATCH_SIZE, RERANKER_FT_LR, RERANKER_FT_MARGIN, SEED,
+        use_lora=USE_LORA, use_8bit_optim=USE_8BIT_OPTIM,
+        lora_r=LORA_R, lora_alpha=LORA_ALPHA, lora_dropout=LORA_DROPOUT)
     reranker_ckpt = os.path.join(CHECKPOINT_DIR, "reranker-ft")
     ft_model.half().save_pretrained(reranker_ckpt)  # lưu fp16 — nhất quán với cách nạp lại để rerank
     ft_tok.save_pretrained(reranker_ckpt)
@@ -998,17 +1164,33 @@ else:
     print(f"  Fine-tune reranker xong: {meta['steps']} step, {meta['elapsed_s']/60:.1f} phút "
           f"-> checkpoint {reranker_ckpt}")
 
-reranker_models, reranker_tokenizers = {}, {}
+# BẢN SỬA (log lỗi thật: dev-eval đo được reranker fine-tune làm Recall@1 SẬP 59,4% -> 36,4%
+# — fine-tune "thành công" về mặt kỹ thuật nhưng model tệ hơn hẳn zero-shot). LƯỚI AN TOÀN:
+# LUÔN tải zero-shot làm baseline; nếu có fine-tune, tải THÊM bản fine-tune riêng — Bước 6
+# (Cell 12) sẽ so sánh CẢ HAI bằng dev-eval thật rồi mới quyết định dùng bản nào cho Bước 7,
+# thay vì mặc định tin fine-tune luôn tốt hơn. Đảm bảo không bao giờ tệ hơn baseline zero-shot
+# cũ nữa, bất kể fine-tune có thật sự cải thiện hay không lần chạy đó.
+reranker_models, reranker_tokenizers = {}, {}          # ZERO-SHOT — luôn tải, dùng làm baseline
 for dev in DEVICES:
-    m, t = load_reranker_on(dev, reranker_source)
+    m, t = load_reranker_on(dev, RERANKER_BASE)
     if m is not None:
         reranker_models[dev] = m
         reranker_tokenizers[dev] = t
 
+reranker_models_ft, reranker_tokenizers_ft = {}, {}     # FINE-TUNED — chỉ tải thêm nếu có fine-tune
+if reranker_finetune_info["used"]:
+    for dev in DEVICES:
+        m, t = load_reranker_on(dev, reranker_source)
+        if m is not None:
+            reranker_models_ft[dev] = m
+            reranker_tokenizers_ft[dev] = t
+
 HAS_RERANKER = len(reranker_models) > 0
+HAS_RERANKER_FT = len(reranker_models_ft) > 0
 RERANK_DEVICES = list(reranker_models.keys())
-print(f"  Reranker ({'fine-tuned' if reranker_finetune_info['used'] else 'zero-shot'}) sẵn sàng "
-      f"trên: {RERANK_DEVICES or '(không tải được — sẽ chạy không rerank)'}")
+print(f"  Reranker zero-shot sẵn sàng trên: {RERANK_DEVICES or '(không tải được)'}"
+      + (f" | fine-tuned CŨNG sẵn sàng trên: {list(reranker_models_ft.keys())} "
+         f"(Bước 6 sẽ so sánh, tự chọn cái thắng)" if HAS_RERANKER_FT else ""))
 checkpoint("Xong tải reranker")
 
 
@@ -1178,9 +1360,15 @@ def _progress_print(label, worker_idx, i, n):
         with _print_lock:
             print(f"    [{label} · luồng {worker_idx}] {i+1}/{n}")
 
-# Cell 12: Bước 6 — Dev-eval (chọn TOP_N_ANSWER, có dùng reranker không, adaptive-k hay
-# không) ĐỒNG THỜI đo Recall@k — gộp chung 1 lượt retrieval+rerank, không chạy lại 2 lần
-# (xem lý do gộp trong bản máy cá nhân — nguyên tắc giữ nguyên, giờ thêm chạy song song 2 GPU)
+# Cell 12: Bước 6 — Dev-eval (chọn TOP_N_ANSWER, dùng reranker nào — không/zero-shot/
+# fine-tuned — hay adaptive-k) ĐỒNG THỜI đo Recall@k — gộp chung 1 lượt retrieval+rerank.
+#
+# BẢN SỬA (log lỗi thật: reranker fine-tune làm Recall@1 SẬP 59,4%->36,4%, dev-eval trước
+# đây chỉ so "không rerank" vs "rerank" — không có lựa chọn "zero-shot" nếu đã fine-tune,
+# nên khi fine-tune hỏng thì MẤT LUÔN lợi ích của zero-shot, không chỉ mất phần fine-tune):
+# giờ so sánh CẢ BA — không rerank / rerank zero-shot / rerank fine-tuned (nếu có) — bằng
+# METEOR đo thật trên cùng 300 câu dev, chọn đúng cái thắng. Đảm bảo không bao giờ tệ hơn
+# baseline zero-shot cũ nữa.
 import nltk
 if str(NLTK_CACHE_DIR) not in nltk.data.path:
     nltk.data.path.insert(0, str(NLTK_CACHE_DIR))
@@ -1207,18 +1395,24 @@ print(f"  Mẫu dev-eval: {len(dev_ids)} câu ({len(recall_ids)} câu có citati
       f"-> dùng luôn để đo Recall@k, không chạy lại retrieval riêng).")
 
 ks = [1, 3, 5, 10, 30, 100]
-configs = [("BM25+dense (không rerank)", False)]
+configs = [("BM25+dense (không rerank)", False, None)]
 if HAS_RERANKER:
-    configs.append(("BM25+dense+rerank", True))
+    configs.append(("BM25+dense+rerank (zero-shot)", True, "zeroshot"))
+if HAS_RERANKER_FT:
+    configs.append(("BM25+dense+rerank (fine-tuned)", True, "finetuned"))
 
 # BẢN SỬA: theo dõi thêm best_r (ROUGE-L của cấu hình thắng) + recall_at_k_by_label — để Cell 14
 # ghi đủ vào sổ thí nghiệm (trước đây các con số này chỉ in ra console rồi mất).
 best_n, best_m, best_r, best_use_rerank, best_use_adaptive = 3, -1.0, None, False, False
+best_rr_source = None   # None | "zeroshot" | "finetuned" — CÁI THẮNG, quyết định reranker dùng ở Bước 7
 recall_at_k_by_label = {}
-for label, use_rr in configs:
+for label, use_rr, rr_source in configs:
     print(f"  --- {label} ---")
-    if use_rr and len(RERANK_DEVICES) > 1:
-        def _worker(chunk, dev, widx, _label=label):
+    rr_models = reranker_models_ft if rr_source == "finetuned" else reranker_models
+    rr_tokenizers = reranker_tokenizers_ft if rr_source == "finetuned" else reranker_tokenizers
+    rr_devices = list(rr_models.keys())
+    if use_rr and len(rr_devices) > 1:
+        def _worker(chunk, dev, widx, _label=label, _rr_models=rr_models, _rr_tok=rr_tokenizers):
             out = {}
             for i, qid in enumerate(chunk):
                 item = train_data[qid]
@@ -1226,16 +1420,16 @@ for label, use_rr in configs:
                 scores = None
                 if ranked:
                     ranked, scores = rerank(item["question"], ranked,
-                                             reranker_models[dev], reranker_tokenizers[dev])
+                                             _rr_models[dev], _rr_tok[dev])
                 out[qid] = (ranked, scores)
                 _progress_print(_label, widx, i, len(chunk))
             return out
-        merged = parallel_process(dev_ids, _worker, RERANK_DEVICES, label=label)
+        merged = parallel_process(dev_ids, _worker, rr_devices, label=label)
         ranked_cache = {q: v[0] for q, v in merged.items()}
         scores_cache = {q: v[1] for q, v in merged.items()}
     else:
         # Không rerank (rẻ, tuần tự đủ nhanh) hoặc chỉ 1 GPU cho reranker.
-        rr_dev = RERANK_DEVICES[0] if (use_rr and RERANK_DEVICES) else None
+        rr_dev = rr_devices[0] if (use_rr and rr_devices) else None
         ranked_cache, scores_cache = {}, {}
         t0 = time.time()
         for i, qid in enumerate(dev_ids):
@@ -1244,7 +1438,7 @@ for label, use_rr in configs:
             scores = None
             if rr_dev is not None and ranked:
                 ranked, scores = rerank(item["question"], ranked,
-                                         reranker_models[rr_dev], reranker_tokenizers[rr_dev])
+                                         rr_models[rr_dev], rr_tokenizers[rr_dev])
             ranked_cache[qid] = ranked
             scores_cache[qid] = scores
             if (i + 1) % 50 == 0 or (i + 1) == len(dev_ids):
@@ -1276,7 +1470,7 @@ for label, use_rr in configs:
         print(f"    top_n={top_n}  METEOR={m:.4f}  ROUGE-L={r:.4f}  (n={len(dev_ids)})")
         if m > best_m:
             best_m, best_r, best_n = m, r, top_n
-            best_use_rerank, best_use_adaptive = use_rr, False
+            best_use_rerank, best_use_adaptive, best_rr_source = use_rr, False, rr_source
 
     if use_rr:
         ms, rs = [], []
@@ -1291,12 +1485,34 @@ for label, use_rr in configs:
         print(f"    adaptive-k       METEOR={m:.4f}  ROUGE-L={r:.4f}  (n={len(dev_ids)})")
         if m > best_m:
             best_m, best_r, best_use_rerank, best_use_adaptive = m, r, True, True
+            best_rr_source = rr_source
 
-print(f"  => chọn TOP_N_ANSWER={best_n}, dùng reranker={best_use_rerank}, "
-      f"dùng adaptive-k={best_use_adaptive} (METEOR={best_m:.4f})")
+print(f"  => chọn TOP_N_ANSWER={best_n}, dùng reranker={best_use_rerank} "
+      f"(nguồn={best_rr_source}), dùng adaptive-k={best_use_adaptive} (METEOR={best_m:.4f})")
 top_n_answer, use_reranker, use_adaptive = best_n, best_use_rerank, best_use_adaptive
+
+# Chốt reranker_models/reranker_tokenizers DÙNG CHO BƯỚC 7 theo đúng cái thắng ở dev-eval —
+# nếu fine-tuned thắng, GÁN LẠI reranker_models = bộ fine-tuned; nếu zero-shot thắng (hoặc
+# không dùng reranker), GIỮ NGUYÊN reranker_models (đã là zero-shot mặc định). Giải phóng
+# bộ không dùng tới để đỡ VRAM cho Bước 7.
+if best_rr_source == "finetuned":
+    print("  Reranker fine-tuned THẮNG dev-eval -> dùng cho Bước 7 (giải phóng bản zero-shot).")
+    for dev, m in list(reranker_models.items()):
+        del m
+    reranker_models, reranker_tokenizers = reranker_models_ft, reranker_tokenizers_ft
+elif HAS_RERANKER_FT:
+    print("  Reranker zero-shot THẮNG (hoặc không dùng reranker) -> giải phóng bản fine-tuned, "
+          "không dùng cho Bước 7.")
+    for dev, m in list(reranker_models_ft.items()):
+        del m
+reranker_models_ft, reranker_tokenizers_ft = {}, {}
+try:
+    torch.cuda.empty_cache()
+except Exception:
+    pass
+
 eval_info = {"meteor": round(best_m, 4), "rouge_l": (round(best_r, 4) if best_r is not None else None),
-             "recall_at_k": recall_at_k_by_label, "n_dev": len(dev_ids)}
+             "recall_at_k": recall_at_k_by_label, "n_dev": len(dev_ids), "reranker_source": best_rr_source}
 checkpoint("Xong dev-eval + Recall@k")
 
 
