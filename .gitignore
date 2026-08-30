@@ -12,3 +12,4 @@ cache_final/
 cache/
 structure_MD/
 .gitignore
+checkpoints/
