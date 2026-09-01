@@ -1,47 +1,38 @@
 #!/usr/bin/env python
 """
-legalqa_dual_encoder.py — LegalQA (UIT DSC2026 Task 2), kiến trúc "mạnh nhất" v6:
-2 dense encoder khác họ (BAAI/bge-m3 + intfloat/multilingual-e5-large) fine-tune SONG
-SONG trên 2 GPU riêng (subprocess) + fusion RRF 3 kênh + NHÃN TASK 1 (LegalIR,
-document-level, cần file legalir_train.json trong Kaggle Dataset — tự lùi về chỉ nhãn
-citation nếu không có, KHÔNG crash) + FINE-TUNE RERANKER trên riêng nhãn citation.
+legalqa_dual_encoder.py — LegalQA (UIT DSC2026 Task 2), kiến trúc v7: xếp hạng + hiệu năng.
 
-BẢN SỬA v6 (log lỗi thật: fine-tune reranker làm Recall@1 SẬP 59,4%->36,4% — margin
-ranking loss bão hoà quá sớm, model gốc đã pretrain tốt nên chỉ ~100 bước là thoả mãn
-margin=1.0 cho hầu hết cặp, ~5000 bước còn lại lãng phí/overfit lên phần dư nhiễu):
-  1. Đổi margin ranking loss -> pairwise logistic loss (softplus(-(pos-neg)), RankNet-style)
-     — KHÔNG BAO GIỜ thực sự về 0, luôn còn gradient, không có margin cứng để "học xong sớm".
-  2. Thêm dừng sớm dựa trên loss trung bình cửa sổ trượt 200 bước — hội tụ thật thì dừng,
-     tránh lãng phí ngân sách và overfit thêm.
-  3. LƯỚI AN TOÀN: LUÔN tải reranker zero-shot làm baseline (không chỉ khi không fine-tune
-     như trước) — nếu có fine-tune, tải THÊM bản fine-tune riêng. Bước 6 (dev-eval) so sánh
-     CẢ BA cấu hình (không rerank / zero-shot / fine-tuned) bằng METEOR đo thật trên cùng
-     300 câu dev, tự chọn cái thắng cho Bước 7 — đảm bảo KHÔNG BAO GIỜ tệ hơn baseline
-     zero-shot cũ nữa, bất kể fine-tune có thật sự cải thiện hay không ở lần chạy đó.
+Phát hiện định hướng nghiên cứu: Recall@100 = 100% ở MỌI cấu hình đo được trên log thật —
+retrieval đã bão hoà hoàn toàn, nút thắt còn lại nằm ở XẾP HẠNG + QUYẾT ĐỊNH SỐ LƯỢNG,
+không phải "tìm đâu thấy". Bản này KHÔNG thêm retriever mới, cải thiện đúng chỗ đó +
+tăng tốc lặp thử nghiệm:
+  1. BM25 dùng tách từ tiếng Việt thật (underthesea, tự đo tốc độ + lùi về regex nếu quá
+     chậm) — sửa bẫy từ ghép "hợp_đồng" (corpus) vs "hợp đồng" (câu hỏi) không khớp token.
+  2. Hard-negative CÙNG VĂN BẢN cho reranker (thay BM25 top-60 chung chung) — nhắm đúng vào
+     lỗi đã đo: reranker cũ học trên negative quá dễ, không phân biệt được các Điều cùng
+     văn bản.
+  3. Tái dùng checkpoint (2 dense encoder + reranker) nếu fingerprint khớp cấu hình hiện
+     tại — train chiếm ~32% thời gian 1 lần chạy đầy đủ, lãng phí nếu chỉ thử lại Bước 6/7.
+  4. Nâng ENCODE_BATCH_SIZE — encode corpus chiếm ~32% thời gian, 16GB/thẻ Kaggle còn dư.
 
-BẢN SỬA v5 (giữ nguyên): LoRA (peft) + optimizer AdamW 8-bit (bitsandbytes) tự bật khi
-phát hiện VRAM < 10GB và KHÔNG phải Kaggle (LOW_VRAM_MODE) — giải quyết OOM optimizer.step()
-đầu tiên khi full fine-tune 568M tham số trên GPU 4GB (không phụ thuộc batch size).
+Giữ nguyên mọi kỹ thuật đã xác nhận có ích: 2 dense encoder (BAAI/bge-m3 + intfloat/
+multilingual-e5-large) fine-tune song song 2 GPU (subprocess), fusion RRF 3 kênh, fine-tune
+reranker (loss logistic + dừng sớm), lưới an toàn so sánh không-rerank/zero-shot/fine-tuned/
+RRF-gaps ở Bước 6, nhãn Task 1 (LegalIR), LoRA + optimizer 8-bit cho VRAM thấp, tự nhận diện
+môi trường Kaggle/máy cá nhân, seed toàn cục, sổ thí nghiệm.
 
-TỰ NHẬN DIỆN MÔI TRƯỜNG (Kaggle vs máy cá nhân) qua /kaggle/input — cùng MỘT nguồn code
-(chia sẻ với legalqa_kaggle_t4x2.ipynb) chạy đúng đường dẫn ở CẢ HAI nơi.
+Bản .py TRÍCH XUẤT Y HỆT logic của legalqa_kaggle_t4x2.ipynb (không viết lại tay, tránh
+lệch giữa 2 bản) — chạy Ở CẤP MODULE, không gói trong def main()/không thụt lề gì (tránh
+lỗi IndentationError đã gặp thật khi thụt lề làm hỏng chuỗi worker_code nhiều dòng).
 
-BẢN SỬA (IndentationError trước đây trong _train_encoder_worker.py — bản build .py cũ
-thụt lề toàn bộ vào def main(), phá hỏng chuỗi nhiều dòng worker_code): bản .py này KHÔNG
-gói trong def main()/thụt lề gì cả — mã chạy Ở CẤP MODULE, y hệt notebook.
-
-CÁCH DÙNG:
-    pip install -q -U sentence-transformers datasets "accelerate>=1.1.0" nltk rouge_score sentencepiece peft
+CÁCH DÙNG (đặt cạnh train.json, public-official.json, selected-contexts/, và
+legalir_train.json của Task 1 nếu có — không có thì tự lùi về chỉ nhãn citation):
+    pip install -q -U sentence-transformers datasets "accelerate>=1.1.0" nltk rouge_score sentencepiece peft underthesea
     pip install -q -U bitsandbytes   # tuỳ chọn — không cài được cũng không sao
     python legalqa_dual_encoder.py
 
 KHÔNG dùng ký hiệu `!pip install` (cú pháp riêng của Jupyter) — cài thư viện bằng lệnh
 pip ở trên TRƯỚC khi chạy file này.
-
-LƯU Ý DỮ LIỆU: muốn có cải thiện từ nhãn Task 1, cần đặt legalir_train.json (train.json
-của Task 1 — LegalIR, dạng {"qid": {"question":..., "answer": [document_id,...]}}) CẠNH
-train.json/public-official.json/selected-contexts/ (máy cá nhân) hoặc trong Kaggle Dataset
-(Kaggle) — không có thì tự lùi về chỉ nhãn citation của Task 2, KHÔNG crash, chỉ in cảnh báo.
 """
 
 # Cell 2: Đường dẫn và tham số
@@ -133,7 +124,10 @@ N_NEG_PER_ROW = 2
 # thật sự hết" đã áp dụng xuyên suốt từ legalqa_local.py.
 TRAIN_BATCH_SIZE = 64        # batch HIỆU DỤNG (số in-batch negative)
 TRAIN_MINI_BATCH_SIZE = 32   # batch THẬT mỗi forward — OOM-backoff tự giảm nếu máy yếu hơn Kaggle.
-ENCODE_BATCH_SIZE = 256      # batch encode corpus mỗi tiến trình GPU.
+ENCODE_BATCH_SIZE = 384     # BẢN SỬA: nâng từ 256 -- log thật: encode corpus chiếm
+                              # ~121/380 phút (32%) của 1 lần chạy đầy đủ, 16GB/thẻ Kaggle
+                              # còn dư -- batch lớn hơn tận dụng tốt hơn (OOM-backoff tự lùi
+                              # nếu máy yếu hơn dự kiến).
 RERANK_SUBBATCH = 64         # batch xử lý mỗi lần forward reranker (568M) — xử lý theo lô thay
                               # vì lô vừa phải luôn nhanh hơn 1 lô khổng lồ (padding ít hơn,
                               # không nghẽn băng thông bộ nhớ) — xem Cell 11.
@@ -213,6 +207,26 @@ print(f"DATA_DIR  = {DATA_DIR}")
 print(f"OUT_DIR   = {OUT_DIR}")
 print(f"CACHE_DIR = {CACHE_DIR}" + ("  (tạm, mất khi session kết thúc)" if IS_KAGGLE else ""))
 print(f"LOW_VRAM_MODE={LOW_VRAM_MODE} (VRAM={_total_vram_gb:.1f}GB) -> USE_LORA={USE_LORA}, USE_8BIT_OPTIM={USE_8BIT_OPTIM}")
+
+# BẢN SỬA (research mới — retrieval đã bão hoà: Recall@100=100% ở MỌI cấu hình đo được, xem
+# PHAN_TICH_KY_THUAT.md — nút thắt còn lại nằm ở XẾP HẠNG/CHỌN SỐ LƯỢNG, không phải "tìm
+# đâu thấy" nữa). Bốn thay đổi, đều nhắm đúng vào đó thay vì thêm retriever:
+USE_VI_TOKENIZER = True
+# BM25 hiện tách từ bằng regex thô (mỗi âm tiết 1 token) — corpus tiếng Việt có TỪ GHÉP
+# ("hợp_đồng", "quyết_định") mà câu hỏi gõ tay thường KHÔNG nối gạch dưới ("hợp đồng") ->
+# 2 token khác nhau, BM25 mất tín hiệu dù cùng nghĩa. Bật tách từ thật (underthesea) cho cả
+# corpus lẫn câu hỏi. CÓ TỰ KIỂM TỐC ĐỘ (đo 200 chunk đầu, ước lượng tổng thời gian) — nếu
+# chiếu ra quá 40 phút cho toàn corpus thì TỰ LÙI về regex thô, không ép chạy chậm vô hạn.
+
+REUSE_CHECKPOINT_IF_EXISTS = True
+# Log thật: train 2 dense encoder (~90 phút) + reranker (~29 phút) chiếm ~120/380 phút (32%)
+# một lần chạy đầy đủ — lãng phí nếu chỉ muốn thử lại Bước 6/7 (đổi adaptive-k, câu kết...)
+# mà không đổi gì ở dữ liệu train. Nếu checkpoint trong CHECKPOINT_DIR khớp ĐÚNG fingerprint
+# (số cặp train, SEED, model gốc, USE_LORA...) với cấu hình hiện tại, TẢI LẠI thay vì train
+# lại từ đầu. Fingerprint LỆCH dù chỉ 1 chi tiết -> train lại bình thường, không bao giờ dùng
+# nhầm checkpoint cũ không khớp.
+
+print(f"USE_VI_TOKENIZER={USE_VI_TOKENIZER} · REUSE_CHECKPOINT_IF_EXISTS={REUSE_CHECKPOINT_IF_EXISTS}")
 
 
 # Cell 3: Kiểm tra GPU (mong đợi 2x Tesla T4) + tiện ích thời gian
@@ -294,8 +308,30 @@ def extract_vb_info(passage: str):
     return loai_vb, so_hieu
 
 
-def tokenize_simple(text: str) -> list:
+# BẢN SỬA (research mới — BM25 đang mất tín hiệu vì từ ghép trong corpus có gạch dưới
+# "hợp_đồng" trong khi câu hỏi gõ tay "hợp đồng" -- 2 token khác nhau dù cùng nghĩa): thử
+# tách từ tiếng Việt thật (underthesea) thay cho regex mỗi-âm-tiết-1-token. `_VI_SEGMENT_OK`
+# quyết định 1 LẦN ở Bước 2 (sau speed-check trên mẫu) rồi dùng NHẤT QUÁN cho cả corpus lẫn
+# mọi câu hỏi về sau — BẮT BUỘC nhất quán, dùng 2 kiểu tách từ khác nhau cho corpus và câu
+# hỏi sẽ làm BM25 hỏng hoàn toàn (token không bao giờ khớp).
+try:
+    from underthesea import word_tokenize as _vi_word_tokenize
+except ImportError:
+    _vi_word_tokenize = None
+_VI_SEGMENT_OK = False
+
+
+def _tokenize_regex(text: str) -> list:
     return _TOKEN_RE.findall(text.lower())
+
+
+def tokenize_simple(text: str) -> list:
+    if _VI_SEGMENT_OK and _vi_word_tokenize is not None:
+        try:
+            return [t.lower() for t in _vi_word_tokenize(text)]
+        except Exception:
+            return _tokenize_regex(text)
+    return _tokenize_regex(text)
 
 
 def norm_so_hieu(s: str) -> str:
@@ -416,7 +452,34 @@ class BM25:
 
 
 print("=== Bước 2: BM25 index ===")
+if USE_VI_TOKENIZER and _vi_word_tokenize is not None:
+    print("  Đo tốc độ tách từ tiếng Việt (underthesea) trên 200 chunk mẫu...")
+    _sample = all_chunks[:200] if len(all_chunks) >= 200 else all_chunks
+    _t0 = time.time()
+    _ok = True
+    for _c in _sample:
+        try:
+            _vi_word_tokenize(_c["text"][:2000])  # cắt bớt chunk siêu dài để đo ổn định
+        except Exception:
+            _ok = False
+            break
+    _elapsed_sample = time.time() - _t0
+    _projected_min = (_elapsed_sample / max(len(_sample), 1)) * len(all_chunks) / 60
+    print(f"  {_elapsed_sample:.1f}s cho {len(_sample)} chunk -> ước lượng {_projected_min:.1f} phút "
+          f"cho toàn bộ {len(all_chunks)} chunk.")
+    if _ok and _projected_min <= 40:
+        _VI_SEGMENT_OK = True
+        print("  -> BẬT tách từ tiếng Việt cho BM25 (trong ngân sách 40 phút).")
+    else:
+        print(f"  -> {'lỗi lúc tách từ' if not _ok else f'quá chậm (ước lượng {_projected_min:.1f} phút > 40 phút)'} "
+              f"-> LÙI về tách từ regex thô.")
+elif USE_VI_TOKENIZER:
+    print("  USE_VI_TOKENIZER=True nhưng underthesea chưa cài được -> dùng tách từ regex thô.")
+
+_t0 = time.time()
 tokenized = [tokenize_simple(f"{c.get('loai_vb','')} {c['text']}") for c in all_chunks]
+print(f"  Tách từ xong corpus: {time.time()-_t0:.0f}s "
+      f"({'underthesea' if _VI_SEGMENT_OK else 'regex'})")
 bm25 = BM25(tokenized)
 checkpoint("Xong BM25 index")
 
@@ -781,6 +844,53 @@ def _build_training_rows(train_positive, train_data, chunk_by_id, all_chunks, bm
     return rows
 
 
+def _build_doc_index(all_chunks):
+    """doc_id -> list chunk_id CÙNG văn bản (dùng để mine hard-negative "sai Điều, đúng
+    văn bản" cho reranker) — doc_id suy từ chunk_id dạng f"{doc_id}_{dieu}_{i}"."""
+    idx = {}
+    for c in all_chunks:
+        doc_id = c["id"].rsplit("_", 2)[0]
+        idx.setdefault(doc_id, []).append(c["id"])
+    return idx
+
+
+def _build_reranker_rows(train_positive, train_data, chunk_by_id, doc_index, all_chunks, bm25,
+                          n_neg=N_NEG_PER_ROW):
+    """Sinh training rows cho RERANKER — ưu tiên hard-negative CÙNG VĂN BẢN (sai Điều, đúng
+    văn bản gold) thay vì BM25 top-60 chung chung như dense encoder dùng. Lý do (log thật):
+    sau khi fine-tune reranker bằng negative kiểu BM25-top-60 cũ, Recall@1 SẬP (59,4%->44,8%)
+    — nghi vấn negative quá dễ (thường khác hẳn văn bản), không dạy được việc phân biệt các
+    Điều trong CÙNG 1 văn bản, đúng loại nhầm lẫn hay gặp nhất trong thực tế. Văn bản chỉ có
+    1 Điều (không đủ sibling) thì lùi về BM25 top-60 như cũ để bù đủ n_neg."""
+    rows = []
+    n = len(train_positive)
+    for i, (qid, pos_id) in enumerate(train_positive.items()):
+        question = train_data[qid]["question"]
+        pos_text = chunk_by_id[pos_id]["text"]
+        doc_id = pos_id.rsplit("_", 2)[0]
+        siblings = [cid for cid in doc_index.get(doc_id, []) if cid != pos_id]
+        random.shuffle(siblings)
+        neg_ids = siblings[:n_neg]
+        if len(neg_ids) < n_neg:
+            token_q = tokenize_simple(question)
+            ranked = bm25.top_k(token_q, 60)
+            fallback = [all_chunks[i2]["id"] for i2 in ranked[5:60]
+                        if all_chunks[i2]["id"] != pos_id and all_chunks[i2]["id"] not in neg_ids]
+            neg_ids += fallback[:n_neg - len(neg_ids)]
+        if len(neg_ids) < n_neg:
+            pool = [c["id"] for c in all_chunks if c["id"] != pos_id and c["id"] not in neg_ids]
+            while len(neg_ids) < n_neg and pool:
+                neg_ids.append(random.choice(pool))
+        row = {"anchor": question, "positive": pos_text}
+        for j, nid in enumerate(neg_ids[:n_neg]):
+            row[f"negative_{j+1}"] = chunk_by_id[nid]["text"]
+        rows.append(row)
+        if (i + 1) % 500 == 0 or (i + 1) == n:
+            print(f"    _build_reranker_rows (hard-neg cùng văn bản): {i+1}/{n}  "
+                  f"({elapsed()/60:.1f} phút)")
+    return rows
+
+
 finetune_info = {"used_finetune": False, "reason": None, "n_pairs_available": len(train_positive),
                   "n_pairs_used": 0, "models": {}}
 DENSE_CHANNELS = []  # điền ở cuối cell; embeddings điền ở Cell 9
@@ -825,8 +935,11 @@ if rows_needed:
     clean_positive = {qid: cid for qid, cid in train_positive_used.items()
                        if not str(qid).startswith("task1_")}
     if clean_positive:
-        print(f"  Đang tạo training rows (reranker — CHỈ citation, {len(clean_positive)} câu)...")
-        rows_clean = _build_training_rows(clean_positive, train_data_for_pairs, chunk_by_id, all_chunks, bm25)
+        print(f"  Đang tạo training rows (reranker — CHỈ citation, hard-negative CÙNG VĂN "
+              f"BẢN, {len(clean_positive)} câu)...")
+        _doc_index = _build_doc_index(all_chunks)
+        rows_clean = _build_reranker_rows(clean_positive, train_data_for_pairs, chunk_by_id,
+                                           _doc_index, all_chunks, bm25)
         print(f"  {len(rows_clean)} rows_clean (reranker)")
     else:
         print(f"  Không có nhãn citation nào trong mẫu train hiện tại -> reranker sẽ không "
@@ -852,13 +965,49 @@ else:
         {"name": "e5-large", "base_model": BASE_DENSE_MODEL_B, "gpu": DEVICES[-1].split(":")[-1],
          "out": os.path.join(CHECKPOINT_DIR, "e5-large-ft"), "query_prefix": "query: ", "passage_prefix": "passage: "},
     ]
-    # Chỉ chạy THẬT SỰ song song nếu có >= 2 GPU riêng biệt cho 2 spec — nếu chỉ 1 GPU, cả 2
-    # subprocess sẽ tranh cùng 1 thẻ nếu phóng cùng lúc (dễ OOM cả hai) -> chạy TUẦN TỰ.
-    run_parallel = len(DEVICES) > 1 and specs[0]["gpu"] != specs[1]["gpu"]
+
+    # BẢN SỬA (research mới — tái dùng checkpoint): fingerprint gồm đúng những gì QUYẾT ĐỊNH
+    # kết quả train (không gồm mini_batch/OOM-backoff — CachedMultipleNegativesRankingLoss làm
+    # mini_batch KHÔNG đổi kết quả toán học, chỉ đổi tốc độ). Fingerprint LỆCH dù 1 chi tiết
+    # -> train lại bình thường, không bao giờ tái dùng nhầm checkpoint không khớp cấu hình.
+    def _dense_fingerprint(spec):
+        return {"base_model": spec["base_model"], "n_pairs": finetune_info["n_pairs_used"],
+                "seed": SEED, "use_lora": USE_LORA, "max_seq_len": DENSE_MAX_SEQ_LEN,
+                "batch_size": TRAIN_BATCH_SIZE,
+                "lora_r": LORA_R if USE_LORA else None, "lora_alpha": LORA_ALPHA if USE_LORA else None}
+
+    def _checkpoint_reusable(spec):
+        fp_path = spec["out"] + "_fingerprint.json"
+        if not (REUSE_CHECKPOINT_IF_EXISTS and os.path.isdir(spec["out"]) and os.path.exists(fp_path)):
+            return False
+        try:
+            with open(fp_path, encoding="utf-8") as f:
+                old_fp = json.load(f)
+            return old_fp == spec["fingerprint"]
+        except Exception:
+            return False
+
+    for spec in specs:
+        spec["fingerprint"] = _dense_fingerprint(spec)
+        spec["reused"] = _checkpoint_reusable(spec)
+        if spec["reused"]:
+            print(f"  {spec['name']}: TÁI DÙNG checkpoint có sẵn ({spec['out']}) -- fingerprint "
+                  f"khớp cấu hình hiện tại, bỏ qua fine-tune.")
+    to_train = [sp for sp in specs if not sp["reused"]]
+
+    # Chỉ chạy THẬT SỰ song song nếu >=2 spec CẦN train VÀ có >=2 GPU riêng biệt cho chúng —
+    # nếu chỉ 1 GPU (hoặc chỉ 1 spec cần train), cả 2 subprocess tranh cùng 1 thẻ nếu phóng
+    # cùng lúc (dễ OOM cả hai) -> chạy TUẦN TỰ.
+    run_parallel = (len(to_train) > 1 and len(DEVICES) > 1
+                     and to_train[0]["gpu"] != to_train[1]["gpu"])
     time_budget_each = max(600.0, min(remaining() - 5 * 60, FINETUNE_TIME_BUDGET_SEC)
-                            / (1.0 if run_parallel else 2.0))
-    print(f"  Chạy {'SONG SONG (2 GPU riêng)' if run_parallel else 'TUẦN TỰ (chỉ 1 GPU khả dụng)'} "
-          f"— ngân sách mỗi encoder ~{time_budget_each/60:.0f} phút.")
+                            / (1.0 if run_parallel else max(1, len(to_train))))
+    if to_train:
+        print(f"  Cần train: {[sp['name'] for sp in to_train]} — chạy "
+              f"{'SONG SONG (2 GPU riêng)' if run_parallel else 'TUẦN TỰ'} "
+              f"— ngân sách mỗi encoder ~{time_budget_each/60:.0f} phút.")
+    else:
+        print("  Cả 2 encoder đều tái dùng checkpoint — bỏ qua hoàn toàn bước fine-tune.")
 
     def _launch(spec):
         log_path = os.path.join(CACHE_DIR, f"train_{spec['name']}.log")
@@ -879,7 +1028,7 @@ else:
 
     failed = []
     if run_parallel:
-        procs = [(spec, *_launch(spec)) for spec in specs]
+        procs = [(spec, *_launch(spec)) for spec in to_train]
         print(f"  Đang chờ {len(procs)} tiến trình fine-tune song song...", flush=True)
         for spec, proc, lf in procs:
             rc = proc.wait()
@@ -888,7 +1037,7 @@ else:
                 failed.append(spec["name"])
             lf.close()
     else:
-        for spec in specs:
+        for spec in to_train:
             proc, lf = _launch(spec)
             rc = proc.wait()
             print(f"  {spec['name']}: xong, mã thoát {rc}")
@@ -901,11 +1050,20 @@ else:
     from sentence_transformers import SentenceTransformer
     for spec in specs:
         meta_path = spec["out"] + "_meta.json"
-        with open(meta_path, encoding="utf-8") as f:
-            m = json.load(f)
+        if spec["reused"]:
+            with open(meta_path, encoding="utf-8") as f:
+                m = json.load(f)
+            m["reused"] = True
+        else:
+            with open(meta_path, encoding="utf-8") as f:
+                m = json.load(f)
+            # Lưu fingerprint SAU KHI train xong thành công -- lần chạy sau mới tái dùng được.
+            with open(spec["out"] + "_fingerprint.json", "w", encoding="utf-8") as f:
+                json.dump(spec["fingerprint"], f)
+            m["reused"] = False
         finetune_info["models"][spec["name"]] = m
-        print(f"  {spec['name']}: {m['max_steps']} step, mini_batch cuối={m['mini_batch_final']}, "
-              f"{m['elapsed_s']/60:.1f} phút")
+        print(f"  {spec['name']}: {'TÁI DÙNG' if spec['reused'] else str(m['max_steps']) + ' step'}"
+              f"{'' if spec['reused'] else f', mini_batch cuối={m["mini_batch_final"]}, {m["elapsed_s"]/60:.1f} phút'}")
 
     m_a = SentenceTransformer(specs[0]["out"], device=DEVICES[0])
     m_b = SentenceTransformer(specs[1]["out"], device=DEVICES[-1])
@@ -1141,12 +1299,39 @@ print("=== Bước 5b: Fine-tune reranker (nếu bật) + tải mỗi GPU 1 bả
 reranker_finetune_info = {"used": False, "reason": None, "steps": 0, "elapsed_s": 0.0}
 reranker_source = RERANKER_BASE
 use_reranker_finetune = USE_RERANKER_FINETUNE and bool(rows_clean) and remaining() > 15 * 60
+reranker_ckpt = os.path.join(CHECKPOINT_DIR, "reranker-ft")
+
+# BẢN SỬA (research mới — tái dùng checkpoint): cùng nguyên tắc ở Bước 4 — fingerprint gồm
+# đúng những gì quyết định kết quả train, lệch dù 1 chi tiết thì train lại bình thường.
+_rr_fingerprint = {"base_model": RERANKER_BASE, "n_pairs": len(rows_clean), "seed": SEED,
+                    "use_lora": USE_LORA, "lora_r": LORA_R if USE_LORA else None,
+                    "lora_alpha": LORA_ALPHA if USE_LORA else None}
+_rr_fp_path = reranker_ckpt + "_fingerprint.json"
+_rr_reused = False
+if use_reranker_finetune and REUSE_CHECKPOINT_IF_EXISTS and os.path.isdir(reranker_ckpt) and os.path.exists(_rr_fp_path):
+    try:
+        with open(_rr_fp_path, encoding="utf-8") as f:
+            _old_fp = json.load(f)
+        _rr_reused = (_old_fp == _rr_fingerprint)
+    except Exception:
+        _rr_reused = False
+
 if not use_reranker_finetune:
     reason = ("USE_RERANKER_FINETUNE=False" if not USE_RERANKER_FINETUNE else
               ("không có rows_clean (xem Bước 4 — có thể toàn bộ nhãn hiện tại đến từ Task 1)"
                if not rows_clean else "hết ngân sách thời gian"))
     print(f"  {reason} -> reranker giữ ZERO-SHOT ({RERANKER_BASE}).")
     reranker_finetune_info["reason"] = reason
+elif _rr_reused:
+    print(f"  TÁI DÙNG checkpoint reranker có sẵn ({reranker_ckpt}) -- fingerprint khớp cấu "
+          f"hình hiện tại, bỏ qua fine-tune.")
+    reranker_source = reranker_ckpt
+    meta_path = reranker_ckpt + "_meta.json"
+    meta = {}
+    if os.path.exists(meta_path):
+        with open(meta_path, encoding="utf-8") as f:
+            meta = json.load(f)
+    reranker_finetune_info.update({"used": True, "reused": True, **meta})
 else:
     t0 = time.time()
     ft_model, ft_tok, meta = finetune_reranker(
@@ -1154,13 +1339,16 @@ else:
         RERANKER_FT_BATCH_SIZE, RERANKER_FT_LR, RERANKER_FT_MARGIN, SEED,
         use_lora=USE_LORA, use_8bit_optim=USE_8BIT_OPTIM,
         lora_r=LORA_R, lora_alpha=LORA_ALPHA, lora_dropout=LORA_DROPOUT)
-    reranker_ckpt = os.path.join(CHECKPOINT_DIR, "reranker-ft")
     ft_model.half().save_pretrained(reranker_ckpt)  # lưu fp16 — nhất quán với cách nạp lại để rerank
     ft_tok.save_pretrained(reranker_ckpt)
     del ft_model
     torch.cuda.empty_cache()
     reranker_source = reranker_ckpt
-    reranker_finetune_info.update({"used": True, **meta})
+    reranker_finetune_info.update({"used": True, "reused": False, **meta})
+    with open(reranker_ckpt + "_meta.json", "w", encoding="utf-8") as f:
+        json.dump(meta, f)
+    with open(_rr_fp_path, "w", encoding="utf-8") as f:
+        json.dump(_rr_fingerprint, f)
     print(f"  Fine-tune reranker xong: {meta['steps']} step, {meta['elapsed_s']/60:.1f} phút "
           f"-> checkpoint {reranker_ckpt}")
 
@@ -1200,11 +1388,20 @@ from concurrent.futures import ThreadPoolExecutor
 
 _print_lock = __import__("threading").Lock()
 
-def rrf_retrieve(question: str, bm25, dense_channels, all_chunks, top_k: int = TOP_K_RETRIEVE):
+def rrf_retrieve(question: str, bm25, dense_channels, all_chunks, top_k: int = TOP_K_RETRIEVE,
+                  return_scores: bool = False):
     """RRF fusion N kênh: BM25 + mỗi encoder trong `dense_channels` (list of {"model",
     "embeddings", "query_prefix"}). Mỗi encoder có thể cần tiền tố khác nhau lúc encode QUERY
     (vd e5: "query: ") — PHẢI khớp tiền tố đã dùng lúc encode CORPUS ở Cell 9, nếu không
-    embedding lệch hệ toạ độ mà không lỗi nào báo (bẫy đã ghi ở Cell 2/8)."""
+    embedding lệch hệ toạ độ mà không lỗi nào báo (bẫy đã ghi ở Cell 2/8).
+
+    BẢN SỬA (log thật: Recall@1 KHÔNG rerank = 60,1%, rerank zero-shot = 55,2%, rerank
+    fine-tuned = 44,8% — rerank làm Recall@k TỆ ĐI ở MỌI mức k, dù hệ thống vẫn chọn dùng
+    rerank vì adaptive-k trên điểm reranker cho METEOR cuối cao hơn top_n cố định không
+    rerank). Gợi ý: giá trị thật nằm ở "adaptive-k" (biết khi nào dừng), không nằm ở bản
+    thân việc rerank. `return_scores=True` trả thêm mảng điểm RRF (đã sort giảm dần, khớp
+    thứ tự chunk trả về) để thử `adaptive_k_cutoff` TRỰC TIẾP trên điểm RRF — không cần
+    rerank — xem cấu hình mới ở Cell 12."""
     bm25_ranked = bm25.top_k(tokenize_simple(question), top_k)
     rank_maps = [{idx: r for r, idx in enumerate(bm25_ranked)}]
     all_idx = set(bm25_ranked)
@@ -1217,7 +1414,11 @@ def rrf_retrieve(question: str, bm25, dense_channels, all_chunks, top_k: int = T
         all_idx |= set(ranked_ch)
     rrf = {i: sum(1 / (60 + rm.get(i, top_k + 1)) for rm in rank_maps) for i in all_idx}
     ranked = sorted(rrf, key=rrf.get, reverse=True)
-    return [all_chunks[i] for i in ranked]
+    chunks = [all_chunks[i] for i in ranked]
+    if return_scores:
+        rrf_scores = np.array([rrf[i] for i in ranked], dtype=np.float32)
+        return chunks, rrf_scores
+    return chunks
 
 
 def rerank(question: str, candidates: list, reranker_model, reranker_tokenizer,
@@ -1320,7 +1521,18 @@ def render_answer(selected_chunks: list, top_n: int, question: str = "",
 
 
 def answer_question(question: str, bm25, dense_channels, all_chunks, top_n: int,
-                     reranker_model=None, reranker_tokenizer=None, use_adaptive_k: bool = False) -> str:
+                     reranker_model=None, reranker_tokenizer=None, use_adaptive_k: bool = False,
+                     use_rrf_gaps: bool = False) -> str:
+    """use_rrf_gaps=True: adaptive-k chạy TRỰC TIẾP trên điểm RRF fusion, KHÔNG rerank —
+    thêm sau khi đo được rerank làm Recall@k tệ đi ở MỌI mức k (log thật, xem Cell 12) dù
+    hệ thống vẫn có lợi từ adaptive-k; giả thuyết: lợi ích nằm ở CƠ CHẾ adaptive-k, không
+    nằm ở bản thân việc rerank — thử adaptive-k ngay trên nguồn có Recall cao nhất (RRF)."""
+    if use_rrf_gaps:
+        ranked, scores = rrf_retrieve(question, bm25, dense_channels, all_chunks, return_scores=True)
+        if not ranked:
+            return "Không tìm thấy thông tin pháp lý cho câu hỏi này."
+        n = adaptive_k_cutoff(scores) if use_adaptive_k else top_n
+        return render_answer(ranked, n, question)
     ranked = rrf_retrieve(question, bm25, dense_channels, all_chunks)
     if not ranked:
         return "Không tìm thấy thông tin pháp lý cho câu hỏi này."
@@ -1405,6 +1617,7 @@ if HAS_RERANKER_FT:
 # ghi đủ vào sổ thí nghiệm (trước đây các con số này chỉ in ra console rồi mất).
 best_n, best_m, best_r, best_use_rerank, best_use_adaptive = 3, -1.0, None, False, False
 best_rr_source = None   # None | "zeroshot" | "finetuned" — CÁI THẮNG, quyết định reranker dùng ở Bước 7
+best_use_rrf_gaps = False  # True nếu cấu hình RRF-gaps (không rerank) thắng dev-eval
 recall_at_k_by_label = {}
 for label, use_rr, rr_source in configs:
     print(f"  --- {label} ---")
@@ -1487,9 +1700,52 @@ for label, use_rr, rr_source in configs:
             best_m, best_r, best_use_rerank, best_use_adaptive = m, r, True, True
             best_rr_source = rr_source
 
+# BẢN SỬA — thử adaptive-k TRỰC TIẾP trên điểm RRF fusion, KHÔNG rerank (xem docstring
+# answer_question() ở Cell 11): log thật cho thấy rerank làm Recall@k tệ đi ở MỌI mức k so
+# với RRF thuần, nhưng hệ thống vẫn có lợi từ CƠ CHẾ adaptive-k — thử adaptive-k ngay trên
+# nguồn có Recall cao nhất, không cần rerank, không tốn thêm GPU nào.
+print("  --- BM25+dense (RRF gaps, không rerank) ---")
+rrf_ranked_cache, rrf_scores_cache = {}, {}
+t0 = time.time()
+for i, qid in enumerate(dev_ids):
+    item = train_data[qid]
+    ranked, scores = rrf_retrieve(item["question"], bm25, DENSE_CHANNELS, all_chunks, return_scores=True)
+    rrf_ranked_cache[qid] = ranked
+    rrf_scores_cache[qid] = scores
+    if (i + 1) % 50 == 0 or (i + 1) == len(dev_ids):
+        print(f"    retrieval (RRF gaps) {i+1}/{len(dev_ids)} ... {time.time()-t0:.0f}s")
+
+if recall_ids:
+    hits = {k: 0 for k in ks}
+    for qid in recall_ids:
+        ranked_ids = [c["id"] for c in rrf_ranked_cache[qid]]
+        pos_id = train_positive[qid]
+        for k in ks:
+            if pos_id in ranked_ids[:k]:
+                hits[k] += 1
+    nr = len(recall_ids)
+    recall_at_k_by_label["BM25+dense (RRF gaps, không rerank)"] = {str(k): round(hits[k] / nr, 4) for k in ks}
+
+ms, rs = [], []
+for qid in dev_ids:
+    ranked, scores = rrf_ranked_cache[qid], rrf_scores_cache[qid]
+    k = adaptive_k_cutoff(scores) if ranked else 1
+    pred = render_answer(ranked, k, train_data[qid]["question"]) if ranked else "Không tìm thấy thông tin pháp lý cho câu hỏi này."
+    ref = train_data[qid]["answer"]
+    ms.append(meteor_score([str(ref).split()], str(pred).split()))
+    rs.append(rouge.score(str(ref), str(pred))["rougeL"].fmeasure)
+m, r = sum(ms) / len(ms), sum(rs) / len(rs)
+print(f"    adaptive-k (RRF gaps)  METEOR={m:.4f}  ROUGE-L={r:.4f}  (n={len(dev_ids)})")
+best_use_rrf_gaps = False
+if m > best_m:
+    best_m, best_r, best_use_rerank, best_use_adaptive = m, r, False, True
+    best_rr_source, best_use_rrf_gaps = None, True
+
 print(f"  => chọn TOP_N_ANSWER={best_n}, dùng reranker={best_use_rerank} "
-      f"(nguồn={best_rr_source}), dùng adaptive-k={best_use_adaptive} (METEOR={best_m:.4f})")
+      f"(nguồn={best_rr_source}), dùng adaptive-k={best_use_adaptive}, "
+      f"RRF-gaps={best_use_rrf_gaps} (METEOR={best_m:.4f})")
 top_n_answer, use_reranker, use_adaptive = best_n, best_use_rerank, best_use_adaptive
+use_rrf_gaps = best_use_rrf_gaps
 
 # Chốt reranker_models/reranker_tokenizers DÙNG CHO BƯỚC 7 theo đúng cái thắng ở dev-eval —
 # nếu fine-tuned thắng, GÁN LẠI reranker_models = bộ fine-tuned; nếu zero-shot thắng (hoặc
@@ -1512,7 +1768,8 @@ except Exception:
     pass
 
 eval_info = {"meteor": round(best_m, 4), "rouge_l": (round(best_r, 4) if best_r is not None else None),
-             "recall_at_k": recall_at_k_by_label, "n_dev": len(dev_ids), "reranker_source": best_rr_source}
+             "recall_at_k": recall_at_k_by_label, "n_dev": len(dev_ids), "reranker_source": best_rr_source,
+             "rrf_gaps_used": best_use_rrf_gaps}
 checkpoint("Xong dev-eval + Recall@k")
 
 
