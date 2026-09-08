@@ -1,0 +1,14 @@
+QA PAIR STATISTICS:
+  Total: 7000
+  With Điều: 6174 (88.2%)
+  Without Điều: 826 (11.8%)
+  Avg answer length: 347.4 words
+  Median answer length: 312.0 words
+  Avg sentences: 9.66
+
+DOCUMENT STATISTICS:
+  Total: 8474
+  With Điều: 7161 (84.5%)
+  Without Điều: 1313 (15.5%)
+  Avg passage length: 8562.0 words
+  Median passage length: 4830.5 words

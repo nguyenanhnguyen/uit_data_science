@@ -1,0 +1,1638 @@
+{
+  "qa_samples": {
+    "with_dieu": [
+      {
+        "qid": "119283",
+        "question": "Trong bộ máy hành chính Quốc hội làm luật và sửa đổi luật ra sao?",
+        "answer_len_words": 203,
+        "answer_excerpt": "Căn cứ, Điều 5 Luật Tổ chức Quốc hội 2014 như sau:\n“1. Quốc hội quyết định chương trình xây dựng luật, pháp lệnh theo đề nghị của Ủy ban thường vụ Quốc hội.\n2. Các dự án luật trước khi trình Quốc hội phải được Hội đồng dân tộc hoặc Ủy ban của Quốc hội thẩm tra, Ủy ban thường vụ Quốc hội cho ý kiến.\n3. Quốc hội thảo luận, xem xét, thông qua dự án luật tại một hoặc nhiều kỳ họp Quốc hội căn cứ vào n... [+489 chars]",
+        "dieus": [
+          "5"
+        ]
+      },
+      {
+        "qid": "59437",
+        "question": "Trường hợp trung tập học tập cộng đồng không hoạt động trong vòng 1 năm thì có bị đình chỉ hoạt động không?",
+        "answer_len_words": 148,
+        "answer_excerpt": "Căn cứ vào khoản 1 Điều 44 Nghị định 46/2017/NĐ-CP và Điều 2 Nghị định 135/2018/NĐ-CP quy định về các trường hợp đình chỉ hoạt động như sau:\nĐình chỉ hoạt động của trung tâm học tập cộng đồng\n1. Trung tâm học tập cộng đồng bị đình chỉ hoạt động trong các trường hợp sau đây:\na) Vi phạm các quy định của pháp luật về xử phạt vi phạm hành chính trong lĩnh vực giáo dục ở mức độ phải đình chỉ;\nc) Trong ... [+286 chars]",
+        "dieus": [
+          "44",
+          "2"
+        ]
+      },
+      {
+        "qid": "134279",
+        "question": "Người có công với cách mạng khi được Nhà nước giao đất thì có được giảm tiền sử dụng đất hay không? ",
+        "answer_len_words": 606,
+        "answer_excerpt": "Căn cứ theo quy định tại Điều 103 và Điều 104 Nghị định 131/2021/NĐ-CP như sau:\nĐối tượng hưởng\nNgười có công quy định tại các điểm a, b, d, đ, e, g, h, i, k, l, m khoản 1 Điều 3 Pháp lệnh; thân nhân liệt sĩ quy định tại khoản 2 Điều 3 Pháp lệnh.\nChế độ miễn tiền sử dụng đất\n1. Miễn tiền sử dụng đất trong hạn mức giao đất ở khi Nhà nước giao đất ở, chuyển mục đích sử dụng đất sang đất ở, công nhận... [+2335 chars]",
+        "dieus": [
+          "103",
+          "104",
+          "3",
+          "3",
+          "3"
+        ]
+      },
+      {
+        "qid": "115973",
+        "question": "Bài giảng của giảng viên đại học phải cung cấp cho sinh viên trước hay sau giờ học?",
+        "answer_len_words": 720,
+        "answer_excerpt": "Bài giảng của giảng viên đại học khi đưa vào sử dụng và giảng dạy cần đáp ứng các yêu cầu quy định tại Điều 3 và Điều 5 Thông tư 35/2021/TT-BGDĐT như sau:\n* Yêu cầu chung đối với bài giảng của giảng viên đại học\n- Việc biên soạn, lựa chọn, thẩm định, phê duyệt và sử dụng tài liệu giảng dạy, giáo trình giáo dục đại học phải bảo đảm tuân thủ theo quy định của Luật sở hữu trí tuệ, Luật xuất bản và cá... [+2897 chars]",
+        "dieus": [
+          "3",
+          "5",
+          "8"
+        ]
+      },
+      {
+        "qid": "121139",
+        "question": "Các sản phẩm bị lỗi kỹ thuật nhưng chưa đến mức phải triệu hồi thì cần được xử lý ra sao?",
+        "answer_len_words": 186,
+        "answer_excerpt": "Căn cứ Điều 15 Thông tư 25/2019/TT-BGTVT quy định về sản phẩm phải triệu hồi như sau:\nSản phẩm phải triệu hồi\n1. Doanh nghiệp phải triệu hồi các sản phẩm có khuyết tật do mình sản xuất, lắp ráp trong các trường hợp sau:\na) Sản phẩm vi phạm các quy định, tiêu chuẩn, quy chuẩn kỹ thuật hiện hành bắt buộc áp dụng cho đối tượng sản phẩm đó;\nb) Sản phẩm gây ra nguy hiểm về tính mạng và tài sản do các l... [+449 chars]",
+        "dieus": [
+          "15"
+        ]
+      },
+      {
+        "qid": "107909",
+        "question": "Quy hoạch xây dựng là hoạt động gì?",
+        "answer_len_words": 172,
+        "answer_excerpt": "Căn cứ khoản 30 Điều 3 Luật Xây dựng 2014 và điểm b khoản 18 Điều 28 Luật sửa đổi, bổ sung một số Điều của 37 Luật có liên quan đến quy hoạch 2018, hoạt động quy hoạch xây dựng được hiểu như sau:\n\"30. Quy hoạch xây dựng là việc tổ chức không gian của đô thị, nông thôn và khu chức năng; tổ chức hệ thống công trình hạ tầng kỹ thuật, hạ tầng xã hội; tạo lập môi trường thích hợp cho người dân sống tại... [+370 chars]",
+        "dieus": [
+          "3",
+          "28"
+        ]
+      },
+      {
+        "qid": "71653",
+        "question": "Thời gian tham gia công tác để xem xét khen thưởng quá trình cống hiến được quy định như thế nào?",
+        "answer_len_words": 304,
+        "answer_excerpt": "Căn cứ tại khoản 1 Điều 41 Nghị định 91/2017/NĐ-CP hướng dẫn Luật thi đua, khen thưởng 2003 do Bộ trưởng Bộ Nội vụ ban hành quy định về Thời gian tham gia công tác để xét khen thưởng quá trình cống hiến như sau:\n- Cán bộ tham gia hoạt động cách mạng trước năm 1945 là những người tham gia cách mạng trước ngày 01 tháng 01 năm 1945, người được kết nạp vào Đảng Cộng sản Đông Dương hoặc được kết nạp lạ... [+978 chars]",
+        "dieus": [
+          "41"
+        ]
+      },
+      {
+        "qid": "147757",
+        "question": "Dự án có một nhà đầu tư đáp ứng yêu cầu năng lực kinh nghiệm được chấp thuận là nhà đầu tư thực hiện dự án có được miễn ký quỹ không?",
+        "answer_len_words": 262,
+        "answer_excerpt": "Theo hướng dẫn tại Công văn 2541/CV-TCT ngày 18/4/2022, theo đó việc dự án có một nhà đầu tư đáp ứng yêu cầu năng lực kinh nghiệm được chấp thuận là nhà đầu tư thực hiện dự án có được miễn ký quỹ theo điểm b khoản 1 Điều 43 không được hướng dẫn như sau:\n- Theo quy định tại điểm b khoản 1 Điều 43 Luật Đầu tư, nhà đầu tư trúng đấu thầu thực hiện dự án đầu tư có sử dụng đất không thuộc trường hợp phả... [+738 chars]",
+        "dieus": [
+          "43",
+          "43",
+          "13",
+          "43"
+        ]
+      },
+      {
+        "qid": "42915",
+        "question": "Trường hợp nào công chức sẽ bị áp dụng hình thức xử lý kỷ luật cảnh cáo?",
+        "answer_len_words": 149,
+        "answer_excerpt": "Căn cứ vào Điều 9 Nghị định 112/2020/NĐ-CP quy định về áp dụng hình thức xử lý kỷ luật cảnh cáo trong những trường hợp như sau:\n- Công chức đã bị xử lý kỷ luật bằng hình thức khiển trách nhưng lại tái phạm\n- Có hành vi vi phạm lần đầu thuộc trường hợp khiển trách nhưng gây ra hậu quả nghiêm trọng\n- Có hành vi vi phạm lần đâu nhưng gây ra hậu quả ít nghiêm trọng trong các trường hợp sau:\n+ Cán bộ, ... [+275 chars]",
+        "dieus": [
+          "9"
+        ]
+      },
+      {
+        "qid": "29425",
+        "question": "Dự án bất động sản hình thành trong tương lai là chung cư khi đưa vào kinh doanh có bắt buộc phải bảo lãnh không?",
+        "answer_len_words": 196,
+        "answer_excerpt": "Căn cứ theo quy định tại khoản 1 Điều 56 Luật Kinh doanh bất động sản 2014 quy định như sau:\n1. Chủ đầu tư dự án bất động sản trước khi bán, cho thuê mua nhà ở hình thành trong tương lai phải được ngân hàng thương mại có đủ năng lực thực hiện bảo lãnh nghĩa vụ tài chính của chủ đầu tư đối với khách hàng khi chủ đầu tư không bàn giao nhà ở theo đúng tiến độ đã cam kết với khách hàng.\nNgân hàng Nhà ... [+482 chars]",
+        "dieus": [
+          "56"
+        ]
+      },
+      {
+        "qid": "152435",
+        "question": "Thời gian biệt phái cán bộ quản lý cấp huyện nhiều nhất là bao lâu? Khi hết thời gian biệt phái thì xử lý như thế nào?",
+        "answer_len_words": 166,
+        "answer_excerpt": "Theo quy định tại điểm 2.2 khoản 2 Điều 30 Quy định 80/QĐ-TW năm 2022 về quy trình biệt phái cán bộ như sau:\nQuy trình điều động, biệt phái cán bộ\n...\n2. Biệt phái cán bộ\n...\n2.2. Thời gian biệt phái nhiều nhất là 3 năm; khi hết thời gian biệt phái thì cấp uỷ, tổ chức đảng, cơ quan, đơn vị nơi cử cán bộ đi biệt phái đánh giá, nhận xét và xem xét, quyết định việc kết thúc hoặc gia hạn thời gian biệ... [+335 chars]",
+        "dieus": [
+          "30"
+        ]
+      },
+      {
+        "qid": "31417",
+        "question": "Trình tự thu hồi giấy chứng nhận quyền sử dụng đất được quy định như thế nào?",
+        "answer_len_words": 574,
+        "answer_excerpt": "Căn cứ theo khoản 4 Điều 87 Nghị định 43/2014/NĐ-CP được sửa đổi bởi khoản 26 Điều 1 Nghị định 148/2020/NĐ-CP quy định về thủ tục thu hồi giấy chứng nhận quyền sở hữu nhà ở, giấy chứng nhận quyền sở hữu công trình xây dựng đã cấp như sau:\n “4. Việc thu hồi Giấy chứng nhận đã cấp không đúng quy định của pháp luật về đất đai tại điểm d khoản 2 Điều 106 của Luật Đất đai được thực hiện như sau:\n a) Tr... [+2180 chars]",
+        "dieus": [
+          "87",
+          "1",
+          "106",
+          "105",
+          "37"
+        ]
+      },
+      {
+        "qid": "73853",
+        "question": "Công bố nội dung đăng ký doanh nghiệp bao gồm những thông tin gì?",
+        "answer_len_words": 153,
+        "answer_excerpt": "Tại Điều 32 Luật Doanh nghiệp 2020 thì doanh nghiệp sau khi được cấp Giấy chứng nhận đăng ký doanh nghiệp phải thông báo công khai trên Cổng thông tin quốc gia về đăng ký doanh nghiệp và phải nộp phí theo quy định của pháp luật. Nội dung công bố bao gồm các nội dung Giấy chứng nhận đăng ký doanh nghiệp và các thông tin sau đây:\n- Ngành, nghề kinh doanh;\n- Danh sách cổ đông sáng lập; danh sách cổ đ... [+324 chars]",
+        "dieus": [
+          "32"
+        ]
+      },
+      {
+        "qid": "72795",
+        "question": "Ai phải báo cáo tình hình hoạt động kiểm định chất lượng giáo dục trong năm và phương hướng hoạt động năm tiếp theo cho Bộ Giáo dục và Đào tạo?",
+        "answer_len_words": 187,
+        "answer_excerpt": "Căn cứ theo khoản 1, khoản 2 Điều 16 Thông tư 19/2020/TT-BGDĐT quy định như sau:\nBáo cáo tình hình hoạt động kiểm định chất lượng giáo dục trong năm và phương hướng hoạt động năm tiếp theo\n1. Nội dung yêu cầu báo cáo: Tình hình hoạt động kiểm định chất lượng giáo dục trong năm; phương hướng, nhiệm vụ trong năm tiếp theo; đề xuất, kiến nghị (nếu có).\n2. Đối tượng thực hiện, cơ quan nhận báo cáo và ... [+508 chars]",
+        "dieus": [
+          "16"
+        ]
+      },
+      {
+        "qid": "75603",
+        "question": "Một số quy định khác đối với trường hợp xét cấp giấy phép xây dựng có thời hạn ở tỉnh Bến Tre gồm những gì?",
+        "answer_len_words": 459,
+        "answer_excerpt": "Một số quy định khác đối với trường hợp xét cấp giấy phép xây dựng có thời hạn được quy định tại khoản 6 Điều 9 Quy định ban hành kèm theo Quyết định 43/2021/QĐ-UBND của tỉnh Bến Tre :\n- Công trình xây dựng nằm trong khu vực đã có kế hoạch sử dụng đất hằng năm của cấp huyện nhưng chưa có quyết định thu hồi đất của cơ quan nhà nước có thẩm quyền thì không cấp giấy phép xây dựng có thời hạn cho việc... [+1676 chars]",
+        "dieus": [
+          "9"
+        ]
+      },
+      {
+        "qid": "158213",
+        "question": "Cơ quan nào sẽ thực hiện các quyền, trách nhiệm và nghĩa vụ của chủ sở hữu đối với Tập đoàn Dệt May Việt Nam?",
+        "answer_len_words": 142,
+        "answer_excerpt": "Theo quy định tại Điều 6 Điều lệ tổ chức và hoạt động của Tập đoàn Dệt May Việt Nam ban hành kèm theo Nghị định 118/2013/NĐ-CP về chủ sở hữu của VINATEX như sau:\nChủ sở hữu của VINATEX\nNhà nước là chủ sở hữu của VINATEX. Chính phủ thống nhất quản lý và thực hiện chức năng của chủ sở hữu đối với VINATEX.\nBộ Công Thương là cấp trên trực tiếp của Hội đồng thành viên VINATEX, thực hiện các quyền, trác... [+266 chars]",
+        "dieus": [
+          "6"
+        ]
+      },
+      {
+        "qid": "45219",
+        "question": "Sửa đổi, bổ sung, gia hạn quyết định cho phép thành lập văn phòng đại diện giáo dục nước ngoài trong trường hợp nào?",
+        "answer_len_words": 592,
+        "answer_excerpt": "Căn cứ tại khoản 1 Điều 60 Nghị định 86/2018/NĐ-CP quy định như sau:\nSửa đổi, bổ sung, gia hạn quyết định cho phép thành lập\n1. Tổ chức, cơ sở giáo dục nước ngoài phải đăng ký sửa đổi, bổ sung, gia hạn quyết định cho phép thành lập văn phòng đại diện giáo dục nước ngoài trong những trường hợp sau đây:\na) Thay đổi tên gọi, người đứng đầu hoặc địa điểm đặt trụ sở của tổ chức, cơ sở giáo dục nước ngo... [+2304 chars]",
+        "dieus": [
+          "60"
+        ]
+      },
+      {
+        "qid": "43571",
+        "question": "Hồ sơ, thủ tục giải quyết chế độ ưu đãi đối với vợ liệt sĩ lấy chồng khác được quy định như thế nào?",
+        "answer_len_words": 652,
+        "answer_excerpt": "Căn cứ theo Điều 27 Nghị định 131/2021/NĐ-CP quy định như sau:\nHồ sơ, thủ tục giải quyết chế độ ưu đãi đối với vợ hoặc chồng liệt sĩ lấy chồng hoặc vợ khác\n1. Cá nhân làm đơn đề nghị theo Mẫu số 17 Phụ lục I Nghị định này gửi Sở Lao động - Thương binh và Xã hội nơi thường trú kèm một trong các giấy tờ sau:\na) Ý kiến đồng thuận bằng văn bản của con liệt sĩ có xác nhận về chữ ký và nơi thường trú củ... [+2403 chars]",
+        "dieus": [
+          "27",
+          "651",
+          "651"
+        ]
+      },
+      {
+        "qid": "95747",
+        "question": "Cổng thông tin một cửa quốc gia trong lĩnh vực thông tin và truyền thông có những chức năng gì?",
+        "answer_len_words": 437,
+        "answer_excerpt": "Căn cứ Điều 10 Thông tư liên tịch 80/2016/TTLT-BTC-BTTTT quy định về các chức năng của Cổng thông tin một cửa quốc gia như sau:\nCác chức năng của Cổng thông tin một cửa quốc gia\n1. Tiếp nhận chứng từ điện tử và các thông tin có liên quan, xác thực chữ ký số của người khai và các cơ quan xử lý gửi tới.\n2. Chuyển chứng từ điện tử, thông tin khác của người khai đến hệ thống xử lý chuyên ngành (bao gồ... [+1540 chars]",
+        "dieus": [
+          "10"
+        ]
+      },
+      {
+        "qid": "90159",
+        "question": "Điều kiện cấp chứng thư số cho tổ chức cung cấp dịch vụ chứng thực chữ ký số công cộng ra sao? ",
+        "answer_len_words": 146,
+        "answer_excerpt": "Căn cứ theo Điều 20 Nghị định 130/2018/NĐ-CP quy định như sau:\n\"Điều 20. Điều kiện cấp chứng thư số cho các tổ chức cung cấp dịch vụ chứng thực chữ ký số công cộng\n1. Có giấy phép cung cấp dịch vụ chứng thực chữ ký số công cộng do Bộ Thông tin và Truyền thông cấp đang còn hiệu lực.\n2. Hệ thống kỹ thuật thực tế đảm bảo theo đúng hồ sơ cấp phép.\n3. Khóa công khai trên chứng thư số sẽ được cấp là duy... [+246 chars]",
+        "dieus": [
+          "20",
+          "20"
+        ]
+      },
+      {
+        "qid": "17155",
+        "question": "Cổ đông nắm giữ cổ phần ưu đãi hoàn lại có các quyền gì?",
+        "answer_len_words": 1161,
+        "answer_excerpt": "Căn cứ khoản 2, 3 Điều 118 Luật Doanh nghiệp 2020 quy định như sau:\n“Điều 118. Cổ phần ưu đãi hoàn lại và quyền của cổ đông sở hữu cổ phần ưu đãi hoàn lại\n[...]\n2. Cổ đông sở hữu cổ phần ưu đãi hoàn lại có quyền như cổ đông phổ thông, trừ trường hợp quy định tại khoản 3 Điều này.\n3. Cổ đông sở hữu cổ phần ưu đãi hoàn lại không có quyền biểu quyết, dự họp Đại hội đồng cổ đông, đề cử người vào Hội đ... [+4631 chars]",
+        "dieus": [
+          "118",
+          "118",
+          "114",
+          "148",
+          "115"
+        ]
+      },
+      {
+        "qid": "91325",
+        "question": "Mức lương cụ thể của viên chức được bổ nhiệm chức danh thẩm kế viên hạng 4 được quy định thế nào?",
+        "answer_len_words": 232,
+        "answer_excerpt": "Hiện nay, mức lương của viên chức được bổ nhiệm chức danh thẩm kế viên hạng 4 sẽ được tính dựa vào căn cứ tại Bảng 3 Bảng lương chuyên môn, nghiệp vụ đối với cán bộ, viên chức trong các đơn vị sự nghiệp của nhà nước ban hành kèm theo Nghị định 204/2004/NĐ-CP (được bổ sung bởi điểm đ khoản 3 Điều 1 Nghị định 17/2013/NĐ-CP).\nVới mức lương cơ sở hiện tại là 1.490.000 đồng theo quy định tại khoản 2 Đi... [+1080 chars]",
+        "dieus": [
+          "1",
+          "3",
+          "3"
+        ]
+      },
+      {
+        "qid": "156215",
+        "question": "Mức bảo đảm thực hiện dự án đầu tư của dự án đầu tư là bao nhiêu?",
+        "answer_len_words": 89,
+        "answer_excerpt": "Căn cứ khoản 2 Điều 26 Nghị định 31/2021/NĐ-CP, mức bảo đảm thực hiện dự án đầu tư được tính bằng tỷ lệ phần trăm trên vốn đầu tư của dự án đầu tư theo nguyên tắc lũy tiến từng phần như sau:\n- Đối với phần vốn đến 300 tỷ đồng, mức bảo đảm là 3%;\n- Đối với phần vốn trên 300 tỷ đồng đến 1.000 tỷ đồng, mức bảo đảm là 2%;\n- Đối với phần vốn trên 1.000 tỷ đồng, mức bảo đảm là 1%.",
+        "dieus": [
+          "26"
+        ]
+      },
+      {
+        "qid": "61503",
+        "question": "Điều kiện để thành lập Hội đấu tranh vì nữ quyền cần đáp ứng những gì?",
+        "answer_len_words": 394,
+        "answer_excerpt": "Về các điều kiện để thành lập Hội, chị có thể xem xét tại Điều 5 Nghị định 45/2010/NĐ-CP có quy định như sau:\n- Có mục đích hoạt động không trái với pháp luật; không trùng lặp về tên gọi và lĩnh vực hoạt động chính với hội đã được thành lập hợp pháp trước đó trên cùng địa bàn lãnh thổ.\n- Có điều lệ;\n- Có trụ sở;\n- Có số lượng công dân, tổ chức Việt Nam đăng ký tham gia thành lập hội:\n+ Hội có phạm... [+1352 chars]",
+        "dieus": [
+          "5",
+          "14"
+        ]
+      },
+      {
+        "qid": "103983",
+        "question": "Công dân trong trường hợp nào thì được công nhận là đã hoàn thành nghĩa vụ quân sự tại ngũ trong thời bình?",
+        "answer_len_words": 228,
+        "answer_excerpt": "Căn cứ vào Điều 4 Luật Nghĩa vụ quân sự 2015 (được sửa đổi bởi điểm a khoản 1 Điều 49 Luật Dân quân tự vệ 2019) quy định như sau:\n- Công dân thuộc một trong các trường hợp sau đây được công nhận hoàn thành nghĩa vụ quân sự tại ngũ trong thời bình:\n+ Dân quân thường trực có ít nhất 24 tháng phục vụ thì được công nhận hoàn thành thực hiện nghĩa vụ quân sự tại ngũ trong thời bình, do Chỉ huy trưởng B... [+607 chars]",
+        "dieus": [
+          "4",
+          "49"
+        ]
+      },
+      {
+        "qid": "106907",
+        "question": "Nhiệm vụ của người lao động khi tham gia bộ phận an toàn vệ sinh lao động tại cơ sở sản xuất hóa chất là gì?",
+        "answer_len_words": 387,
+        "answer_excerpt": "Căn cứ khoản 2 Điều 72 Luật An toàn, vệ sinh lao động 2015 quy định về trách nhiệm của người lao động khi tham gia bộ phận an toàn vệ sinh lao động như sau:\nBộ phận an toàn, vệ sinh lao động\n...\n2. Người làm công tác an toàn, vệ sinh lao động hoặc bộ phận an toàn, vệ sinh lao động có nhiệm vụ tham mưu, giúp người sử dụng lao động tổ chức thực hiện công tác an toàn, vệ sinh lao động tại cơ sở sản x... [+1323 chars]",
+        "dieus": [
+          "72"
+        ]
+      },
+      {
+        "qid": "109577",
+        "question": "Căn cứ vào đâu để chuẩn bị thực hiện định giá đất cụ thể tại địa phương?",
+        "answer_len_words": 257,
+        "answer_excerpt": "Tại Điều 29 Thông tư 36/2014/TT-BTNMT có quy định như sau:\nChuẩn bị thực hiện định giá đất cụ thể\nCăn cứ vào kế hoạch định giá đất cụ thể đã được Ủy ban nhân dân cấp tỉnh phê duyệt, Sở Tài nguyên và Môi trường chuẩn bị thực hiện định giá đất cụ thể bao gồm các nội dung sau:\n1. Xác định mục đích định giá đất, thời gian thực hiện và dự toán kinh phí.\n2. Chuẩn bị hồ sơ thửa đất cần định giá bao gồm:\n... [+732 chars]",
+        "dieus": [
+          "29"
+        ]
+      },
+      {
+        "qid": "121967",
+        "question": "Thời hiệu thi hành bản án đối với người bị kết án về tội không làm nhiệm vụ trong chiến đấu gây hậu quả đặc biệt nghiêm trọng là bao nhiêu năm?",
+        "answer_len_words": 350,
+        "answer_excerpt": "Căn cứ tại điểm b và điểm c khoản 3 Điều 60 Bộ luật Hình sự 2015, có quy định về thời hiệu thi hành bản án như sau:\nThời hiệu thi hành bản án\n1. Thời hiệu thi hành bản án hình sự là thời hạn do Bộ luật này quy định mà khi hết thời hạn đó người bị kết án, pháp nhân thương mại bị kết án không phải chấp hành bản án đã tuyên.\n2. Thời hiệu thi hành bản án hình sự đối với người bị kết án được quy định n... [+1090 chars]",
+        "dieus": [
+          "60"
+        ]
+      },
+      {
+        "qid": "68875",
+        "question": "Việc giới thiệu cán bộ cấp tỉnh ứng cử chức vụ cao hơn cần đảm bảo những nguyên tắc gì?",
+        "answer_len_words": 333,
+        "answer_excerpt": "Căn cứ theo Điều 16 Quy định 80/QĐ-TW năm 2022 quy định như sau:\nNguyên tắc bổ nhiệm, giới thiệu cán bộ ứng cử\n1. Cấp uỷ, tổ chức đảng và tập thể lãnh đạo cơ quan, đơn vị xem xét, quyết định bổ nhiệm, giới thiệu cán bộ ứng cử theo thẩm quyền; bảo đảm sự lãnh đạo của Đảng, nguyên tắc tập trung dân chủ, khách quan, công khai, minh bạch, phát huy đầy đủ quyền hạn, trách nhiệm của từng thành viên và n... [+1122 chars]",
+        "dieus": [
+          "16"
+        ]
+      },
+      {
+        "qid": "131381",
+        "question": "Quy trình lấy phiếu tín nhiệm được quy định như thế nào?",
+        "answer_len_words": 440,
+        "answer_excerpt": "Quy trình lấy phiếu tín nhiệm được quy định tại Điều 9 Quy định 96-QĐ-TW năm 2023 như sau:\nĐối với các chức danh cấp ủy và chức danh, chức vụ lãnh đạo, quản lý trong hệ thống chính trị:\nBước 1: Chuẩn bị lấy phiếu tín nhiệm\nCăn cứ kế hoạch của cấp có thẩm quyền, cơ quan tham mưu tổ chức, cán bộ chuẩn bị các nội dung sau:\n- Yêu cầu người được lấy phiếu tín nhiệm báo cáo theo quy định tại Khoản 3, Đi... [+1583 chars]",
+        "dieus": [
+          "9",
+          "7",
+          "10",
+          "9"
+        ]
+      },
+      {
+        "qid": "80883",
+        "question": "Trách nhiệm của UBND cấp tỉnh trong thực hiện tổ chức kỳ thi tốt nghiệp THPT là gì?",
+        "answer_len_words": 134,
+        "answer_excerpt": "Căn cứ tại Điều 57 Quy chế thi tốt nghiệp THPT Ban hành kèm theo Thông tư 15/2020/TT-BGDĐT quy định về trách nhiệm của UBND cấp tỉnh GDĐT trong thực hiện tổ chức kỳ thi tốt nghiệp THPT như sau:\n- Chịu trách nhiệm toàn bộ về chỉ đạo tổ chức kỳ thi tại địa phương.\n- Thành lập Ban chỉ đạo cấp tỉnh; duyệt phương án, kế hoạch và kinh phí tổ chức kỳ thi do sở GDĐT trình; chỉ đạo, giao nhiệm vụ cho sở GD... [+204 chars]",
+        "dieus": [
+          "57"
+        ]
+      },
+      {
+        "qid": "121627",
+        "question": "Đang thực hiện nghĩa vụ Công an nhân dân nhưng sức khỏe yếu có xin xuất ngũ không?",
+        "answer_len_words": 366,
+        "answer_excerpt": "Căn cứ Điều 10 Nghị định 70/2019/NĐ-CP quy định về xuất ngũ như sau:\nXuất ngũ\n1. Hạ sĩ quan, chiến sĩ hết thời hạn phục vụ tại ngũ quy định tại khoản 3 Điều 4 Nghị định này thì được xuất ngũ.\n2. Hạ sĩ quan, chiến sĩ nghĩa vụ có thể được xuất ngũ trước thời hạn khi được Hội đồng giám định y khoa cấp tỉnh hoặc Hội đồng y khoa Bộ Công an kết luận không đủ sức khỏe để tiếp tục phục vụ tại ngũ hoặc các... [+1190 chars]",
+        "dieus": [
+          "10",
+          "4",
+          "41"
+        ]
+      },
+      {
+        "qid": "33849",
+        "question": "Danh mục thông tin, dữ liệu tài nguyên và môi trường được công bố ở đâu và phải tuân thủ quy định gì?",
+        "answer_len_words": 330,
+        "answer_excerpt": "Căn cứ Điều 15 Nghị định 73/2017/NĐ-CP. quy định như sau:\nCông bố danh mục thông tin, dữ liệu tài nguyên và môi trường\n1. Danh mục thông tin, dữ liệu tài nguyên và môi trường được công bố trên trang thông tin hoặc cổng thông tin điện tử, các ấn phẩm chuyên môn. Việc công bố danh mục thông tin, dữ liệu tài nguyên và môi trường phải tuân thủ theo các quy định về bảo vệ bí mật nhà nước trong lĩnh vực... [+1136 chars]",
+        "dieus": [
+          "15"
+        ]
+      },
+      {
+        "qid": "62547",
+        "question": "Các hành vi thuộc thẩm quyền xử phạt của Bộ đội Biên phòng theo Nghị định 120/2013/NĐ-CP?",
+        "answer_len_words": 254,
+        "answer_excerpt": "Căn cứ Điều 41 Nghị định 120/2013/NĐ-CP có quy định rằng Bộ đội Biên phòng có thẩm quyền xử phạt đối với các hành vi vi phạm quy định tại Mục 6, Mục 7 Chương II Nghị định này. Do đó, các hành vi thuộc thẩm quyền xử phạt của Bộ đội Biên phòng bao gồm:\n- Vi phạm quy định đi lại, cư trú, sản xuất, kinh doanh bất hợp pháp trong khu vực cấm, khu vực bảo vệ, vành đai an toàn của công trình quốc phòng, k... [+700 chars]",
+        "dieus": [
+          "41"
+        ]
+      },
+      {
+        "qid": "111847",
+        "question": "Xúc phạm, lăng mạ bố mẹ vợ có phải là hành vi bạo lực gia đình không?",
+        "answer_len_words": 431,
+        "answer_excerpt": "Xúc phạm, lăng mạ bố mẹ vợ có phải là hành vi bạo lực gia đình không?\nCăn cứ theo điểm b khoản 1 Điều 3 Luật Phòng, chống bạo lực gia đình 2022 (Có hiệu lực ngày 01/07/2023) quy định:\nHành vi bạo lực gia đình\n1. Hành vi bạo lực gia đình bao gồm:\na) Hành hạ, ngược đãi, đánh đập, đe dọa hoặc hành vi cố ý khác xâm hại đến sức khỏe, tính mạng;\nb) Lăng mạ, chì chiết hoặc hành vi cố ý khác xúc phạm danh... [+1515 chars]",
+        "dieus": [
+          "3",
+          "2"
+        ]
+      },
+      {
+        "qid": "85095",
+        "question": "Trình tự thủ tục cấp Giấy chứng nhận cơ sở đủ điều kiện đào tạo, huấn luyện thuyền viên hàng hải",
+        "answer_len_words": 450,
+        "answer_excerpt": "Theo Điều 7 Nghị định 29/2017/NĐ-CP quy định về cấp Giấy chứng nhận cơ sở đủ điều kiện đào tạo, huấn luyện thuyền viên hàng hải như sau:\n(1) Bộ trưởng Bộ Giao thông vận tải cấp Giấy chứng nhận theo quy định tại Nghị định này.\n(2) Cơ sở đào tạo, huấn luyện gửi 01 bộ hồ sơ trực tiếp hoặc gửi bằng các hình thức phù hợp khác đến Bộ Giao thông vận tải. Hồ sơ bao gồm:\n- Tờ khai theo Mẫu số 01 quy định t... [+2444 chars]",
+        "dieus": [
+          "7"
+        ]
+      },
+      {
+        "qid": "157775",
+        "question": "Ưu đãi đối với vận động viên đội tuyển quốc gia được quy định như thế nào?",
+        "answer_len_words": 476,
+        "answer_excerpt": "Chế độ ưu đãi đối với vận động viên đội tuyển quốc gia được quy định tại Điều 6, Điều 7 và Điều 8 Nghị định 36/2019/NĐ-CP như sau:\n* Ưu đãi về đào tạo, bồi dưỡng chuyên môn nghiệp vụ\nVận động viên, huấn luyện viên đội tuyển thể thao quốc gia đã tốt nghiệp trung học phổ thông, được Bộ Văn hóa, Thể thao và Du lịch xác nhận đã hoàn thành nhiệm vụ tham gia thi đấu Olympic Games, Giải vô địch thế giới,... [+1786 chars]",
+        "dieus": [
+          "6",
+          "7",
+          "8"
+        ]
+      },
+      {
+        "qid": "155139",
+        "question": "Có bao nhiêu mức sự cố về hệ thống hạ tầng thông tin trong ngành Bảo hiểm xã hội Việt Nam?",
+        "answer_len_words": 338,
+        "answer_excerpt": "Theo khoản 3 Điều 15 Quy chế quản lý, triển khai, vận hành và khai thác hệ thống hạ tầng thông tin trong ngành Bảo hiểm xã hội Việt Nam Ban hành kèm theo Quyết định 3735/QĐ-BHXH năm 2022 quy định như sau:\nHỗ trợ và xử lý sự cố về hệ thống\n...\n3. Tùy thuộc vào mức độ ảnh hưởng của các sự cố, Bộ phận CNTT đánh giá và phân loại theo 3 mức: sự cố đặc biệt nghiêm trọng, sự cố nghiêm trọng, sự cố thông ... [+1100 chars]",
+        "dieus": [
+          "15"
+        ]
+      },
+      {
+        "qid": "56029",
+        "question": "Doanh nghiệp thuê trụ sở thanh toán tiền điện nước trực tiếp với đơn vị cung cấp thì có được trừ chi phí khi tính thuế thu nhập doanh nghiệp không?",
+        "answer_len_words": 855,
+        "answer_excerpt": "Căn cứ vào khoản 2 Điều 6 Thông tư 78/2014/TT-BTC được sửa đổi bởi Điều 4 Thông tư 96/2015/TT-BTC quy định như sau:\nCác khoản chi được trừ và không được trừ khi xác định thu nhập chịu thuế\n...\n2. Các khoản chi không được trừ khi xác định thu nhập chịu thuế bao gồm:\n2.1. Khoản chi không đáp ứng đủ các điều kiện quy định tại Khoản 1 Điều này.\nTrường hợp doanh nghiệp có chi phí liên quan đến phần giá... [+3535 chars]",
+        "dieus": [
+          "6",
+          "4"
+        ]
+      },
+      {
+        "qid": "82155",
+        "question": "Trẻ em dưới 16 tuổi mồ côi cả cha và mẹ có được cấp thẻ bảo hiểm y tế miễn phí theo quy định hiện nay không?",
+        "answer_len_words": 314,
+        "answer_excerpt": "Theo điểm b khoản 1 Điều 5 Nghị định 20/2021/NĐ-CP quy định về đối tượng bảo trợ xã hội hưởng trợ cấp xã hội hàng tháng như sau:\nĐối tượng bảo trợ xã hội hưởng trợ cấp xã hội hàng tháng\n1. Trẻ em dưới 16 tuổi không có nguồn nuôi dưỡng thuộc một trong các trường hợp sau đây:\na) Bị bỏ rơi chưa có người nhận làm con nuôi;\nb) Mồ côi cả cha và mẹ;\nc) Mồ côi cha hoặc mẹ và người còn lại bị tuyên bố mất ... [+975 chars]",
+        "dieus": [
+          "5",
+          "3"
+        ]
+      },
+      {
+        "qid": "108273",
+        "question": "Hội đồng nhân dân xã phải phê chuẩn báo cáo quyết toán ngân sách nhà nước gửi lên Ủy ban nhân dân huyện sau bao nhiêu này kể từ khi báo cáo được duyệt?",
+        "answer_len_words": 267,
+        "answer_excerpt": "Theo khoản 5 Điều 69 Luật Ngân sách nhà nước 2015 quy định về thời hạn thực hiện lập và duyệt kết toán ngân sách nhà nước như sau:\nĐiều 69. Thời hạn và trình tự quyết toán ngân sách địa phương\n....\n5. Hội đồng nhân dân cấp xã xem xét, phê chuẩn báo cáo quyết toán ngân sách cấp mình, gửi Ủy ban nhân dân cấp huyện chậm nhất là 05 ngày làm việc, kể từ ngày báo cáo quyết toán được phê chuẩn. Ủy ban nh... [+817 chars]",
+        "dieus": [
+          "69",
+          "69"
+        ]
+      },
+      {
+        "qid": "125125",
+        "question": "Phương pháp tính thuế thu nhập doanh nghiệp được thực hiện như thế nào?",
+        "answer_len_words": 163,
+        "answer_excerpt": "Căn cứ khoản 1 Điều 3 Thông tư 78/2014/TT-BTC (khoản này được sửa đổi bởi Điều 1 Thông tư 96/2015/TT-BTC) quy định về phương pháp tính thuế như sau:\nSố thuế thu nhập doanh nghiệp phải nộp trong kỳ tính thuế bằng thu nhập tính thuế trừ đi phần trích lập quỹ khoa học và công nghệ (nếu có) nhân với thuế suất thuế thu nhập doanh nghiệp.\nThuế thu nhập doanh nghiệp phải nộp được xác định theo công thức ... [+375 chars]",
+        "dieus": [
+          "3",
+          "1"
+        ]
+      },
+      {
+        "qid": "144833",
+        "question": "Phương tiện đường thủy không chấp hành yêu cầu kiểm tra của người có thẩm quyền bị xử phạt vi phạm hành chính như thế nào?",
+        "answer_len_words": 353,
+        "answer_excerpt": "Theo khoản 2 Điều 41 Nghị định 139/2021/NĐ-CP quy định về các hành vi vi phạm quy định khi có hoạt động thanh tra, kiểm tra như sau:\nVi phạm quy định khi có hoạt động thanh tra, kiểm tra\n...\n2. Phạt tiền từ 10.000.000 đồng đến 15.000.000 đồng đối với mỗi hành vi vi phạm sau đây:\na) Không chấp hành yêu cầu về kiểm tra, kiểm soát của người có thẩm quyền;\nb) Cố tình không dừng phương tiện để kiểm tra... [+1254 chars]",
+        "dieus": [
+          "41",
+          "4"
+        ]
+      },
+      {
+        "qid": "106191",
+        "question": "Quy định cụ thể về phân cấp, phân quyền sử dụng Hệ thống Quản lý cán bộ tập trung của ngành Hải quan cho Vụ Tổ chức cán bộ như thế nào?",
+        "answer_len_words": 296,
+        "answer_excerpt": "Theo điểm b khoản 1 Điều 6 Quy chế sử dụng Hệ thống Quản lý cán bộ tập trung của ngành Hải quan ban hành kèm theo Quyết định 240/QĐ-TCHQ năm 2018 quy định như sau:\nQuy định cụ thể về phân cấp, phân quyền\n1. Cấp Tổng cục:\na) Cục Công nghệ thông tin và Thống kê Hải quan:\n- Quyền quản trị hệ thống toàn diện;\n- Đảm bảo các yếu tố liên quan đến kỹ thuật để duy trì hệ thống QLCBTT hoạt động;\nb) Vụ Tổ ch... [+909 chars]",
+        "dieus": [
+          "6"
+        ]
+      },
+      {
+        "qid": "149105",
+        "question": "Có được yêu cầu phúc tra bài thi vấn đáp trong kỳ kiểm tra kết quả tập sự hành nghề đấu giá hay không?",
+        "answer_len_words": 249,
+        "answer_excerpt": "Căn cứ theo Điều 21 Thông tư 06/2017/TT-BTP quy định về việc phúc tra bài kiểm tra kết quả tập sự hành nghề đấu giá như sau:\nPhúc tra bài kiểm tra\n1. Trong thời hạn 15 ngày kể từ ngày kết quả kiểm tra được đăng tải trên Cổng thông tin điện tử của Bộ Tư pháp, thí sinh không đồng ý với kết quả kiểm tra của mình có quyền làm đơn phúc tra gửi Chủ tịch Hội đồng kiểm tra.\nKhông phúc tra bài kiểm tra vấn... [+711 chars]",
+        "dieus": [
+          "21"
+        ]
+      },
+      {
+        "qid": "51137",
+        "question": "Công chức muốn khai thác hồ sơ điện tử cá nhân thì cần đáp ứng điều kiện gì?",
+        "answer_len_words": 203,
+        "answer_excerpt": "Căn cứ khoản 2 Điều 29 Quy chế quản lý hồ sơ công chức, viên chức và người lao động của Bộ Tư pháp ban hành kèm theo Quyết định 1818/QĐ-BTP năm 2020 quy định về trách nhiệm của công chức đối với hồ sơ cá nhân như sau:\nTrách nhiệm của công chức, viên chức đối với hồ sơ cá nhân\n1. Công chức, viên chức có trách nhiệm đối với hồ sơ cá nhân theo quy định tại Điều 21 Thông tư số 11/2012/TT-BNV và Điều 2... [+514 chars]",
+        "dieus": [
+          "29",
+          "21",
+          "21"
+        ]
+      },
+      {
+        "qid": "127465",
+        "question": "Khi có nhu cầu xác nhận lại thời hạn sử dụng đất nông nghiệp trồng cây lâu năm thực hiện như thế nào?",
+        "answer_len_words": 301,
+        "answer_excerpt": "Căn cứ quy định tại khoản 3 Điều 74 Nghị định 43/2014/NĐ-CP như sau:\n\"Điều 74: Trình tự, thủ tục gia hạn sử dụng đất; xác nhận tiếp tục sử dụng đất nông nghiệp của hộ gia đình, cá nhân khi hết hạn sử dụng đất\n[...]\n3. Trường hợp hộ gia đình, cá nhân quy định tại Khoản 2 Điều này có nhu cầu xác nhận lại thời hạn sử dụng đất trên Giấy chứng nhận thì thực hiện theo trình tự, thủ tục như sau:\na) Người... [+912 chars]",
+        "dieus": [
+          "74",
+          "74",
+          "126",
+          "210"
+        ]
+      },
+      {
+        "qid": "100823",
+        "question": "Nguyên tắc phòng ngừa bệnh truyền nhiễm, bệnh dại là gì?",
+        "answer_len_words": 145,
+        "answer_excerpt": "Tại Điều 4 Luật Phòng Chống bệnh truyền nhiễm 2007 quy định chung về nguyên tắc phòng ngừa bệnh truyền nhiễm như sau:\nNguyên tắc phòng, chống bệnh truyền nhiễm\n1. Lấy phòng bệnh là chính trong đó thông tin, giáo dục, truyền thông, giám sát bệnh truyền nhiễm là biện pháp chủ yếu. Kết hợp các biện pháp chuyên môn kỹ thuật y tế với các biện pháp xã hội, hành chính trong phòng, chống bệnh truyền nhiễm... [+331 chars]",
+        "dieus": [
+          "4"
+        ]
+      },
+      {
+        "qid": "156407",
+        "question": "Người kinh doanh thức ăn đường phố cần đáp ứng điều kiện gì để bảo đảm an toàn vệ sinh thực phẩm?",
+        "answer_len_words": 412,
+        "answer_excerpt": "Theo Điều 28 Luật an toàn thực phẩm 2010 quy định về điều kiện bảo đảm an toàn thực phẩm đối với nơi chế biến, kinh doanh dịch vụ ăn uống như sau:\nĐiều 28. Điều kiện bảo đảm an toàn thực phẩm đối với nơi chế biến, kinh doanh dịch vụ ăn uống\n1. Bếp ăn được bố trí bảo đảm không nhiễm chéo giữa thực phẩm chưa qua chế biến và thực phẩm đã qua chế biến.\n2. Có đủ nước đạt quy chuẩn kỹ thuật phục vụ việc... [+1410 chars]",
+        "dieus": [
+          "28",
+          "28",
+          "30",
+          "30"
+        ]
+      },
+      {
+        "qid": "11525",
+        "question": "Đối với dự án khai thác tận thu khoáng sản thì Nhà nước có phép được thực hiện thu hồi đất không?",
+        "answer_len_words": 464,
+        "answer_excerpt": "Căn cứ theo khoản 3 Điều 62 Luật Đất đai 2013 có quy định như sau:\nThu hồi đất để phát triển kinh tế - xã hội vì lợi ích quốc gia, công cộng\nNhà nước thu hồi đất để phát triển kinh tế - xã hội vì lợi ích quốc gia, công cộng trong các trường hợp sau đây:\n...\n3. Thực hiện các dự án do Hội đồng nhân dân cấp tỉnh chấp thuận mà phải thu hồi đất bao gồm:\na) Dự án xây dựng trụ sở cơ quan nhà nướ... [+1720 chars]",
+        "dieus": [
+          "62"
+        ]
+      }
+    ],
+    "without_dieu": [
+      {
+        "qid": "98511",
+        "question": "Hồ sơ thành lập trường cao đẳng tư thục có từ 02 thành viên góp vốn trở lên hoạt động không vì lợi nhuận gồm những gì?",
+        "answer_len_words": 397,
+        "answer_excerpt": "Căn cứ quy định tại điểm 20.3 khoản 20 tiểu mục I Mục B Phần II Thủ tục hành chính ban hành kèm theo Quyết định 445/QĐ-LĐTBXH năm 2022.\nHồ sơ thành lập trường cao đẳng tư thục có từ 02 thành viên góp vốn trở lên hoạt động không vì lợi nhuận bao gồm:\n- Văn bản đề nghị cho phép thành lập;\n- Văn bản chấp thuận của UBND tỉnh nơi trường cao đẳng đặt trụ sở chính;\n- Đề án thành lập trường;\n- Dự thảo quy... [+1347 chars]"
+      },
+      {
+        "qid": "135659",
+        "question": "Phẫu thuật kết hợp xương gãy xương gót chống chỉ định đối với ai?",
+        "answer_len_words": 163,
+        "answer_excerpt": "Căn cứ theo quy định tại Mục III Quy trình kỹ thuật điều trị điều trị phẫu thuật kết hợp xương gãy xương gót ban hành kèm theo Quyết định 5728/QĐ-BYT năm 2017 như sau:\nPHẪU THUẬT KẾT HỢP XƯƠNG GẪY XƯƠNG GÓT\n...\nII. CHỈ ĐỊNH\n- Gãy xương gót di lệch.\n- Gãy trật xương gót (gãy xương gót kèm theo trật khớp dưới sên, trật khớp gót hộp).\nIII. CHỐNG CHỈ ĐỊNH\n- Gãy xương gót không di lệch.\n- Tổ chức phần ... [+354 chars]"
+      },
+      {
+        "qid": "51957",
+        "question": "Diện tích tối đa của bảng quảng cáo dọc tuyến đường cao tốc TPHCM - Long Thành - Dầu Giây là bao nhiêu?",
+        "answer_len_words": 121,
+        "answer_excerpt": "Theo quy định tại mục 2.2.1.2 Quy chuẩn kỹ thuật quốc gia về xây dựng và lắp đặt phương tiện quảng cáo ngoài trời ban hành kèm theo Thông tư 04/2018/TT-BXD (gọi tắt là QCVN 17:2018/BXD) quy định về khoảng cách và kích thước như sau:\n2.2.1.2 Bảng quảng cáo, hộp đèn đứng độc lập xây dựng, lắp đặt dọc các tuyến đường ngoài đô thị phải tuân theo các quy định trong Bảng 1.\n\nTheo đó, diện tích tối đa củ... [+178 chars]"
+      },
+      {
+        "qid": "82887",
+        "question": "Chất lượng của đậu bắp quả tươi hạng II cần đáp ứng những yêu cầu tối thiểu nào?",
+        "answer_len_words": 645,
+        "answer_excerpt": "Căn cứ tiết 2.2.3 tiểu mục 2.2 Mục 2 Tiêu chuẩn quốc gia TCVN 12995:2020 quy định chất lượng của đậu bắp quả tươi hạng II như sau:\nYêu cầu về chất lượng\n2.1 Yêu cầu tối thiểu\nTrong tất cả các hạng, tùy theo yêu cầu cụ thể cho từng hạng và dung sai cho phép, đậu bắp quả tươi phải:\n- nguyên vẹn, đã cắt sạch cuống;\n- tươi, lành lặn, không bị thối hoặc hư hỏng đến mức không phù hợp cho sử dụng;\n- sạch... [+2449 chars]"
+      },
+      {
+        "qid": "148605",
+        "question": "Mẫu sổ thống kê tai nạn lao động cấp cơ sở như thế nào?",
+        "answer_len_words": 32,
+        "answer_excerpt": "Theo Phụ lục I ban hành kèm Thông tư 13/2020/TT-BLĐTBXH quy định về mẫu sổ thống kê tai nạn lao động cấp cơ sở như sau:\n\n\nTải biểu mẫu về: Tại đây."
+      },
+      {
+        "qid": "161861",
+        "question": "Tra cứu điểm thi lớp 10 tại TP. Hồ Chí Minh năm 2023 - 2024 như thế nào? Có những cách tra cứu điểm thi nào?",
+        "answer_len_words": 218,
+        "answer_excerpt": "Tại Phụ lục I ban hành kèm theo Công văn 1682/SGDĐT-KTKĐ năm 2023 có nêu rõ các mốc thời gian trong tuyển sinh vào lớp 10 tại Thành phố Hồ Chí Minh.\nTheo đó, học sinh Thành phố Hồ Chí Minh sẽ được công bố kết quả thi vào ngày 20/6/2023.\nĐồng thời, có hai mốc thời gian quan trọng sau đây:\n- 24/06/2023: Công bố điểm chuẩn tuyển sinh trung học phổ thông chuyên, tích hợp và kết quả tuyển thẳng.\n- 10/0... [+654 chars]"
+      },
+      {
+        "qid": "138041",
+        "question": "Mẫu Giấy báo mất Thẻ tiết kiệm tại Ngân hàng Chính sách xã hội?",
+        "answer_len_words": 48,
+        "answer_excerpt": "Mẫu Giấy báo mất Thẻ tiết kiệm tại Ngân hàng Chính sách xã hội hiện nay được quy định tại Mẫu số 03/NHCS-TGTK ban hành kèm theo Hướng dẫn 3579/NHCS-KHNV năm 2019:\n\nTải Mẫu Giấy báo mất Thẻ tiết kiệm tại Ngân hàng Chính sách xã hội: tại"
+      },
+      {
+        "qid": "97161",
+        "question": "Tác nhân gây bệnh đường hô hấp có thể bắt nguồn từ những dụng cụ không được khử khuẩn hay không?",
+        "answer_len_words": 284,
+        "answer_excerpt": "Tác nhân gây bệnh đường hô hấp có thể bắt nguồn từ những dụng cụ không được khử khuẩn hay không? (Hình từ Internet)\nTheo quy định tại tiểu mục 3.1 Mục III Hướng dẫn khử khuẩn, tiệt khuẩn dụng cụ trong các cơ sở khám bệnh, chữa bệnh ban hành kèm theo Quyết định 3671/QĐ-BYT năm 2012, các tác nhân gây bệnh thường gặp có thể kể đến như:\n\"3.1. Các tác nhân gây bệnh thường gặp\nPhần lớn là các cầu khuẩn,... [+965 chars]"
+      },
+      {
+        "qid": "39671",
+        "question": "Mẫu sổ theo dõi trợ cấp gạo trồng rừng thay thế nương rẫy được quy định như thế nào?",
+        "answer_len_words": 28,
+        "answer_excerpt": "Theo Mẫu biểu số 07 Phụ lục ban hành kèm theo Thông tư liên tịch 93/2016/TTLT-BTC-BNNPTNT có quy định về sổ theo dõi trợ cấp gạo như sau:"
+      },
+      {
+        "qid": "108219",
+        "question": "Nhà chung cư cần phải bố trí không gian sinh hoạt cộng đồng với diện tích tối thiểu là bao nhiêu?",
+        "answer_len_words": 271,
+        "answer_excerpt": "Tại tiểu mục 2.2.7 Mục 2 Quy chuẩn kỹ thuật quốc gia QCVN 04:2021/BXD quy định về không gian sinh hoạt cộng đồng của nhà chung cư cụ thể như sau:\n\"2.2.7 Không gian sinh hoạt cộng đồng\na) Nhà chung cư, phần căn hộ chung cư trong nhà chung cư hỗn hợp phải bố trí không gian sinh hoạt cộng đồng đảm bảo diện tích sử dụng bình quân tối thiểu đạt 0,8 m2/căn hộ, trong đó phải có không gian phù hợp để tổ c... [+846 chars]"
+      },
+      {
+        "qid": "61237",
+        "question": "Lái tàu đường sắt trình độ cao đẳng là ngành nghề như thế nào?",
+        "answer_len_words": 318,
+        "answer_excerpt": "Căn cứ theo tiểu mục 1 Mục A Phần 9 Quy định khối lượng kiến thức tối thiểu, yêu cầu về năng lực mà người học phải đạt được sau khi tốt nghiệp trình độ trung cấp, trình độ cao đẳng cho các ngành, nghề thuộc lĩnh vực kỹ thuật mỏ và kỹ thuật ban hành kèm theo Thông tư 50/2018/TT-BLĐTBXH như sau:\nGiới thiệu chung về ngành, nghề\nLái tàu đường sắt trình độ cao đẳng là ngành, nghề mà người hành nghề tr... [+1113 chars]"
+      },
+      {
+        "qid": "87767",
+        "question": "Khi nào thì được phép phẫu thuật thắt hẹp động mạch phổi trong bệnh tim bẩm sinh có tăng áp lực động mạch phổi nặng?",
+        "answer_len_words": 347,
+        "answer_excerpt": "Căn cứ theo Mục II Quy trình kỹ thuật phẫu thuật thắt hẹp động mạch phổi trong bệnh tim bẩm sinh có tăng áp lực động mạch phổi nặng ban hành kèm theo Quyết định 5732/QĐ-BYT năm 2017 như sau:\nPHẪU THUẬT THẮT HẸP ĐỘNG MẠCH PHỔI TRONG BỆNH TIM BẨM SINH CÓ TĂNG ÁP LỰC ĐỘNG MẠCH PHỔI NẶNG\n...\nII. CHỈ ĐỊNH\n1) Nhóm người bệnh với bệnh tim có shunt trái - phải và tăng lưu lượng máu lên động mạch phổi như ... [+1176 chars]"
+      },
+      {
+        "qid": "28695",
+        "question": "Những sản phẩm nào yêu cầu phải có thẩm định, chứng nhận an toàn thực phẩm thủy sản xuất khẩu?",
+        "answer_len_words": 209,
+        "answer_excerpt": "Dựa vào nội dung tại Phụ lục VIII ban hành kèm theo Thông tư 32/2022/TT-BNNPTNT, những sản phẩm thủy sản xuất khẩu được yêu cầu phải có thẩm định, chứng nhận an toàn thực phẩm bao gồm:\n- Tất cả các sản phẩm thủy sản: Montenegro, Argentina, Indonesia, Macedonia, Peru, Braxin, French Polynesia, Liên minh Kinh tế Á - Âu (Liên bang Nga, Kazakhstan, Belarus, Armenia, Kyryzstan), Trung Quốc, Hàn Quốc, S... [+672 chars]"
+      },
+      {
+        "qid": "128055",
+        "question": "Hướng dẫn tổ chức Kỳ thi tốt nghiệp THPT, tuyển sinh đại học 2023,giáo dục nghề nghiệp năm 2023 đối với các Sở GDĐT ra sao?",
+        "answer_len_words": 478,
+        "answer_excerpt": "Tại mục 1 Công văn 2742/BGDĐT-QLCL năm 2023 nêu rõ Bộ GD&ĐT đề nghị Giám đốc các Sở GDĐT, Giám đốc các Đại học, Học viện, Hiệu trưởng các Trường Đại học tập trung triển khai nhiều công việc, đơn cử như:\n*Đối với các Sở GDĐT\n- Tăng cường tuyên truyền nhằm thông tin kịp thời, đầy đủ về mục đích, ý nghĩa, những nội dung cơ bản của Kỳ thi và công tác tuyển sinh năm 2023.\n- Khẩn trương ban hành các văn... [+1776 chars]"
+      },
+      {
+        "qid": "154117",
+        "question": "Tổng kiểm toán nhà nước cần đáp ứng các điều kiện nào về chức danh?",
+        "answer_len_words": 329,
+        "answer_excerpt": "Căn cứ điểm 2.14 khoản 2 Mục I Quy định 214-QĐ/TW năm 2020 có quy định về tiêu chuẩn đối với chức danh Tổng kiểm toán nhà nước như sau:\nKHUNG TIÊU CHUẨN CHỨC DANH CÁN BỘ THUỘC DIỆN BAN CHẤP HÀNH TRUNG ƯƠNG, BỘ CHÍNH TRỊ, BAN BÍ THƯ QUẢN LÝ\n...\n2. Tiêu chuẩn chức danh cụ thể\nTiêu chuẩn các chức danh dưới đây phải bảo đảm đầy đủ tiêu chuẩn chung nêu tại Mục 1, Phần I, Quy định này; đồng thời, đáp ứn... [+1119 chars]"
+      },
+      {
+        "qid": "6991",
+        "question": "Ong mật là con giống được lựa chọn và quản lý thế nào?",
+        "answer_len_words": 240,
+        "answer_excerpt": "Việc lựa chọn và quản lý ong giống được tiến hành theo quy định tại mục 2 Chương 2 Quy trình thực hành chăn nuôi tốt cho chăn nuôi ong an toàn tại Việt Nam (VIETGAHP) ban hành kèm theo Quyết định 1580/QĐ-BNN-KHCN năm 2008 như sau:\n\"2. Con giống và quản lý giống\n2.1. Nguồn gốc con giống: Con giống phải có nguồn gốc rõ ràng, có hồ sơ ghi rõ tên và địa chỉ của tổ chức, cá nhân nơi cung cấp, thời gian... [+694 chars]"
+      },
+      {
+        "qid": "68733",
+        "question": "Trong quá trình xử lý quả tươi bằng hơi nước nóng trừ ruồi đục quả cán bộ theo dõi và điều khiển thiết bị xử lý phải thực hiện những công việc gì?",
+        "answer_len_words": 638,
+        "answer_excerpt": "Căn cứ theo tiết 2.3.2 tiểu mục 2.3 Mục II Quy chuẩn kỹ thuật quốc gia QCVN 01-115:2012/BNNPTNT quy định về trình tự thực hiện như sau:\nYÊU CẦU KỸ THUẬT\n...\n2.3. Trình tự thực hiện\n...\n2.3.2. Các bước tiến hành\nBước 1: Lựa chọn quả tươi theo trọng lượng hay kích thước đồng đều để đưa từng loại vào khay nhựa chịu nhiệt trước xử lý;\nBước 2: Các khay quả tươi được xếp lên từng ngăn trước khi đưa vào ... [+2379 chars]"
+      },
+      {
+        "qid": "33867",
+        "question": "F0 cách ly tại nhà được dỡ bỏ cách ly sau bao nhiêu ngày?",
+        "answer_len_words": 246,
+        "answer_excerpt": "Theo hướng dẫn tại tiểu mục 7.1 mục VII Hướng dẫn chẩn đoán và điều trị Covid-19 ban hành kèm theo Quyết định 250/QĐ-BYT năm 2022 về thời hạn dỡ bỏ cách ly tại nhà đối với F0 như sau:\n\"VII. XUẤT VIỆN VÀ DỰ PHÒNG LÂY NHIỄM\n7.1. Tiêu chuẩn dỡ bỏ cách ly với người quản lý, chăm sóc tại nhà\nĐối với người bệnh COVID-19 không triệu chứng hoặc triệu chứng nhẹ đủ điều kiện cách ly, điều trị tại nhà theo q... [+715 chars]"
+      },
+      {
+        "qid": "95443",
+        "question": "Sau khi tốt nghiệp ngành xây dựng cầu đường bộ trình độ cao đẳng thì người học phải có những kỹ năng nào?",
+        "answer_len_words": 374,
+        "answer_excerpt": "Căn cứ theo tiểu mục 3 Mục A Phần 12 Quy định ban hành kèm theo Thông tư 51/2018/TT-BLĐTBXH như sau:\nKỹ năng\n- Sử dụng được các thiết bị, máy móc chuyên dụng trong khảo sát địa hình, đo đạc, định vị, bố trí công trình;\n- Đọc được bản vẽ thiết kế kỹ thuật thi công; bóc tách được khối lượng vật tư, vật liệu theo hồ sơ thiết kế bản vẽ thi công;\n- Đánh giá được chủng loại, chất lượng vật liệu, cấu kiệ... [+1313 chars]"
+      },
+      {
+        "qid": "147521",
+        "question": "Những ai có thể thực hiện soi bóng đồng tử? Sử dụng phương tiện gì để soi bóng đồng tử?",
+        "answer_len_words": 89,
+        "answer_excerpt": "Căn cứ theo Mục IV Quy trình kỹ thuật Soi bóng đồng tử Ban hành kèm theo Quyết định 3906/QĐ-BYT năm 2012 quy định như sau:\nSOI BÓNG ĐỒNG TỬ\n...\nIV. CHUẨN BỊ\n1. Người thực hiện\nBác sĩ, điều dưỡng, hoặc kỹ thuật viên chuyên khoa Mắt.\n2. Phương tiện\nMột máy soi bóng đồng tử hình khe, hộp kính và gọng kính thử, thước Parent.\nTheo đó, người thực hiện soi bóng đồng tử là bác sĩ, điều dưỡng, hoặc kỹ thuậ... [+23 chars]"
+      },
+      {
+        "qid": "127889",
+        "question": "Nhà xưởng có hoạt động liên quan đến hóa chất nguy hiểm thì bảng quy trình ứng phó sự cố phải được đặt ở đâu?",
+        "answer_len_words": 131,
+        "answer_excerpt": "Căn cứ theo quy định tại tiết 2.5 tiểu mục 2 Mục II Quy chuẩn kỹ thuật quốc gia QCVN 05A:2020/BCT về An toàn trong sản xuất, kinh doanh, sử dụng, bảo quản và vận chuyển hóa chất nguy hiểm nhà xưởng có hoạt động liên quan đến hóa chất nguy hiểm thì bảng quy trình ứng phó sự cố phải được đặt như sau:\n- Quy trình ứng phó sự cố hóa chất, danh mục hóa chất và phiếu an toàn hóa chất phải được để nơi dễ ... [+191 chars]"
+      },
+      {
+        "qid": "5975",
+        "question": "Kế hoạch huy động tiềm lực khoa học và công nghệ phục vụ công tác công an được bổ sung khi nào?",
+        "answer_len_words": 299,
+        "answer_excerpt": "Theo quy định tại tiểu mục 3 Mục II Thông tư liên tịch 05/2008/TTLT-BCA-BKHCN-BTC về điều chỉnh, bổ sung kế hoạch huy động như sau:\nXÂY DỰNG, ĐIỀU CHỈNH KẾ HOẠCH HUY ĐỘNG\n...\n3. Điều chỉnh, bổ sung kế hoạch huy động\na) Những trường hợp điều chỉnh, bổ sung:\n- Đối tượng huy động không còn phù hợp với kế hoạch huy động;\n- Điều chỉnh dự toán kinh phí chi cho các nhiệm vụ trong kế hoạch đã được phê duy... [+974 chars]"
+      },
+      {
+        "qid": "83373",
+        "question": "Công chức được tuyển dụng theo chính sách thu hút nhân tài có được đặc cách cử tham gia kỳ thi nâng ngạch Kiểm tra viên chính của Đảng không?",
+        "answer_len_words": 448,
+        "answer_excerpt": "Kiểm tra viên chính của Đảng (Hình từ Internet)\nTheo điểm e khoản 2 Mục II Phần A Quy định về tiêu chuẩn, chức danh và bổ nhiệm ngạch Kiểm tra Đảng (gọi tắt là Quy định) ban hành kèm theo Quyết định 505-QĐ/UBKTTW năm 2022 quy định như sau:\nA. TIÊU CHUẨN, CHỨC DANH NGẠCH KIỂM TRA ĐẢNG\n...\nII. TIÊU CHUẨN CỤ THỂ\n2. Kiểm tra viên chính của Đảng (Mã ngạch: 04.024A)\n...\ne. Điều kiện dự thi nâng ngạch ki... [+1680 chars]"
+      },
+      {
+        "qid": "39257",
+        "question": "Ở bước chuẩn bị trước khi phẫu thuật kết hợp xương gãy thân hai xương cẳng chân thì người thực hiện sẽ là ai?",
+        "answer_len_words": 438,
+        "answer_excerpt": "Căn cứ theo quy định tại tiểu mục 1 Mục IV Quy trình kỹ thuật điều trị phẫu thuật kết hợp xương gãy thân hai xương cẳng chân ban hành kèm theo Quyết định 5728/QĐ-BYT năm 2017 như sau:\nPHẪU THUẬT KẾT HỢP XƯƠNG GÃY THÂN HAI XƯƠNG CẲNG CHÂN\n...\nIV. CHUẨN BỊ\n1. Người thực hiện: Phẫu thuật viên chấn thương chỉnh hình.\n2. Người bệnh:\n- Chuẩn bị vệ sinh thân thể trước mổ.\n- Vệ sinh vùng mổ, cạo lông chân... [+1617 chars]"
+      },
+      {
+        "qid": "21011",
+        "question": "Năng lực của chuyên viên cao cấp về hoạch định và thực thi chính sách tiền tệ, ngân hàng được quy định như thế nào?",
+        "answer_len_words": 75,
+        "answer_excerpt": "Căn cứ vào tiểu mục 5.2 Mục 5 Phụ lục II ban hành kèm theo Thông tư 19/2022/TT-NHNN quy định bảng năng lực của chuyên viên cao cấp về hoạch định và thực thi chính sách tiền tệ, ngân hàng như sau:\n\nXem bảng năng lực của chuyên viên cao cấp về hoạch định và thực thi chính sách tiền tệ, ngân hàng: Tại đây\nThông tư 19/2022/TT-NHNN sẽ có hiệu lực vào ngày 01/03/2023."
+      },
+      {
+        "qid": "153671",
+        "question": "Kế hoạch an ninh tàu biển phải đáp ứng yêu cầu của Bộ luật ISPS được quy định như thế nào?",
+        "answer_len_words": 1269,
+        "answer_excerpt": "Mục 9 Phần A Phụ lục của Bộ luật ISPS quy định kế hoạch an ninh tàu như sau:\n\"9.1. Mỗi tàu phải có một bản Kế hoạch An ninh Tàu do Chính quyền Hành chính phê duyệt. Kế hoạch phải chuẩn bị cho 3 cấp độ an ninh như được định nghĩa trong phần này của Bộ luật.\n9.1.1. Theo các điều khoản của mục 9.2.1, một tổ chức an ninh được công nhận có thể soạn thảo kế hoạch an ninh cho một tàu cụ thể.\n9.2. Chính q... [+5252 chars]"
+      },
+      {
+        "qid": "30301",
+        "question": "Trường hợp nào cho phép F0 cách ly tại nhà?",
+        "answer_len_words": 312,
+        "answer_excerpt": "Theo hướng dẫn tại Mục 1 Phụ lục 1 ban hành kèm theo Công văn 8728/SYT-NVY ngày 23/11/2021 thì chỉ những trường hợp F0 sau đây mới được phép cách ly tại nhà, cụ thể:\n\"1. Đối tượng quản lý tại nhà\na) Người mắc COVID-19 (F0) mới là người có kết quả xét nghiệm RT-PCR hoặc xét nghiệm nhanh kháng nguyên SARS-CoV-2 dương tính, đủ điều kiện cách ly tại nhà.\nb) Điều kiện cách ly tại nhà:\n- Hội đủ 02 tiêu ... [+1013 chars]"
+      },
+      {
+        "qid": "89069",
+        "question": "Kiểm tra bất thường thiết bị nâng trên tàu biển phải được thực hiện khi nào?",
+        "answer_len_words": 346,
+        "answer_excerpt": "Căn cứ theo tiểu mục 2.2.2 Mục 2 Quy chuẩn kỹ thuật quốc gia QCVN 23:2016/BGTVT về Thiết bị nâng trên tàu biển có nêu như sua:\nThời hạn kiểm tra các thiết bị nâng phải phù hợp với các quy định dưới đây:\n(1) Kiểm tra lần đầu phải được tiến hành khi ấn định tải trọng làm việc an toàn v.v… lần đầu.\n(2) Tổng kiểm tra hàng năm phải được thực hiện vào thời điểm không vượt quá 12 tháng kể từ ngày kết thú... [+1172 chars]"
+      },
+      {
+        "qid": "66467",
+        "question": "Hồ sơ đề nghị hỗ trợ kinh phí chăm sóc đối với người khuyết tật đang mang thai chưa được hưởng trợ cấp xã hội gồm những gì?",
+        "answer_len_words": 478,
+        "answer_excerpt": "Căn cứ khoản 12 Mục I Thủ tục hành chính mới, sửa đổi lĩnh vực bảo trợ xã hội thuộc phạm vi chức năng quản lý của Bộ Lao động - Thương binh và Xã hội ban hành kèm theo Quyết định 697/QĐ-LĐTBXH năm 2013 quy định về thủ tục hành chính cấp tỉnh như sau:\nThủ tục hành chính cấp tỉnh\n...\n12. Thủ tục thực hiện hỗ trợ kinh phí chăm sóc đối với người khuyết tật đang mang thai hoặc nuôi con dưới 36 tháng tu... [+1762 chars]"
+      },
+      {
+        "qid": "81567",
+        "question": "Việc ghi nhãn trên máy cấy lúa phải đảm bảo có những thông tin tối thiểu gì?",
+        "answer_len_words": 189,
+        "answer_excerpt": "Theo Mục 6 TCVN 12712:2019 về Máy cấy lúa - Yêu cầu kĩ thuật quy định về việc ghi nhãn trên máy cấy lúa như sau:\n\"6 Ghi nhãn\nTrên mỗi máy cấy phải được gắn nhãn rõ ràng, dễ đọc bằng tiếng Việt và không thể tẩy xóa được, với những thông tin tối thiểu sau đây:\n- Tên máy;\n- Tên và địa chỉ đầy đủ của nhà chế tạo hoặc tên và địa chỉ đầy đủ của nhà nhập khẩu nếu nhập khẩu;\n- Xuất xứ máy;\n- Kiểu;\n- Số lo... [+418 chars]"
+      },
+      {
+        "qid": "101763",
+        "question": "Người học ngành an ninh mạng trình độ trung cấp sau khi tốt nghiệp phải đạt được những kiến thức nào?",
+        "answer_len_words": 227,
+        "answer_excerpt": "Căn cứ theo tiểu mục 2 Mục B Phần 5 Quy định ban hành kèm theo Thông tư 44/2018/TT-BLĐTBXH như sau:\nKiến thức\n- Trình bày được cách thức hoạt động của hạ tầng hệ thống mạng, các thiết bị mạng, hệ thống cáp mạng và bảo mật hạ tầng mạng;\n- Trình bày được cách thức hoạt động của hệ điều hành, các dịch vụ mạng và bảo mật dịch vụ mạng;\n- Trình bày được cách thức hoạt động của hệ quản trị cơ sở dữ ... [+639 chars]"
+      },
+      {
+        "qid": "140905",
+        "question": "Bảng kê giống cây trồng lâm nghiệp đối với hom giống, cành ghép, mắt ghép thực hiện theo mẫu nào hiện nay?",
+        "answer_len_words": 87,
+        "answer_excerpt": "Theo Mục 3 Phụ lục II Các biểu mẫu quản lý, xuất khẩu, nhập khẩu giống cây trồng lâm nghiệp ban hành kèm theo Nghị định 27/2021/NĐ-CP như sau:\n\nTheo đó, biểu mẫu Bảng kê giống cây trồng lâm nghiệp (đối với hom giống, cành ghép, mắt ghép) thực hiện theo Mẫu số 03/LN như sau:\n\nTải mẫu Bảng kê giống cây trồng lâm nghiệp (đối với hom giống, cành ghép, mắt ghép) mới nhất tại đây: Tải về\n\nGiống cây trồn... [+31 chars]"
+      },
+      {
+        "qid": "137429",
+        "question": "Các bước chuẩn bị và tiến hành phẫu thuật tái tạo dây chằng xương thuyền như thế nào?",
+        "answer_len_words": 433,
+        "answer_excerpt": "Căn cứ theo Mục IV và Mục V Quy trình kỹ thuật Phẫu thuật tái tạo dây chằng xương thuyền ban hành kèm theo Quyết định 4484/QĐ-BYT năm 2016 như sau:\nPHẪU THUẬT TÁI TẠO DÂY CHẰNG XƯƠNG THUYỀN\n...\nIV. CHUẨN BỊ\n1. Người bệnh: Tâm lý cho người bệnh, hồ sơ bệnh án đầy đủ thủ tục hành chính và các xét nghiệm.\n2. Người thực hiện: Phẫu thuật viên chấn thương chỉnh hình và hai người phụ\n3. Phương tiện trang... [+1582 chars]"
+      },
+      {
+        "qid": "168423",
+        "question": "Sau khi phẫu thuật vá da diện tích 5 - 10 cm2 thì người bệnh bị nhiễm trùng thì phải làm thế nào?",
+        "answer_len_words": 234,
+        "answer_excerpt": "Phẫu thuật vá da diện tích 5 - 10 cm2 là một trong 62 Quy trình kỹ thuật Ngoại khoa, chuyên khoa Chấn thương chỉnh hình ban hành kèm theo Quyết định 5728/QĐ-BYT năm 2017.\nCăn cứ theo quy định tại tiểu mục 2 Mục VI Quy trình kỹ thuật phẫu thuật vá da diện tích 5 - 10 cm2 ban hành kèm theo Quyết định 5728/QĐ-BYT năm 2017 như sau:\nPHẪU THUẬT VÁ DA DIỆN TÍCH 5 - 10 CM2\nVI. THEO DÕI VÀ XỬ TRÍ TAI BIẾN\n... [+662 chars]"
+      },
+      {
+        "qid": "93871",
+        "question": "Danh mục nhiệm vụ, dự án trọng tâm trong năm 2023 do Bộ Y tế phê duyệt?",
+        "answer_len_words": 33,
+        "answer_excerpt": "Tại Phụ lục ban hành kèm theo Quyết định 2089/QĐ-BYT năm 2023, phê duyệt danh mục nhiêm vu, dự án trọng tâm trong năm 2023 do Bộ Y tế phê duyệt như sau:"
+      },
+      {
+        "qid": "149749",
+        "question": "Quan trắc thấm vòng qua vai công trình thủy lợi được quy định như thế nào?",
+        "answer_len_words": 214,
+        "answer_excerpt": "Căn cứ theo tiết 6.1.4 tiểu mục 6.1 Mục 6 Tiêu chuẩn quốc gia TCVN 8215:2021 quy định như sau:\nThiết kế và lắp đặt thiết bị quan trắc\n6.1 Quan trắc thấm\n...\n6.1.4 Quan trắc thấm vòng qua vai (mang) công trình\n6.1.4.1 Quan trắc thấm vòng qua vai công trình thực hiện theo quy định tại điều 5.1.1 và 5.1.2 khi vai công trình đặt trên các lớp đất, đá có hệ số thấm lớn hơn 1 x 10-4 cm/s (yêu cầu về thiế... [+587 chars]"
+      },
+      {
+        "qid": "46299",
+        "question": "Cán bộ chuyên trách dân số kế hoạch hóa gia đình xã là viên chức hay công chức?",
+        "answer_len_words": 251,
+        "answer_excerpt": "Theo khoản 1 Mục I Phần 3 Thông tư 05/2008/TT-BYT có quy định về vị trí, chức năng của cán bộ chuyên trách dân số kế hoạch hóa gia đình xã như sau:\nCHỨC NĂNG, NHIỆM VỤ CỦA CÁN BỘ CHUYÊN TRÁCH DS-KHHGĐ XÃ\n1. Vị trí, chức năng\nCán bộ chuyên trách DS-KHHGĐ xã có trách nhiệm giúp việc cho Trạm trưởng trạm Y tế cấp xã xây dựng kế hoạch và tổ chức thực hiện chương trình mục tiêu DS-KHHGĐ trên địa bàn xã... [+740 chars]"
+      },
+      {
+        "qid": "131399",
+        "question": "Cơ sở chế biến thủy sản khi thực hiện rã đông, cấp đông sản phẩm thủy sản đông lạnh cần tuân thủ những quy định gì?",
+        "answer_len_words": 324,
+        "answer_excerpt": "Theo Mục 7 Tiêu chuẩn Việt Nam TCVN 4378:2001 thì quá trình rã đông, cấp đông sản phẩm thủy sản đông lạnh cần tuân thủ những yêu cầu sau đây:\n(1) Rã đông\n- Sản phẩm thủy sản đông lạnh chỉ được phép rã đông ngay trước khi chế biến.\n- Rã đông sản phẩm phải được tiến hành trong điều kiện vệ sinh, hạn chế thấp nhất nguy cơ làm giảm chất lượng sản phẩm. Nước đá tan ra phải được thoát hết.\n- Quá trình r... [+1061 chars]"
+      },
+      {
+        "qid": "74725",
+        "question": "Quy trình cho lập hợp phần quy hoạch trong hoạt động quy hoạch phát triển, ứng dụng năng lượng nguyên tử được quy định như thế nào?",
+        "answer_len_words": 516,
+        "answer_excerpt": "Căn cứ theo quy định tại tiểu mục 1 Mục III Phụ lục II ban hành kèm Thông tư 09/2022/TT-BKHCN quy định về quy trình cho lập hợp phần quy hoạch như sau:\n“III. Định mức kinh tế - Kỹ thuật cho lập hợp phần quy hoạch \n1. Quy trình cho lập hợp phần quy hoạch\nQuy trình này áp dụng cho 05 hợp phần quy hoạch: Hợp phần quy hoạch phát triển, ứng dụng bức xạ và đồng vị phóng xạ trong ngành y tế; hợp phần quy... [+1982 chars]"
+      },
+      {
+        "qid": "19299",
+        "question": "Học sinh tại trung tâm giáo dục thường xuyên có được hỗ trợ khởi nghiệp theo đề án hỗ trợ học sinh, sinh viên khởi nghiệp không?",
+        "answer_len_words": 276,
+        "answer_excerpt": "Căn cứ theo Mục II Quyết định 1665/QĐ-TTg năm 2017 có quy định:\nĐỐI TƯỢNG, PHẠM VI ÁP DỤNG\n1. Đối tượng\n- Học sinh, sinh viên đang học tại các đại học, học viện, trường đại học, trường cao đẳng, trường trung cấp, học sinh đang học tại các trường trung học phổ thông và các trung tâm giáo dục nghề nghiệp - giáo dục thường xuyên trong toàn quốc;\n- Cán bộ, giảng viên, giáo viên, người làm công tác hỗ ... [+927 chars]"
+      },
+      {
+        "qid": "22801",
+        "question": "Thời hạn đăng kiểm xe ô tô năm 2023 là khi nào﻿?",
+        "answer_len_words": 75,
+        "answer_excerpt": "Căn cứ theo Mục 2 Phụ lục XI Chu kỳ kiểm định ban hành kèm theo Thông tư 16/2021/TT-BGTVT quy định về chu kỳ kiểm định như sau:\n\nTheo đó, mỗi phương tiện ô tô sẽ căn cứ vào năm sản xuất sẽ có một chu kì đăng kiểm khác nhau.\nChủ phương tiện cần lưu ý thời hạn đăng kiểm theo bảng trên để đăng kiểm đúng thời hạn cho phương tiện của mình."
+      },
+      {
+        "qid": "52033",
+        "question": "Kết quả đã đạt được về công tác điều hành giá trong 8 tháng đầu năm 2022?",
+        "answer_len_words": 491,
+        "answer_excerpt": "Tại Thông báo 280/TB-VPCP năm 2022 có nêu ra những kết quả đã đạt được về công tác điều hành giá trong 8 tháng đầu năm 2022 cụ thể như sau:\nTrong 8 tháng đầu năm 2022, mặc dù tình hình kinh tế, giá cả thị trường thế giới và trong nước có nhiều yếu tố không thuận lợi, kinh tế có chiều hướng suy giảm ở một số nền kinh tế lớn, xung đột chính trị giữa một số quốc gia có diễn biến phức tạp... tác động ... [+1870 chars]"
+      },
+      {
+        "qid": "154965",
+        "question": "Mức thu phí, lệ phí trong lĩnh vực chứng khoán mới nhất 2023? ",
+        "answer_len_words": 629,
+        "answer_excerpt": "Căn cứ Thông tư 25/2022/TT-BTC quy định về mức thu, chế độ thu, nộp, quản lý và sử dụng phí, lệ phí trong lĩnh vực chứng khoán do Bộ trưởng Bộ Tài chính ban hành.\nMức thu phí, lệ phí trong lĩnh vực chứng khoán mới nhất hiện nay là mức thu phí quản lý và giám sát hoạt động chứng khoán; lệ phí cấp giấy phép, giấy chứng nhận hoạt động trong lĩnh vực chứng khoán được xác định theo bảng biểu mức ban hà... [+2494 chars]"
+      },
+      {
+        "qid": "91149",
+        "question": "Mẫu báo cáo về tình hình mua, chuyển, mang ngoại tệ ra nước ngoài của người cư trú là tổ chức cho mục đích chuyển tiền tài trợ, viện trợ được quy định như thế nào?",
+        "answer_len_words": 79,
+        "answer_excerpt": "Mẫu báo cáo về tình hình mua, chuyển, mang ngoại tệ ra nước ngoài của người cư trú là tổ chức cho mục đích chuyển tiền tài trợ, viện trợ được quy định tại Phụ lục ban hành kèm theo Thông tư 20/2022/TT-NHNN như sau:\n\nTải về mẫu báo cáo về tình hình mua, chuyển, mang ngoại tệ ra nước ngoài của người cư trú là tổ chức cho mục đích chuyển tiền tài trợ, viện trợ tại đây"
+      },
+      {
+        "qid": "115979",
+        "question": "Mẫu báo cáo việc đáp ứng quy định bồi dưỡng nghiệp vụ kiểm định viên giáo dục đại học và cao đẳng sư phạm hiện nay?",
+        "answer_len_words": 78,
+        "answer_excerpt": "Căn cứ theo Phụ lục II Mẫu báo cáo việc đáp ứng quy định bồi dưỡng nghiệp vụ kiểm định viên Ban hành kèm theo Thông tư 14/2022/TT-BGDĐT như sau:\n\nTải mẫu Báo cáo việc đáp ứng quy định bồi dưỡng nghiệp vụ kiểm định viên giáo dục đại học và cao đẳng sư phạm tại đây: Tải về.\n\nBồi dưỡng nghiệp vụ kiểm định viên giáo dục đại học và cao đẳng sư phạm (Hình từ Internet)"
+      },
+      {
+        "qid": "92693",
+        "question": "Thủ tục đăng ký thêm dấu nổi hiện nay được quy định thế nào?",
+        "answer_len_words": 382,
+        "answer_excerpt": "Thủ tục đăng ký thêm dấu nổi đối với cơ quan, tổ chức, chức danh nhà nước hiện nay được thực hiện theo tiểu mục 3 Mục B Phần II Thủ tục hành chính ban hành kèm theo Quyết định 3191/QĐ-BCA năm 2022.\nCụ thể như sau:\nBước 1: Cơ quan, tổ chức, chức danh nhà nước có nhu cầu đăng ký thêm con dấu nổi nộp hồ sơ đến Cục Cảnh sát quản lý hành chính về trật tự xã hội - Bộ Công an.\nBước 2: Cán bộ tiếp nhận ki... [+1246 chars]"
+      },
+      {
+        "qid": "42529",
+        "question": "Mẫu Báo cáo tình hình sản xuất thức ăn chăn nuôi mới nhất là mẫu nào? ",
+        "answer_len_words": 112,
+        "answer_excerpt": "Căn cứ Thông tư 31/2022/TT-BNNPTNT sửa đổi, bổ sung một số điều của Thông tư 21/2019/TT-BNNPTNT ngày 28 tháng 11 năm 2019 của Bộ trưởng Bộ Nông nghiệp và Phát triển nông thôn hướng dẫn một số điều của Luật Chăn nuôi về thức ăn chăn nuôi.\nMẫu Báo cáo tình hình sản xuất thức ăn chăn nuôi mới nhất được ban hành tại Phụ lục IV ban hành kèm theo Thông tư 31/2022/TT-BNNPTNT.\n\nMẫu Báo cáo tình hình sản x... [+154 chars]"
+      },
+      {
+        "qid": "108689",
+        "question": "Phẫu thuật kết hợp xương gãy lồi cầu xương khớp ngón tay nhằm mục đích gì?",
+        "answer_len_words": 193,
+        "answer_excerpt": "Phẫu thuật kết hợp xương gãy lồi cầu xương khớp ngón tay là một trong 62 Quy trình kỹ thuật Ngoại khoa, chuyên khoa Chấn thương chỉnh hình ban hành kèm theo Quyết định 5728/QĐ-BYT năm 2017.\nCăn cứ theo quy định tại Mục I Quy trình kỹ thuật phẫu thuật kết hợp xương gãy lồi cầu xương khớp ngón tay ban hành kèm theo Quyết định 5728/QĐ-BYT năm 2017 như sau:\nPHẪU THUẬT KHX GÃY LỒI CẦU XƯƠNG KHỚP NGÓN T... [+516 chars]"
+      },
+      {
+        "qid": "125463",
+        "question": "Trình tự thực hiện thủ tục cấp thẻ cộng tác viên trợ giúp pháp lý ra sao?",
+        "answer_len_words": 508,
+        "answer_excerpt": "Căn cứ Quyết định 1017/QĐ-BTP năm 2023 công bố thủ tục hành chính được sửa đổi, bổ sung trong lĩnh vực trợ giúp pháp lý thuộc phạm vi chức năng quản lý của Bộ Tư pháp.\nThủ tục cấp thẻ cộng tác viên trợ giúp pháp lý được quy định tại Phụ lục ban hành kèm theo Quyết định 1017/QĐ-BTP năm 2023. Theo đó, trình tự thực hiện thủ tục được xác định như sau:\n- Người có đủ tiêu chuẩn nếu có nguyện vọng làm c... [+1855 chars]"
+      },
+      {
+        "qid": "136285",
+        "question": "Mẫu đơn đề nghị cấp CFS mới nhất hiện nay là mẫu nào?",
+        "answer_len_words": 69,
+        "answer_excerpt": "Mẫu đơn đề nghị cấp CFS được quy định tại Phụ lục III ban hành kèm theo Thông tư 12/2018/TT-BCT. Dưới đây là hình ảnh Mẫu đơn đề nghị cấp CFS:\n\nTải Mẫu đơn đề nghị cấp CFS: Tại đây.\n\nMẫu đơn đề nghị cấp CFS mới nhất hiện nay là mẫu nào? Quy trình cấp CFS đối với hàng hóa xuất khẩu như thế nào? (Hình từ Internet)"
+      }
+    ]
+  },
+  "doc_samples": {
+    "with_dieu": [
+      {
+        "doc_id": 301570,
+        "name": "Thong-tu-29-2022-TT-BLDTBXH-thanh-lap-khung-vi-tri-viec-lam-vien-chuc-nganh-quan-hoc-vien-556951",
+        "passage_len_words": 31394,
+        "passage_excerpt": "BỘ LAO ĐỘNG -\r\n\n  THƯƠNG BINH VÀ XÃ HỘI\r\n\n  -------\n\nCỘNG HÒA XÃ HỘI CHỦ\r\n\n  NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc\r\n\n  ---------------\n\nSố: 29/2022/TT-BLĐTBXH\n\nHà Nội, ngày 28\r\n\n  tháng 12 năm 2022\n\n \n\nTHÔNG\r\n\nTƯ\n\nHƯỚNG DẪN VIỆC THÀNH LẬP, GIẢI THỂ; TỔ CHỨC\r\n\nHOẠT ĐỘNG, KHUNG DANH MỤC VỊ TRÍ VIỆC LÀM VÀ ĐỊNH MỨC SỐ NGƯỜI LÀM VIỆC; NỘI\r\n\nQUY, QUY CHẾ; MÃ SỐ, TIÊU CHUẨN CHỨC DANH NGHỀ NGHIỆ... [+153980 chars]",
+        "dieus": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20"
+        ],
+        "num_dieus": 83
+      },
+      {
+        "doc_id": 42583,
+        "name": "Quyet-dinh-5085-QD-BNN-BVTV-2021-cong-bo-thu-tuc-hanh-chinh-bao-ve-thuc-vat-Bo-Nong-nghiep-499197",
+        "passage_len_words": 13952,
+        "passage_excerpt": "BỘ NÔNG\r\n\n  NGHIỆP\n\nVÀ\r\n\n  PHÁT TRIỂN NÔNG THÔN\r\n\n  -------\n\nCỘNG HÒA XÃ\r\n\n  HỘI CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố:\r\n\n  5085/QĐ-BNN-BVTV \n\nHà Nội,\r\n\n  ngày 28\r\n\n  tháng\r\n\n  12\r\n\n  năm\r\n\n  2021\n\n\n\nQUYẾT\r\n\nĐỊNH\n\nVỀ VIỆC CÔNG BỐ THỦ TỤC HÀNH CHÍNH ĐƯỢC SỬA\r\n\nĐỔI, BỔ SUNG LĨNH VỰC BẢO VỆ THỰC VẬT THUỘC PHẠM VI CHỨC NĂNG QUẢN LÝ CỦA BỘ\r\n\nNÔNG NGHIỆP VÀ PHÁT TRI... [+81861 chars]",
+        "dieus": [
+          "1",
+          "2",
+          "3"
+        ],
+        "num_dieus": 3
+      },
+      {
+        "doc_id": 276631,
+        "name": null,
+        "passage_len_words": 32856,
+        "passage_excerpt": "\n\nQUỐC HỘI\n\n--------\n\nCỘNG HÒA XÃ HỘI\r\n\n  CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nLuật số:\r\n\n  15/2023/QH15\n\nHà Nội, ngày 09\r\n\n  tháng 01 năm 2023\n\nQUỐC HỘI\n\n--------\n\nCỘNG HÒA XÃ HỘI\r\n\n  CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nLuật số:\r\n\n  15/2023/QH15\n\nHà Nội, ngày 09\r\n\n  tháng 01 năm 2023\n\n \n\nLUẬT\n\nKHÁM BỆNH, CHỮA BỆNH\n\nCăn\r\n\ncứ ... [+154274 chars]",
+        "dieus": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20"
+        ],
+        "num_dieus": 121
+      },
+      {
+        "doc_id": 169688,
+        "name": "Nghi-dinh-26-2013-ND-CP-to-chuc-va-hoat-dong-cua-thanh-tra-nganh-Xay-dung-179589",
+        "passage_len_words": 5511,
+        "passage_excerpt": "CHÍNH PHỦ\r\n\n  --------\n\nCỘNG HÒA XÃ HỘI\r\n\n  CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc\r\n\n  ----------------\n\nSố: 26/2013/NĐ-CP\n\nHà Nội, ngày 29\r\n\n  tháng 03 năm 2013\n\n \n\nNGHỊ ĐỊNH\n\nVỀ\r\n\nTỔ CHỨC VÀ HOẠT ĐỘNG CỦA THANH TRA NGÀNH XÂY DỰNG\n\nCăn cứ Luật tổ chức Chính phủ ngày 25 tháng 12\r\n\nnăm 2001;\n\nCăn cứ Luật xây dựng ngày 26 tháng 11 năm 2003\r\n\nvà Luật sửa đổi, bổ sung một số điều của các l... [+26119 chars]",
+        "dieus": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20"
+        ],
+        "num_dieus": 29
+      },
+      {
+        "doc_id": 41776,
+        "name": "Nghi-dinh-53-2016-ND-CP-lao-dong-tien-luong-thu-lao-tien-thuong-cong-ty-co-phan-von-gop-chi-phoi-Nha",
+        "passage_len_words": 3637,
+        "passage_excerpt": "CHÍNH PHỦ\r\n\n  -------\n\nCỘNG HÒA XÃ HỘI\r\n\n  CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố: 53/2016/NĐ-CP\n\nHà Nội, ngày 13\r\n\n  tháng 06 năm 2016\n\n \n\nNGHỊ ĐỊNH\n\nQUY\r\n\nĐỊNH VỀ LAO ĐỘNG, TIỀN LƯƠNG, THÙ LAO, TIỀN THƯỞNG ĐỐI VỚI CÔNG TY CÓ CỔ PHẦN, VỐN\r\n\nGÓP CHI PHỐI CỦA NHÀ NƯỚC\n\nCăn cứ Luật tổ chức\r\n\nChính phủ ngày 19 tháng 6 năm 2015;\n\nCăn cứ Bộ luật lao\r\n\nđộng ngày 18 t... [+16773 chars]",
+        "dieus": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12"
+        ],
+        "num_dieus": 12
+      },
+      {
+        "doc_id": 202998,
+        "name": "Quyet-dinh-1863-QD-BVHTTDL-2019-to-chuc-danh-gia-giai-quyet-thu-tuc-hanh-chinh-theo-co-che-mot-cua-4",
+        "passage_len_words": 6987,
+        "passage_excerpt": "BỘ\r\n\n  VĂN HÓA, THỂ THAO \n\nVÀ DU LỊCH\r\n\n  -------\n\nCỘNG\r\n\n  HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố: 1863/QĐ-BVHTTDL\n\nHà\r\n\n  Nội, ngày 23 tháng 5 năm 2019\n\n\n\nQUYẾT ĐỊNH\n\nBAN HÀNH QUY ĐỊNH VỀ TỔ CHỨC ĐÁNH GIÁ GIẢI QUYẾT THỦ TỤC HÀNH CHÍNH\r\n\nTHEO CƠ CHẾ MỘT CỬA, MỘT CỬA LIÊN THÔNG CỦA BỘ VĂN HÓA, THỂ THAO VÀ DU LỊCH\n\nBỘ TRƯỞNG BỘ VĂN HÓA, THỂ THAO VÀ DU... [+32689 chars]",
+        "dieus": [
+          "1",
+          "2",
+          "3",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14"
+        ],
+        "num_dieus": 17
+      },
+      {
+        "doc_id": 91012,
+        "name": "Nghi-dinh-108-2022-ND-CP-chuc-nang-nhiem-vu-to-chuc-Vien-Han-lam-Khoa-hoc-xa-hoi-Viet-Nam-547883",
+        "passage_len_words": 2567,
+        "passage_excerpt": "CHÍNH PHỦ\r\n\n  -------\n\nCỘNG HÒA XÃ HỘI\r\n\n  CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố: 108/2022/NĐ-CP\n\nHà Nội, ngày 28\r\n\n  tháng 12 năm 2022\n\n \n\nNGHỊ ĐỊNH\n\nQUY\r\n\nĐỊNH CHỨC NĂNG, NHIỆM VỤ, QUYỀN HẠN VÀ CƠ CẤU TỔ CHỨC CỦA VIỆN HÀN LÂM KHOA HỌC\r\n\nXÃ HỘI VIỆT NAM\n\nCăn cứ Luật Tổ chức\r\n\nChính phủ ngày 19 tháng 6 năm 2015; Luật sửa\r\n\nđổi, bổ sung một số điều của Luật Tổ ... [+11615 chars]",
+        "dieus": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6"
+        ],
+        "num_dieus": 6
+      },
+      {
+        "doc_id": 66991,
+        "name": "Thong-tu-38-2022-TT-BGTVT-xep-luong-vien-chuc-chuyen-nganh-tim-kiem-cuu-nan-hang-hai-548436",
+        "passage_len_words": 7504,
+        "passage_excerpt": "BỘ GIAO THÔNG VẬN\r\n\n  TẢI\r\n\n  -------\n\nCỘNG HÒA XÃ HỘI\r\n\n  CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc\r\n\n  ---------------\n\nSố:\r\n\n  38/2022/TT-BGTVT\n\nHà Nội, ngày 30\r\n\n  tháng 12 năm 2022\n\n \n\nTHÔNG TƯ\n\nQUY ĐỊNH MÃ SỐ, TIÊU CHUẨN CHỨC DANH NGHỀ NGHIỆP VÀ XẾP LƯƠNG\r\n\nVIÊN CHỨC CHUYÊN NGÀNH TÌM KIẾM CỨU NẠN HÀNG HẢI, THÔNG TIN AN NINH HÀNG HẢI\n\nCăn cứ Luật Viên chức ngày 15 tháng 11 năm 2010; ... [+35666 chars]",
+        "dieus": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14"
+        ],
+        "num_dieus": 14
+      },
+      {
+        "doc_id": 69585,
+        "name": "Quyet-dinh-28-QD-TW-2021-to-chuc-bo-may-cua-Dang-uy-Khoi-Doanh-nghiep-Trung-uong-485643",
+        "passage_len_words": 2169,
+        "passage_excerpt": "BAN\r\n\n  CHẤP HÀNH TRUNG ƯƠNG\n\n*\n\nĐẢNG\r\n\n  CỘNG SẢN VIỆT NAM\r\n\n  ---------------\n\nSố:\r\n\n  28-QĐ/TW\n\nHà\r\n\n  Nội, ngày 16 tháng 8 năm 2021\n\n\n\nQUYẾT ĐỊNH\n\nVỀ CHỨC NĂNG, NHIỆM VỤ, TỔ CHỨC BỘ MÁY CỦA ĐẢNG ỦY KHỐI DOANH NGHIỆP\r\n\nTRUNG ƯƠNG\n\n- Căn cứ Điều lệ Đảng, Nghị quyết Đại\r\n\nhội đại biểu toàn quốc lần thứ XIII của Đảng;\n\n- Căn cứ Quy chế làm việc của Ban Chấp\r\n\nhành Trung ương, Bộ Chính trị và Ban B... [+10049 chars]",
+        "dieus": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "num_dieus": 5
+      },
+      {
+        "doc_id": 117497,
+        "name": "Thong-tu-24-2022-TT-BGTVT-sua-doi-Thong-tu-quan-ly-tuyen-van-tai-thuy-trong-vung-bien-Viet-Nam-53227",
+        "passage_len_words": 3496,
+        "passage_excerpt": "BỘ GIAO THÔNG VẬN\r\n\n  TẢI\r\n\n  -------\n\nCỘNG HÒA XÃ HỘI\r\n\n  CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc\r\n\n  ---------------\n\nSố:\r\n\n  24/2022/TT-BGTVT\n\nHà Nội, ngày 13\r\n\n  tháng 10 năm 2022\n\n \n\nTHÔNG TƯ\n\nSỬA ĐỔI, BỔ SUNG CÁC THÔNG TƯ CỦA BỘ TRƯỞNG BỘ GIAO THÔNG VẬN\r\n\nTẢI QUY ĐỊNH VỀ QUẢN LÝ TUYẾN VẬN TẢI THỦY TỪ BỜ RA ĐẢO TRONG VÙNG BIỂN VIỆT\r\n\nNAM\n\nCăn cứ Bộ luật Hàng hải Việt Nam ngày 25 th... [+17649 chars]",
+        "dieus": [
+          "1",
+          "2",
+          "3"
+        ],
+        "num_dieus": 3
+      },
+      {
+        "doc_id": 173127,
+        "name": "Thong-tu-13-2022-TT-BTTTT-ma-so-tieu-chuan-chuc-danh-vien-chuc-bien-tap-vien-phong-vien-527921",
+        "passage_len_words": 8922,
+        "passage_excerpt": "BỘ THÔNG TIN VÀ\n\nTRUYỀN THÔNG\r\n\n  -------\n\nCỘNG HÒA XÃ HỘI\r\n\n  CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc\r\n\n  ---------------\n\nSố:\r\n\n  13/2022/TT-BTTTT\n\nHà Nội, ngày 26 tháng 8\r\n\n  năm 2022\n\n \n\nTHÔNG TƯ\n\nQUY ĐỊNH\r\n\nMÃ SỐ, TIÊU CHUẨN CHỨC DANH NGHỀ NGHIỆP VÀ XẾP LƯƠNG ĐỐI VỚI VIÊN CHỨC BIÊN TẬP\r\n\nVIÊN, PHÓNG VIÊN, BIÊN DỊCH VIÊN VÀ ĐẠO DIỄN TRUYỀN HÌNH THUỘC CHUYÊN NGÀNH\r\n\nTHÔNG TIN VÀ TRUY... [+42744 chars]",
+        "dieus": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20"
+        ],
+        "num_dieus": 20
+      },
+      {
+        "doc_id": 84041,
+        "name": "Nghi-dinh-24-2020-ND-CP-huong-dan-Luat-phong-chong-tac-hai-cua-ruou-bia-425470",
+        "passage_len_words": 8188,
+        "passage_excerpt": "CHÍNH PHỦ\r\n\n  -------\n\nCỘNG HÒA XÃ HỘI\r\n\n  CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố: 24/2020/NĐ-CP\n\nHà Nội, ngày 24\r\n\n  tháng 02 năm 2020\n\n \n\nNGHỊ ĐỊNH\n\nQUY\r\n\nĐỊNH CHI TIẾT MỘT SỐ ĐIỀU CỦA LUẬT PHÒNG, CHỐNG TÁC HẠI CỦA RƯỢU, BIA\n\nCăn cứ Luật Tổ chức\r\n\nChính phủ ngày 19 tháng 6 năm 2015;\n\nCăn cứ Luật Phòng,\r\n\nchống tác hại của rượu, bia ngày 14 tháng 6 năm 2019;\n\n... [+38955 chars]",
+        "dieus": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20"
+        ],
+        "num_dieus": 27
+      },
+      {
+        "doc_id": 110276,
+        "name": "Quyet-dinh-186-QD-BNV-nam-2012-phe-duyet-Dieu-le-sua-doi-Hiep-hoi-In-Viet-Nam-141643",
+        "passage_len_words": 4645,
+        "passage_excerpt": "BỘ\r\n\n  NỘI VỤ\r\n\n  --------\n\nCỘNG\r\n\n  HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc\r\n\n  ----------------\n\nSố:\r\n\n  186/QĐ-BNV\n\nHà\r\n\n  Nội, ngày 09 tháng 03 năm 2012\n\n \n\nQUYẾT ĐỊNH\n\nPHÊ DUYỆT ĐIỀU LỆ (SỬA ĐỔI, BỔ SUNG) HIỆP HỘI IN VIỆT NAM\n\nBỘ TRƯỞNG BỘ NỘI VỤ\n\nCăn cứ Sắc lệnh số 102/SL-L004\r\n\nngày 20 tháng 5 năm 1957 ban hành Luật quy định quyền lập hội;\n\nCăn cứ Nghị định số\r\n\n48/200... [+21436 chars]",
+        "dieus": [
+          "1",
+          "2",
+          "3",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17"
+        ],
+        "num_dieus": 33
+      },
+      {
+        "doc_id": 7798,
+        "name": "Quyet-dinh-2099-QD-BYT-2022-chan-doan-dieu-tri-va-phong-benh-dau-mua-khi-o-nguoi-524147",
+        "passage_len_words": 3610,
+        "passage_excerpt": "BỘ Y TẾ\r\n\n  -------\n\nCỘNG HÒA XÃ HỘI\r\n\n  CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc\r\n\n  ---------------\n\nSố: 2099/QĐ-BYT\n\nHà Nội, ngày 29\r\n\n  tháng 7 năm 2022\n\n\n\nQUYẾT ĐỊNH\n\nVỀ VIỆC BAN HÀNH HƯỚNG DẪN CHẨN ĐOÁN, ĐIỀU TRỊ VÀ PHÒNG BỆNH\r\n\nĐẬU MÙA KHỈ Ở NGƯỜI\n\nBỘ TRƯỞNG BỘ Y TẾ\n\nCăn cứ Luật Khám bệnh, chữa\r\n\nbệnh năm 2009;\n\nCăn cứ Nghị định số\r\n\n75/2017/NĐ-CP  ngày 20/6/2017 của Chính phủ quy... [+17340 chars]",
+        "dieus": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "num_dieus": 4
+      },
+      {
+        "doc_id": 200015,
+        "name": "Phap-lenh-dan-so-2008-sua-doi-08-2008-PL-UBTVQH12-83717",
+        "passage_len_words": 279,
+        "passage_excerpt": "ỦY\r\n\n  BAN THƯỜNG VỤ QUỐC HỘI\n\n-------\n\nCỘNG\r\n\n  HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập – Tự do – Hạnh phúc\r\n\n  --------------\n\nSố:\r\n\n  08/2008/PL-UBTVQH12\n\nHà\r\n\n  Nội, ngày 27 tháng 12 năm 2008\n\n \n\nPHÁP LỆNH\n\nSỬA ĐỔI ĐIỀU 10 CỦA PHÁP LỆNH DÂN SỐ\n\nCăn cứ Hiến\r\n\npháp nước Cộng hòa xã hội chủ nghĩa Việt Nam năm 1992 đã được sửa đổi, bổ sung\r\n\nmột số điều theo Nghị quyết số 51/2001/QH10;\r\n\nCăn cứ ... [+1018 chars]",
+        "dieus": [
+          "1",
+          "2"
+        ],
+        "num_dieus": 2
+      },
+      {
+        "doc_id": 227178,
+        "name": "Quyet-dinh-889-QD-BKHCN-nam-2014-cu-cong-vien-chuc-di-cong-tac-nuoc-ngoai-su-dung-quan-ly-ho-chieu-2",
+        "passage_len_words": 3414,
+        "passage_excerpt": "BỘ KHOA HỌC VÀ \r\n\n  CÔNG NGHỆ\r\n\n  --------\n\nCỘNG HÒA XÃ HỘI\r\n\n  CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc\r\n\n  ----------------\n\nSố: 889/QĐ-BKHCN\n\nHà Nội, ngày 28\r\n\n  tháng 04 năm 2014\n\n \n\nQUYẾT ĐỊNH\n\nBAN HÀNH QUY CHẾ CỬ CÔNG CHỨC, VIÊN CHỨC ĐI CÔNG TÁC NƯỚC NGOÀI VÀ SỬ DỤNG,\r\n\nQUẢN LÝ HỘ CHIẾU THUỘC THẨM QUYỀN CỦA BỘ KHOA HỌC VÀ CÔNG NGHỆ\n\nBỘ TRƯỞNG BỘ KHOA HỌC VÀ CÔNG NGHỆ\n\nCăn cứ Nghị đ... [+15391 chars]",
+        "dieus": [
+          "1",
+          "2",
+          "3",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13"
+        ],
+        "num_dieus": 16
+      },
+      {
+        "doc_id": 184588,
+        "name": "Quyet-dinh-2995-QD-BVHTTDL-Quy-che-bo-nhiem-Dai-su-Du-lich-Viet-Nam-129743",
+        "passage_len_words": 2390,
+        "passage_excerpt": "BỘ\r\n\n  VĂN HOÁ, THỂ THAO \r\n\n  VÀ DU LỊCH\r\n\n  --------\n\nCỘNG\r\n\n  HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc\r\n\n  ----------------\n\nSố:\r\n\n  2995/QĐ-BVHTTDL\n\nHà\r\n\n  Nội, ngày 20 tháng 9 năm 2011\n\n\n\nQUYẾT ĐỊNH\n\nVỀ VIỆC BAN HÀNH QUY CHẾ BỔ NHIỆM, MIỄN NHIỆM, TIÊU CHUẨN,\r\n\nHOẠT ĐỘNG, QUYỀN, NGHĨA VỤ VÀ TRÁCH NHIỆM ĐẠI SỨ DU LỊCH VIỆT NAM\n\nBỘ TRƯỞNG BỘ VĂN HÓA, THỂ THAO VÀ DU LỊCH\n\nCăn ... [+10712 chars]",
+        "dieus": [
+          "1",
+          "2",
+          "3",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14"
+        ],
+        "num_dieus": 17
+      },
+      {
+        "doc_id": 121423,
+        "name": "Nghi-quyet-40-2018-NQ-HDND-quy-dinh-phi-le-phi-hoc-phi-gia-san-pham-dich-vu-thuy-loi-Quang-Binh-4060",
+        "passage_len_words": 6109,
+        "passage_excerpt": "môi trường vườn thực vậtHỘI ĐỒNG NHÂN DÂN\r\n\n  TỈNH QUẢNG BÌNH\n\nCỘNG\r\n\n  HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố:\r\n\n  40/2018/NQ-HĐND\n\nQuảng\r\n\n  Bình, ngày 08 tháng 12 năm 2018\n\n\n\nNGHỊ QUYẾT\n\nQUY ĐỊNH MỘT SỐ LOẠI PHÍ, LỆ PHÍ, HỌC PHÍ VÀ GIÁ SẢN PHẨM, DỊCH\r\n\nVỤ THỦY LỢI TRÊN ĐỊA BÀN TỈNH QUẢNG BÌNH\n\nHỘI ĐỒNG NHÂN DÂN TỈNH QUẢNG BÌNH\r\n\nKHÓA XVII - KỲ HỌP... [+31895 chars]",
+        "dieus": [
+          "1",
+          "2",
+          "3"
+        ],
+        "num_dieus": 3
+      },
+      {
+        "doc_id": 166866,
+        "name": "Thong-tu-11-2021-TT-NHNN-su-dung-du-phong-de-xu-ly-rui-ro-hoat-dong-cua-to-chuc-tin-dung-483459",
+        "passage_len_words": 15567,
+        "passage_excerpt": "NGÂN HÀNG NHÀ NƯỚC\n\nVIỆTNAM\r\n\n  -------\n\nCỘNG\r\n\n  HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc\r\n\n  ---------------\n\nSố: 11/2021/TT-NHNN\n\nHà Nội, ngày 30tháng 7năm 2021\n\n \n\nTHÔNG TƯ\n\nQUY ĐỊNH VỀ PHÂN LOẠI TÀI SẢN CÓ, MỨC TRÍCH, PHƯƠNG PHÁP TRÍCH LẬP DỰ\r\n\nPHÒNG RỦI RO VÀ VIỆC SỬ DỤNG DỰ PHÒNG ĐỂ XỬ LÝ RỦI RO TRONG HOẠT ĐỘNG CỦA TỔ\r\n\nCHỨC TÍN DỤNG, CHI NHÁNH NGÂN HÀNG NƯỚC NGOÀI\n\nCăn... [+71694 chars]",
+        "dieus": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20"
+        ],
+        "num_dieus": 27
+      },
+      {
+        "doc_id": 280022,
+        "name": "Thong-tu-27-2023-TT-BTC-muc-thu-che-do-thu-nop-quan-ly-va-su-dung-phi-tham-dinh-thiet-ke-ky-thuat-56",
+        "passage_len_words": 2649,
+        "passage_excerpt": "BỘ TÀI CHÍNH\r\n\n  -------\n\nCỘNG HÒA XÃ HỘI\r\n\n  CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc\r\n\n  ---------------\n\nSố: 27/2023/TT-BTC\n\nHà Nội, ngày 12\r\n\n  tháng 5 năm 2023\n\n \n\nTHÔNG TƯ\n\nQUY\r\n\nĐỊNH MỨC THU, CHẾ ĐỘ THU, NỘP, QUẢN LÝ VÀ SỬ DỤNG PHÍ THẨM ĐỊNH THIẾT KẾ KỸ THUẬT,\r\n\nPHÍ THẨM ĐỊNH DỰ TOÁN XÂY DỰNG\n\nCăn cứ Luật Phí và\r\n\nlệ phí ngày 25 tháng 11 năm 2015;\n\nCăn cứ Luật Ngân\r\n\nsách nhà nước... [+12246 chars]",
+        "dieus": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7"
+        ],
+        "num_dieus": 7
+      },
+      {
+        "doc_id": 5197,
+        "name": "Thong-tu-30-2020-TT-BYT-huong-dan-Nghi-dinh-146-2018-ND-CP-huong-dan-Luat-bao-hiem-y-te-461154",
+        "passage_len_words": 7226,
+        "passage_excerpt": "BỘ Y TẾ\r\n\n  -------\n\nCỘNG HÒA XÃ HỘI\r\n\n  CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố: 30/2020/TT-BYT\n\nHà Nội, ngày 31\r\n\n  tháng 12 năm 2020\n\n \n\nTHÔNG TƯ\n\nQUY\r\n\nĐỊNH CHI TIẾT VÀ HƯỚNG DẪN BIỆN PHÁP THI HÀNH MỘT SỐ ĐIỀU CỦA NGHỊ ĐỊNH SỐ 146/2018/NĐ-CP \r\n\nNGÀY 17 THÁNG 10 NĂM 2018 CỦA CHÍNH PHỦ QUY ĐỊNH CHI TIẾT VÀ HƯỚNG DẪN BIỆN\r\n\nPHÁP THI HÀNH MỘT SỐ ĐIỀU CỦA LUẬT BẢ... [+32956 chars]",
+        "dieus": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14"
+        ],
+        "num_dieus": 14
+      },
+      {
+        "doc_id": 1999,
+        "name": "Thong-tu-07-2022-TT-BTNMT-Quy-chuan-ky-thuat-co-so-du-lieu-nen-dia-ly-quoc-gia-1-50000-519997",
+        "passage_len_words": 760,
+        "passage_excerpt": "BỘ TÀI NGUYÊN VÀ \r\n\n  MÔI TRƯỜNG\r\n\n  -------\n\nCỘNG HÒA XÃ HỘI CHỦ\r\n\n  NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố:\r\n\n  07/2022/TT-BTNMT\n\nHà Nội, ngày 30\r\n\n  tháng 6 năm 2022\n\n \n\nTHÔNG TƯ\n\nBAN\r\n\nHÀNH QUY CHUẨN KỸ THUẬT QUỐC GIA VỀ CƠ SỞ DỮ LIỆU NỀN ĐỊA LÝ QUỐC GIA TỶ LỆ\r\n\n1:50.000, 1:100.000\n\nCăn cứ Luật Tiêu chuẩn và Quy chuẩn kỹ thuật ngày 29\r\n\ntháng 6 năm 2006;\n\nCăn c... [+3298 chars]",
+        "dieus": [
+          "1",
+          "2",
+          "3"
+        ],
+        "num_dieus": 3
+      },
+      {
+        "doc_id": 167237,
+        "name": "Thong-tu-38-2019-TT-BLDTBXH-xay-dung-moi-truong-giao-duc-an-toan-chong-bao-luc-hoc-duong-435900",
+        "passage_len_words": 4199,
+        "passage_excerpt": "\n\nBỘ LAO ĐỘNG - THƯƠNG BINH VÀ XÃ HỘI\r\n\n\t\t\t\t\t\t-------\n\nCỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\n\n\t\t\t\t\t\tĐộc lập - Tự do - Hạnh phúc\r\n\n\t\t\t\t\t\t---------------\n\nSố: 38/2019/TT-BLĐTBXH\n\nHà Nội, ngày 30 tháng 12 năm 2019\n\n\r\n\n\t\t\n\nTHÔNG TƯ\n\nHƯỚNG DẪN XÂY DỰNG MÔI TRƯỜNG GIÁO DỤC AN TOÀN, LÀNH MẠNH, THÂN THIỆN, PHÒNG, CHỐNG BẠO LỰC HỌC ĐƯỜNG TRONG CÁC CƠ SỞ GIÁO DỤC NGHỀ NGHIỆP\n\nCăn cứ Luật Giáo dục nghề nghiệp ... [+19302 chars]",
+        "dieus": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14"
+        ],
+        "num_dieus": 14
+      },
+      {
+        "doc_id": 31239,
+        "name": "Quyet-dinh-1696-QD-BTP-2019-cong-bo-thu-tuc-hanh-chinh-linh-vuc-ho-tro-phap-ly-Bo-Tu-phap-420427",
+        "passage_len_words": 1608,
+        "passage_excerpt": "BỘ\r\n\n  TƯ PHÁP\r\n\n  -------\n\nCỘNG\r\n\n  HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố: 1696/QĐ-BTP\n\nHà Nội, ngày 25 tháng 7 năm 2019\n\n\n\nQUYẾT ĐỊNH\n\nVỀ VIỆC\r\n\nCÔNG BỐ THỦ TỤC HÀNH CHÍNH LĨNH VỰC HỖ TRỢ PHÁP LÝ CHO DOANH NGHIỆP NHỎ VÀ VỪA\r\n\nTHUỘC PHẠM VI CHỨC NĂNG QUẢN LÝ CỦA BỘ TƯ PHÁP\n\nBỘ TRƯỞNG BỘ TƯ PHÁP\n\nCăn cứ Luật Hỗ trợ doanh nghiệp nhỏ\r\n\nvà vừa ngày 12 ... [+7168 chars]",
+        "dieus": [
+          "1",
+          "2",
+          "3"
+        ],
+        "num_dieus": 3
+      },
+      {
+        "doc_id": 258482,
+        "name": "Thong-tu-17-2021-TT-BXD-hoat-dong-giam-dinh-tu-phap-linh-vuc-xay-dung-499053",
+        "passage_len_words": 4304,
+        "passage_excerpt": "BỘ XÂY DỰNG\r\n\n  -------\n\nCỘNG HÒA XÃ HỘI\r\n\n  CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố: 17/2021/TT-BXD\r\n\n  \n\nHà Nội, ngày 22\r\n\n  tháng 12 năm 2021\n\n \n\nTHÔNG TƯ\n\nQUY\r\n\nĐỊNH MỘT SỐ NỘI DUNG VỀ HOẠT ĐỘNG GIÁM ĐỊNH TƯ PHÁP TRONG LĨNH VỰC XÂY DỰNG\n\nCăn cứ Luật Giám định\r\n\ntư pháp ngày 20 tháng 6 năm 2012; Luật sửa đổi,\r\n\nbổ sung một số điều của Luật Giám định tư pháp n... [+19879 chars]",
+        "dieus": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15"
+        ],
+        "num_dieus": 15
+      },
+      {
+        "doc_id": 225729,
+        "name": "Quyet-dinh-2273-QD-BYT-2023-cong-bo-thu-tuc-hanh-chinh-linh-vuc-Thi-dua-khen-thuong-567249",
+        "passage_len_words": 4182,
+        "passage_excerpt": "BỘ\r\n\n  Y TẾ\r\n\n  -------\n\nCỘNG\r\n\n  HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố: 2273/QĐ-BYT\n\nHà Nội, ngày 23\r\n\n  tháng 5 năm 2023\n\n \n\nQUYẾT ĐỊNH\n\nVỀ\r\n\nVIỆC CÔNG BỐ THỦ TỤC HÀNH CHÍNH TRONG LĨNH VỰC THI ĐUA, KHEN THƯỞNG THUỘC PHẠM\r\n\nVI CHỨC NĂNG QUẢN LÝ CỦA BỘ Y TẾ TẠI NGHỊ ĐỊNH SỐ 41/2015/NĐ-CP NGÀY 05/05/2015 CỦA CHÍNH PHỦ QUY ĐỊNH VỀ XÉT TẶNG DANH\r\n\nHIỆU... [+20463 chars]",
+        "dieus": [
+          "1",
+          "2",
+          "3",
+          "9",
+          "10"
+        ],
+        "num_dieus": 5
+      },
+      {
+        "doc_id": 302481,
+        "name": "Quyet-dinh-1099-QD-BHXH-chuc-nang-quyen-han-to-chuc-Truong-Dao-tao-nghiep-vu-bao-hiem-2016-320171",
+        "passage_len_words": 1690,
+        "passage_excerpt": "BẢO\r\n\n  HIỂM XÃ HỘI VIỆT NAM\r\n\n  -------\n\nCỘNG\r\n\n  HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố: 1099/QĐ-BHXH\n\nHà\r\n\n  Nội, ngày 02 tháng 8\r\n\n  năm 2016\n\n\n\nQUYẾT ĐỊNH\n\nQUY ĐỊNH CHỨC NĂNG,\r\n\nNHIỆM VỤ, QUYỀN HẠN VÀ CƠ CẤU TỔ CHỨC CỦA TRƯỜNG ĐÀO TẠO NGHIỆP VỤ BẢO HIỂM XÃ\r\n\nHỘI\n\nTỔNG GIÁM ĐỐC BẢO HIỂM XÃ HỘI VIỆT NAM\n\nCăn cứ\r\n\nNghị định số 01/2016/NĐ-CP ngày 05... [+7852 chars]",
+        "dieus": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6"
+        ],
+        "num_dieus": 6
+      },
+      {
+        "doc_id": 245564,
+        "name": "Nghi-dinh-55-2022-ND-CP-co-so-du-lieu-quoc-gia-ve-cong-tac-tiep-cong-dan-giai-quyet-khieu-nai-527253",
+        "passage_len_words": 4190,
+        "passage_excerpt": "CHÍNH PHỦ\r\n\n  -------\n\nCỘNG HÒA XÃ HỘI\r\n\n  CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc\r\n\n  ---------------\n\nSố: 55/2022/NĐ-CP\n\nHà Nội, ngày 23\r\n\n  tháng 8 năm 2022\n\n \n\nNGHỊ ĐỊNH\n\nQUY\r\n\nĐỊNH CƠ SỞ DỮ LIỆU QUỐC GIA VỀ CÔNG TÁC TIẾP CÔNG DÂN, XỬ LÝ ĐƠN, GIẢI QUYẾT KHIẾU\r\n\nNẠI, TỐ CÁO, KIẾN NGHỊ, PHẢN ÁNH\n\nCăn cứ Luật Tổ chức\r\n\nChính phủ ngày 19 tháng 6 năm 2015; Luật sửa\r\n\nđổi, bổ sung một số ... [+19050 chars]",
+        "dieus": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20"
+        ],
+        "num_dieus": 21
+      },
+      {
+        "doc_id": 145175,
+        "name": "Nghi-dinh-33-2023-ND-CP-can-bo-cong-chuc-cap-xa-va-nguoi-hoat-dong-khong-chuyen-trach-o-cap-xa-56060",
+        "passage_len_words": 19641,
+        "passage_excerpt": "CHÍNH PHỦ\r\n\n  -------\n\nCỘNG HÒA XÃ HỘI\r\n\n  CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố: 33/2023/NĐ-CP\n\nHà Nội, ngày 10\r\n\n  tháng 6 năm 2023 \n\n \n\nNGHỊ ĐỊNH\n\nQUY\r\n\nĐỊNH VỀ CÁN BỘ, CÔNG CHỨC CẤP XÃ VÀ NGƯỜI HOẠT ĐỘNG KHÔNG CHUYÊN TRÁCH Ở CẤP\r\n\nXÃ, Ở THÔN, TỔ DÂN PHỐ\n\nCăn cứ Luật Tổ chức\r\n\nChính phủ ngày 19 tháng 6 năm 2015;\n\nCăn cứ Luật Tổ chức\r\n\nchính quyền địa phương... [+89958 chars]",
+        "dieus": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20"
+        ],
+        "num_dieus": 40
+      },
+      {
+        "doc_id": 18371,
+        "name": "Quyet-dinh-1916-QD-BNV-cap-Giay-phep-thanh-lap-va-cong-nhan-Dieu-le-quy-132313",
+        "passage_len_words": 5942,
+        "passage_excerpt": "BỘ\r\n\n  NỘI VỤ\r\n\n  -------\n\nCỘNG\r\n\n  HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc\r\n\n  ---------------\n\nSố:\r\n\n  1916/QĐ-BNV\n\nHà\r\n\n  Nội, ngày 28 tháng 11 năm 2011\n\n\n\nQUYẾT ĐỊNH\n\nVỀ VIỆC CẤP GIẤY PHÉP THÀNH LẬP VÀ CÔNG NHẬN\r\n\nĐIỀU LỆ QUỸ TÌNH THƯƠNG VIỆT\n\nBỘ TRƯỞNG BỘ NỘI VỤ\n\nCăn cứ Nghị định số\r\n\n48/2008/NĐ-CP ngày 17 tháng 4 năm 2008 của Chính phủ quy định chức năng, nhiệm\r\n\nvụ, qu... [+27252 chars]",
+        "dieus": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16"
+        ],
+        "num_dieus": 29
+      }
+    ],
+    "without_dieu": [
+      {
+        "doc_id": 161441,
+        "name": "Nghi-quyet-33-NQ-CP-2023-giai-phap-thao-go-thuc-day-thi-truong-bat-dong-san-phat-trien-559083",
+        "passage_len_words": 7461,
+        "passage_excerpt": "CHÍNH PHỦ\r\n\n  -------\n\nCỘNG HÒA XÃ HỘI\r\n\n  CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc\r\n\n  ---------------\n\nSố: 33/NQ-CP\n\nHà Nội, ngày 11\r\n\n  tháng 3 năm 2023\n\n \n\nNGHỊ QUYẾT\n\nVỀ\r\n\nMỘT SỐ GIẢI PHÁP THÁO GỠ VÀ THÚC ĐẨY THỊ TRƯỜNG BẤT ĐỘNG SẢN PHÁT TRIỂN AN\r\n\nTOÀN, LÀNH MẠNH, BỀN VỮNG\n\nCHÍNH PHỦ\n\nCăn cứ Luật Tổ chức Chính phủ ngày 19 tháng 6 năm 2015;\r\n\nLuật sửa đổi, bổ sung một số điều của Lu... [+35125 chars]"
+      },
+      {
+        "doc_id": 203551,
+        "name": null,
+        "passage_len_words": 1298,
+        "passage_excerpt": "\n\nBỘ Y TẾ\n\n-------\n\nCỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\n\n\t\t\t\t\t\tĐộc lập - Tự do - Hạnh phúc\r\n\n\t\t\t\t\t\t---------------\n\nSố: 2167/BYT-KH-TC\n\nV/v cung cấp giá dịch vụ KBCB theo yêu cầu tại cơ sở KBCB của Nhà nước.\n\nHà Nội, ngày 14 tháng 4 năm 2023\n\nBỘ Y TẾ\n\n-------\n\nCỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\n\n\t\t\t\t\t\tĐộc lập - Tự do - Hạnh phúc\r\n\n\t\t\t\t\t\t---------------\n\nSố: 2167/BYT-KH-TC\n\nV/v cung cấp giá dịch v... [+7424 chars]"
+      },
+      {
+        "doc_id": 68947,
+        "name": null,
+        "passage_len_words": 853,
+        "passage_excerpt": "\n\nTỔNG CỤC THUẾ\n\nCỤC THUẾ TP. HỒ CHÍ MINH\r\n\n  -------\n\nCỘNG HÒA XÃ HỘI CHỦ NGHĨA\r\n\n  VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố: 11561/CT-TTHT\n\nV/v: Sử\r\n\n  dụng hóa đơn thương mại đối với dịch vụ xuất khẩu\n\nThành phố Hồ Chí Minh,\r\n\n  ngày 25 tháng 12 năm 2014\n\nTỔNG CỤC THUẾ\n\nCỤC THUẾ TP. HỒ CHÍ MINH\r\n\n  -------\n\nCỘNG HÒA XÃ HỘI CHỦ NGHĨA\r\n\n  VIỆT NAM\r\n\n  Độc lập - Tự do - Hạ... [+3703 chars]"
+      },
+      {
+        "doc_id": 58983,
+        "name": null,
+        "passage_len_words": 874,
+        "passage_excerpt": "\n\nBỘ TÀI CHÍNH\n\nTỔNG CỤC HẢI QUAN\r\n\n  -------\n\nCỘNG HÒA XÃ HỘI\r\n\n  CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố: 6550/TCHQ-VP\n\nV/v đóng dấu treo và dấu giáp lai văn bản\n\nHà Nội, ngày 21\r\n\n  tháng 11 năm 2012\n\nBỘ TÀI CHÍNH\n\nTỔNG CỤC HẢI QUAN\r\n\n  -------\n\nCỘNG HÒA XÃ HỘI\r\n\n  CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố: 6550/TCHQ-VP\n\nV/v ... [+3725 chars]"
+      },
+      {
+        "doc_id": 211012,
+        "name": null,
+        "passage_len_words": 1276,
+        "passage_excerpt": "\n\nTT\n\nTên\n\nSố CAS\n\nCông thức\r\n\n  hóa học\n\nNồng độ \r\n\n  tối đa (mg/Nm3)\n\n1\n\nAxetylen tetrabromua\n\n79-27-6\n\nCHBr2CHBr2\n\n14\n\n2\n\nAxetaldehyt\n\n75-07-0\n\nCH3CHO\n\n270\n\n3\n\nAcrolein\n\n107-02-8\n\nCH2=CHCHO\n\n2,5\n\n4\n\nAmylaxetat\n\n628-63-7\n\nCH3COOC5H11\n\n525\n\n5\n\nAnilin\n\n62-53-3\n\nC6H5NH2\n\n19\n\n6\n\nBenzidin\n\n92-87-5\n\nNH2C6H4C6H4NH2\n\nKPHĐ\n\n7\n\nBenzen\n\n71-43-2\n\nC6H6\n\n5\n\n8\n\nBenzyl clorua\n\n100-44-7\n\nC6H5CH2CI\n\n5\n\n9\n\n1,3-But... [+9358 chars]"
+      },
+      {
+        "doc_id": 77960,
+        "name": null,
+        "passage_len_words": 1410,
+        "passage_excerpt": "\n\nTT\n\nTên thông số\n\nĐơn vị tính\n\nNgưỡng\r\n\n   giới hạn\r\n\n   cho phép\n\nCác\r\n\n  thông số nhóm A\n\n\n\nThông số vi\r\n\n  sinh vật\n\n\n\n\n\n1 \n\nColiform\n\nCFU/100 mL\n\n<3\n\n2 \n\nE.Coli hoặc\r\n\n  Coliform chịu nhiệt\n\nCFU/100 mL\n\n<1\n\n\n\nThông số\r\n\n  cảm quan và vô cơ \n\n3 \n\nArsenic (As)(*)\n\nmg/L\n\n0,01\n\n4 \n\nClo dư\r\n\n  tự do(**)\n\nmg/L\n\nTrong\r\n\n  khoảng 0,2 - 1,0\n\n5 \n\nĐộ đục\n\nNTU\n\n2\n\n6 \n\nMàu sắc\n\nTCU\n\n15\n\n7 \n\nMùi, vị\n\n-\n\nK... [+8086 chars]"
+      },
+      {
+        "doc_id": 286060,
+        "name": "Thong-bao-38-TB-VKSTC-2023-tuyen-dung-cong-chuc-tai-Vien-kiem-sat-nhan-dan-toi-cao-557833",
+        "passage_len_words": 2469,
+        "passage_excerpt": "VIỆN KIỂM SÁT\r\n\n  NHÂN DÂN \r\n\n  TỐI CAO\r\n\n  -------\n\nCỘNG HÒA XÃ HỘI\r\n\n  CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố: 38/TB-VKSTC\n\nHà Nội, ngày 03\r\n\n  tháng 3 năm 2023\n\n \n\nTHÔNG BÁO\n\nTUYỂN DỤNG CÔNG CHỨC TẠI VIỆN KIỂM SÁT NHÂN DÂN TỐI CAO NĂM\r\n\n2023\n\nCăn cứ Quyết định số\r\n\n18/QĐ-VKSTC ngày 28/10/2022 của Viện trưởng VKSND tối cao về việc giao biên chế\r\n\ngiai đoạn 20... [+13988 chars]"
+      },
+      {
+        "doc_id": 77719,
+        "name": null,
+        "passage_len_words": 3348,
+        "passage_excerpt": "\n\nBỘ\r\n\n  XÂY DỰNG\r\n\n  -------\n\nCỘNG\r\n\n  HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố: 2307/BXD-QHKT\n\nV/v hướng dẫn\r\n\n  Bộ tiêu chí quốc gia về nông thôn mới các cấp giai đoạn 2021-2025\n\nHà\r\n\n  Nội, ngày 27 tháng 6\r\n\n  năm 2022\n\nBỘ\r\n\n  XÂY DỰNG\r\n\n  -------\n\nCỘNG\r\n\n  HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố: 2307... [+15787 chars]"
+      },
+      {
+        "doc_id": 273695,
+        "name": null,
+        "passage_len_words": 1724,
+        "passage_excerpt": "\n\nTỔNG\r\n\n  CỤC THUẾ\n\nCỤC THUẾ TP HÀ NỘI\r\n\n  --------\n\nCỘNG\r\n\n  HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố: 72271/CT-TTHT\n\nV/v góp vốn bằng TSCĐ\n\nHà\r\n\n  Nội, ngày 16 tháng 9 năm 2019\n\nTỔNG\r\n\n  CỤC THUẾ\n\nCỤC THUẾ TP HÀ NỘI\r\n\n  --------\n\nCỘNG\r\n\n  HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố: 72271/CT-TTHT\n\nV/v góp v... [+7820 chars]"
+      },
+      {
+        "doc_id": 256329,
+        "name": null,
+        "passage_len_words": 1138,
+        "passage_excerpt": "\n\nBỘ XÂY DỰNG\r\n\n  -------\n\nCỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố: 5438/BXD-QLN\n\nV/v hướng dẫn quy\r\n\n  định pháp luật về nhà ở xã hội\n\nHà Nội, ngày 30 tháng 11 năm 2022\n\nBỘ XÂY DỰNG\r\n\n  -------\n\nCỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố: 5438/BXD-QLN\n\nV/v hướng dẫn quy\r\n\n  định pháp luật về nhà ở... [+4921 chars]"
+      },
+      {
+        "doc_id": 193543,
+        "name": "Thong-bao-45-TB-BKHDT-2022-cap-lai-chung-chi-hanh-nghe-hoat-dong-dau-thau-522535",
+        "passage_len_words": 663,
+        "passage_excerpt": "BỘ\r\n\n  KẾ HOẠCH VÀ ĐẦU TƯ\r\n\n  -------\n\nCỘNG\r\n\n  HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố:\r\n\n  45/TB-BKHĐT\n\nHà\r\n\n  Nội, ngày 19 tháng 7\r\n\n  năm 2022\n\n\n\nTHÔNG BÁO\n\nV/V\r\n\nCẤP LẠI CHỨNG CHỈ HÀNH NGHỀ HOẠT ĐỘNG ĐẤU THẦU\n\nTheo quy định tại khoản 3 Điều 111\r\n\nNghị định số 63/2014/NĐ-CP , chứng chỉ hành nghề hoạt động đấu thầu do Bộ Kế\r\n\nhoạch và Đầu tư cấp, c... [+2774 chars]"
+      },
+      {
+        "doc_id": 161295,
+        "name": "Thong-tu-lien-tich-216-2004-TTLT-BTCQT-BTC-huong-dan-co-che-quan-ly-tai-chinh-106301",
+        "passage_len_words": 4752,
+        "passage_excerpt": "LIÊN\r\n\n  TỊCH\r\n\n  BAN TÀI CHÍNH-QUẢN TRỊ TW - BỘ TÀI CHÍNH\n\n-------\n\nCỘNG\r\n\n  HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập – Tự do – Hạnh phúc\r\n\n  --------------\n\nSố:\r\n\n  216/2004/TTLT-BTCQT-BTC\n\nHà\r\n\n  Nội, ngày 29 tháng 03 năm 2004\n\n\n\nTHÔNG TƯ LIÊN TỊCH\n\nHƯỚNG DẪN THỰC HIỆN CƠ CHẾ QUẢN LÝ TÀI CHÍNH ĐẢNG\n\nCăn cứ Điều lệ Đảng Cộng sản Việt\r\n\nNam khóa IX;\r\n\nCăn cứ vào Luật Ngân sách Nhà nước số 01/200... [+22108 chars]"
+      },
+      {
+        "doc_id": 46232,
+        "name": "Thong-tu-86-2002-TT-BTC-huong-dan-chi-ho-tro-hoat-dong-xuc-tien-thuong-mai-day-manh-xuat-khau-50065",
+        "passage_len_words": 1584,
+        "passage_excerpt": "BỘ\r\n\n  TÀI CHÍNH\r\n\n  ********\n\nCỘNG\r\n\n  HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc\r\n\n  ********\n\nSố:\r\n\n  86/2002/TT-BTC\n\nHà\r\n\n  Nội, ngày 27 tháng 9 năm 2002\n\n\n\nTHÔNG TƯ \n\nCỦA BỘ TÀI CHÍNH SỐ 86/2002/TT-BTC NGÀY 27 THÁNG 09 NĂM 2002\r\n\nHƯỚNG DẪN CHI HỖ TRỢ HOẠT ĐỘNG XÚC TIẾN THƯƠNG MẠI ĐẨY MẠNH XUẤT KHẨU\n\nThi hành Nghị quyết số\r\n\n05/2002/NQ-CP ngày 24/4/2002 của Chính phủ về một ... [+7296 chars]"
+      },
+      {
+        "doc_id": 39918,
+        "name": null,
+        "passage_len_words": 3945,
+        "passage_excerpt": "\n\nCác bộ phận\r\n\n  của phao áo\n\nKiểu thứ nhất\n\nKiểu thứ hai\n\nKhối lượng\n\n(635 ± 32) g\n\n(735 ± 37) g\n\nThân trước (dài x rộng) x 2 vạt\n\n(610 x 252) mm ± 20 mm\n\n(640 x 282) mm ± 20 mm\n\nChiều dày vật nổi thân trước\n\n(40 ± 5) mm\n\n(40 ± 5) mm\n\nThân sau (dài x rộng)\n\n(610 x 530) mm ± 20 mm\n\n(640 x 560) mm ± 20 mm\n\nChiều dày vật nổi thân sau\n\n(20 ± 2) mm\n\n(20 ± 2) mm\n\nChiều rộng cổ\n\n(300 ±15) mm\n\n(300 ± 15... [+17923 chars]"
+      },
+      {
+        "doc_id": 141706,
+        "name": null,
+        "passage_len_words": 1970,
+        "passage_excerpt": "\n\nỦY BAN NHÂN DÂN\r\n\n  THÀNH PHỐ HỒ CHÍ MINH\n\nSỞ GIÁO DỤC VÀ ĐÀO TẠO\r\n\n  -------\n\nCỘNG\r\n\n  HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố: 1054/SGDĐT-CTTT\n\nV/v triển khai kế hoạch tiêm vắc xin\r\n\n  phòng COVID-19 cho trẻ em và học sinh từ 5 đến dưới 12 tuổi trong ngành giáo\r\n\n  dục\n\nThành phố Hồ Chí\r\n\n  Minh, ngày 08 tháng 4 năm 2022\n\nỦY BAN NHÂN DÂN\r\n\n  THÀNH... [+9867 chars]"
+      },
+      {
+        "doc_id": 121174,
+        "name": "Chi-thi-21-CT-TTg-2022-thuc-day-chuyen-doi-so-trong-chi-tra-an-sinh-xa-hoi-khong-dung-tien-mat-54057",
+        "passage_len_words": 2186,
+        "passage_excerpt": "THỦ TƯỚNG CHÍNH PHỦ\r\n\n  -------\n\nCỘNG HÒA XÃ HỘI\r\n\n  CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc\r\n\n  ---------------\n\nSố: 21/CT-TTg\n\nHà Nội, ngày 25 tháng 11 năm 2022\n\n \n\nCHỈ THỊ\n\nVỀ THÚC ĐẨY CHUYỂN\r\n\nĐỔI SỐ TRONG CHI TRẢ AN SINH XÃ HỘI KHÔNG DÙNG TIỀN MẶT\n\nThực hiện chủ trương, chính sách của Đảng và Nhà nước\r\n\nvề không ngừng nâng cao đời sống vật chất và tinh thần của nhân dân, thời gian\r... [+9768 chars]"
+      },
+      {
+        "doc_id": 150932,
+        "name": null,
+        "passage_len_words": 1588,
+        "passage_excerpt": "\n\nUrê\n\nCatalase\n\nOxidase\n\nManitol\n\nGlucose\n\nSucrose\n\nD-Xylose\n\n-\n\n-\n\n-\n\n+\n\n+\n\n+\n\n+\n\nUrê\n\nCatalase\n\nOxidase\n\nManitol\n\nGlucose\n\nSucrose\n\nD-Xylose\n\n-\n\n-\n\n-\n\n+\n\n+\n\n+\n\n+\n\nPhương pháp tiến hành, theo\r\n\nPhụ lục B.\n\n5.2.3.3. Xác định\r\n\nvi khuẩn bằng\r\n\nphương pháp PCR\n\nSử dụng phương pháp PCR với các cặp mồi\r\n\nđặc hiệu và chu trình nhiệt được\r\n\nnêu trong Bảng\r\n\n2.\n\nBảng 2 - Cặp\r\n\nmồi đặc hiệu\r\n\ncho Avibact... [+7709 chars]"
+      },
+      {
+        "doc_id": 166878,
+        "name": "Ke-hoach-59-KH-VKSTC-2022-to-chuc-thi-tuyen-Dieu-tra-vien-so-cap-trung-cap-nganh-Kiem-sat-515994",
+        "passage_len_words": 2469,
+        "passage_excerpt": "VIỆN\r\n\n  KIỂM SÁT NHÂN DÂN\r\n\n  TỐI CAO\r\n\n  -------\n\nCỘNG\r\n\n  HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố:\r\n\n  59/KH-VKSTC\n\nHà Nội, ngày 03 tháng 6 năm 2022\n\n\n\nKẾ HOẠCH\n\nTỔ CHỨC THI TUYỂN ĐIỀU TRA VIÊN SƠ CẤP, ĐIỀU TRA VIÊN TRUNG CẤP, ĐIỀU\r\n\nTRA VIÊN CAO CẤP NGÀNH KIỂM SÁT NĂM 2022\n\nCăn cứ Luật Tổ chức Viện kiểm sát\r\n\nnhân dân năm 2014;\n\nCăn cứ Luật Tổ chứ... [+11151 chars]"
+      },
+      {
+        "doc_id": 92115,
+        "name": "Thong-tu-53-2006-TT-BTC-huong-dan-ap-dung-ke-toan-quan-tri-doanh-nghiep-12534",
+        "passage_len_words": 10462,
+        "passage_excerpt": "BỘ TÀI CHÍNH\r\n\n  --------\n\nCỘNG HÒA XÃ HỘI CHỦ\r\n\n  NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố: 53/2006/TT-BTC\n\nHà Nội, ngày\r\n\n  12 tháng 6 năm 2006\n\nTHÔNG TƯ\n\nHƯỚNG\r\n\nDẪN ÁP DỤNG KẾ TOÁN QUẢN TRỊ TRONG DOANH NGHIỆP\n\nCăn cứ Luật Kế toán số\r\n\n03/2003/QH11 ngày 17/6/2003; \n\nCăn cứ Nghị định số 129/2004/NĐ-CP \r\n\nngày 31/5/2004 của Chính phủ Quy định chi tiết và hướng dẫn t... [+56612 chars]"
+      },
+      {
+        "doc_id": 169568,
+        "name": "Chi-thi-10-CT-TTg-2021-cong-tac-bao-ve-an-ninh-quoc-gia-trat-tu-an-toan-xa-hoi-trong-linh-vuc-du-lic",
+        "passage_len_words": 5133,
+        "passage_excerpt": "THỦ\r\n\n  TƯỚNG CHÍNH PHỦ\r\n\n  -------\n\nCỘNG\r\n\n  HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố:\r\n\n  10/CT-TTg\n\nHà\r\n\n  Nội, ngày 31 tháng 3 năm 2021\n\n\n\nCHỈ THỊ\n\nVỀ CÔNG TÁC BẢO VỆ AN NINH QUỐC GIA, BẢO ĐẢM TRẬT TỰ AN TOÀN XÃ HỘI\r\n\nTRONG LĨNH VỰC DU LỊCH TRONG TÌNH HÌNH MỚI\n\nThực hiện Nghị quyết số 08-NQ/TW ngày 16 tháng 01 năm 2017 của Bộ Chính\r\n\ntrị về phát tr... [+23736 chars]"
+      },
+      {
+        "doc_id": 284674,
+        "name": null,
+        "passage_len_words": 856,
+        "passage_excerpt": "\n\nTỔNG CỤC THUẾ \n\nCỤC THUẾ\r\n\n  TP HÀ NỘI\r\n\n  -------\n\nCỘNG HÒA XÃ HỘI CHỦ NGHĨA\r\n\n  VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố: 43570/CTHN-TTHT\n\nV/v chính\r\n\n  sách thuế đối với Quỹ bảo hiểm vi mô\n\nHà Nội, ngày 5 tháng 9 năm 2022\n\nTỔNG CỤC THUẾ \n\nCỤC THUẾ\r\n\n  TP HÀ NỘI\r\n\n  -------\n\nCỘNG HÒA XÃ HỘI CHỦ NGHĨA\r\n\n  VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố... [+3787 chars]"
+      },
+      {
+        "doc_id": 82219,
+        "name": null,
+        "passage_len_words": 9590,
+        "passage_excerpt": "\n\nCấp\r\n\n  đèn\n\nChức\r\n\n  năng\n\nTầm\r\n\n  hiệu lực danh định (hải lý)\n\nTầm\r\n\n  hiệu lực ban ngày (hải lý)\n\nCấp\r\n\n  I\n\nBáo\r\n\n  hiệu nhập bờ\n\n20\r\n\n  ≤ R\n\n8\r\n\n  ≤ R\n\nCấp\r\n\n  II\n\nHàng\r\n\n  hải ven biển\n\n15\r\n\n  ≤ R < 20\n\n6\r\n\n  ≤ R < 8\n\nCấp\r\n\n  III\n\nBáo\r\n\n  hiệu cửa sông, cửa biển\n\n10\r\n\n  ≤ R < 15\n\n4\r\n\n  ≤ R < 6\n\nCấp\r\n\n  đèn\n\nChức\r\n\n  năng\n\nTầm\r\n\n  hiệu lực danh định (hải lý)\n\nTầm\r\n\n  hiệu lực ban ngày (hải ... [+47593 chars]"
+      },
+      {
+        "doc_id": 129275,
+        "name": null,
+        "passage_len_words": 3451,
+        "passage_excerpt": "\n\nLoai\r\n\n  phòng/không gian\n\nDiện tích sử\r\n\n  dụng tối thiểu\n\nCăn hộ 01\r\n\n  phòng ngủ\n\nCăn hộ 02 phòng\r\n\n  ngủ\n\nCăn hộ 03\r\n\n  phòng ngủ\n\nDiện tích từ\r\n\n  25\n\nDiện tích từ\r\n\n  40\n\nPhòng ngủ\n\n9\n\n9\n\n9\n\n9\n\nVệ sinh chung\n\n3\n\n3\n\n3\n\n3\n\nVệ sinh riêng (diện tích 1 phòng)\n\n-\n\n-\n\n3\n\n3\n\nKhông gian đệm\n\n13\n\n(không gian\r\n\n  kết hợp)\n\n28\n\n(không gian\r\n\n  kết hợp)\n\n2\n\n3\n\nKhông gian sinh hoạt chung\n\n20\n\n20\n\nKhông ... [+16288 chars]"
+      },
+      {
+        "doc_id": 267880,
+        "name": null,
+        "passage_len_words": 353,
+        "passage_excerpt": "\n\nBỘ NÔNG NGHIỆP VÀ\r\n\n  PHÁT TRIỂN NÔNG THÔN\r\n\n  CỤC CHĂN NUÔI\r\n\n  -------\n\nCỘNG HÒA XÃ HỘI\r\n\n  CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố: 534/CN-TACN \n\nV/v mặt hàng ngô hạt làm TACN\n\nHà Nội, ngày 26\r\n\n  tháng 6 năm 2020\n\nBỘ NÔNG NGHIỆP VÀ\r\n\n  PHÁT TRIỂN NÔNG THÔN\r\n\n  CỤC CHĂN NUÔI\r\n\n  -------\n\nCỘNG HÒA XÃ HỘI\r\n\n  CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc... [+1353 chars]"
+      },
+      {
+        "doc_id": 266794,
+        "name": null,
+        "passage_len_words": 1063,
+        "passage_excerpt": "\n\nA\n\nCác loại\r\n\n  văn bản quy phạm pháp luật\n\n1\n\nHiến pháp\n\n2\n\nLuật\n\n3\n\nPháp lệnh\n\n4\n\nLệnh\n\n5\n\nNghị quyết\n\n6\n\nNghị quyết liên tịch\n\n7\n\nNghị định\n\n8\n\nQuyết định\n\n9\n\nThông tư\n\n10\n\nThông tư liên tịch\n\n11\n\nChỉ thị (Chỉ thị của Ủy ban nhân dân)\n\n12\n\nBộ luật\n\n13\n\nVăn bản quy phạm pháp luật (của chính quyền\r\n\n  địa phương ở đơn vị hành chính - kinh tế đặc biệt)\n\nB\n\nCác loại\r\n\n  văn bản hành chính\n\n1\n\nNgh... [+4482 chars]"
+      },
+      {
+        "doc_id": 82166,
+        "name": "Chi-thi-12-CT-TTg-2023-doi-moi-hoat-dong-Uy-ban-Quan-ly-von-Nha-nuoc-tai-doanh-nghiep-565514",
+        "passage_len_words": 4479,
+        "passage_excerpt": "THỦ\r\n\n  TƯỚNG CHÍNH PHỦ\r\n\n  -------\n\nCỘNG\r\n\n  HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố: 12/CT-TTg\n\nHà Nội, ngày 06\r\n\n  tháng 5 năm 2023\n\n \n\nCHỈ THỊ\n\nVỀ\r\n\nNHIỆM VỤ, GIẢI PHÁP ĐỔI MỚI HOẠT ĐỘNG CỦA ỦY BAN QUẢN LÝ VỐN NHÀ NƯỚC TẠI DOANH\r\n\nNGHIỆP VÀ NÂNG CAO HIỆU QUẢ HOẠT ĐỘNG, PHÁT HUY NGUỒN LỰC ĐẦU TƯ CỦA 19 TẬP\r\n\nĐOÀN KINH TẾ, TỔNG CÔNG TY NHÀ NƯỚC TRỰC... [+20916 chars]"
+      },
+      {
+        "doc_id": 302755,
+        "name": null,
+        "passage_len_words": 2512,
+        "passage_excerpt": "\n\nBỘ TÀI CHÍNH\n\nTỔNG CỤC HẢI QUAN\r\n\n  -------\n\nCỘNG HÒA XÃ HỘI\r\n\n  CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố: 3173/TCHQ-TXNK\n\nV/v thực hiện Nghị định số 26/2023/NĐ-CP  và\r\n\n  Quyết định số 15/2023/QĐ-TTg  ngày 31/5/2023 về biểu thuế\n\nHà Nội, ngày 21\r\n\n  tháng 6 năm 2023\n\nBỘ TÀI CHÍNH\n\nTỔNG CỤC HẢI QUAN\r\n\n  -------\n\nCỘNG HÒA XÃ HỘI\r\n\n  CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lậ... [+12079 chars]"
+      },
+      {
+        "doc_id": 53928,
+        "name": null,
+        "passage_len_words": 5845,
+        "passage_excerpt": "\n\nĐường tuyến công trình\n\nCấp hạng\n\nIII\n\nIV\n\nĐiểm hạng cao hơn khép về điểm hạng cao hơn\n\n65 km - 70 km\n\n16 km - 20 km\n\nĐiểm hạng cao hơn khép về điểm nút\n\n40 km - 45 km\n\n9 km - 15 km\n\nĐiểm nút khép về điểm nút\n\n25 km - 30 km\n\n6 km - 10 km\n\nĐường tuyến công trình\n\nCấp hạng\n\nIII\n\nIV\n\nĐiểm hạng cao hơn khép về điểm hạng cao hơn\n\n65 km - 70 km\n\n16 km - 20 km\n\nĐiểm hạng cao hơn khép về điểm nút\n\n40 km... [+25333 chars]"
+      },
+      {
+        "doc_id": 206251,
+        "name": null,
+        "passage_len_words": 1797,
+        "passage_excerpt": "\n\nTỔNG\r\n\n  CỤC THUẾ\r\n\n  CỤC THUẾ TP HÀ NỘI\r\n\n  -------\n\nCỘNG\r\n\n  HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố: 54713/CTHN-TTHT\n\nV/v thuế suất thuế GTGT\n\nHà\r\n\n  Nội, ngày 11 tháng 11 năm 2022\n\nTỔNG\r\n\n  CỤC THUẾ\r\n\n  CỤC THUẾ TP HÀ NỘI\r\n\n  -------\n\nCỘNG\r\n\n  HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc \r\n\n  ---------------\n\nSố: 54713/CTHN-TTHT... [+8300 chars]"
+      },
+      {
+        "doc_id": 65991,
+        "name": null,
+        "passage_len_words": 13261,
+        "passage_excerpt": "\n\nBỘ Y TẾ\n\nVIỆN VỆ SINH DỊCH TỄ\r\n\n  TRUNG ƯƠNG\r\n\n  -------\n\nCỘNG HÒA XÃ HỘI CHỦ\r\n\n  NGHĨA VIỆT NAM\r\n\n  Độc lập - Tự do - Hạnh phúc\r\n\n  ---------------\n\nSố: 947/VSDTTƯ-TCQG\n\nV/v: Tài liệu Hướng dẫn triển khai chiến dịch tiêm vắc\r\n\n  xin phòng COVID-19 cho trẻ em từ 5 đến dưới 12 tuổi\n\nHà Nội, ngày 25\r\n\n  tháng 4 năm 2022\n\nBỘ Y TẾ\n\nVIỆN VỆ SINH DỊCH TỄ\r\n\n  TRUNG ƯƠNG\r\n\n  -------\n\nCỘNG HÒA XÃ HỘI CHỦ... [+69462 chars]"
+      }
+    ]
+  },
+  "metadata": {
+    "total_qa_pairs": 7000,
+    "total_documents": 8497,
+    "qa_with_dieu": 6174,
+    "qa_without_dieu": 826,
+    "docs_with_dieu": 7161,
+    "docs_without_dieu": 1313
+  }
+}

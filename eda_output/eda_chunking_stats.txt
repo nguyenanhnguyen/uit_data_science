@@ -1,0 +1,27 @@
+CHUNKING STRATEGIES COMPARISON:
+Total documents analyzed: 8474
+
+Fixed 450W:
+  Avg chunks/doc: 19.5
+  Avg chunk length: 422.1 words
+  Chunk length stdev: 71.4
+
+Sentences:
+  Avg chunks/doc: 20.9
+  Avg chunk length: 410.1 words
+  Chunk length stdev: 95.2
+
+Articles:
+  Avg chunks/doc: 20.8
+  Avg chunk length: 723.4 words
+  Chunk length stdev: 1011.8
+
+Hybrid:
+  Avg chunks/doc: 21.3
+  Avg chunk length: 374.9 words
+  Chunk length stdev: 106.4
+
+DOCUMENT STRUCTURE:
+  With Điều: 7161 (84.5%)
+  Without Điều: 1313 (15.5%)
+  ⚠️  15.5% will fallback in Articles strategy
