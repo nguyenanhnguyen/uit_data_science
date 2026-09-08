@@ -17,3 +17,82 @@ min         4.000000
 75%        24.000000
 max        60.000000
 Name: num_words, dtype: float64
+-> Đã lưu biểu đồ phân phối độ dài câu hỏi tại 'eda_output\question_length_distribution.png'
+
+--- 2. Tỷ lệ các dạng câu hỏi (Dự đoán bằng từ khoá) ---
+ - Yêu cầu thông tin khác: 4805 câu (68.64%)
+ - True/False (Xác nhận): 1181 câu (16.87%)
+ - Tình huống / Thực thi / Mức phạt: 599 câu (8.56%)
+ - Định nghĩa / Khái niệm: 415 câu (5.93%)
+
+--- 3. Mật độ chứa từ khóa trích dẫn trực tiếp trong câu hỏi ---
+ - Tỷ lệ câu hỏi chứa Số hiệu văn bản cụ thể (Ví dụ: 12/2020/NĐ-CP): 0.47%
+ - Tỷ lệ câu hỏi đề cập trực tiếp từ khóa 'Điều [số]': 0.06%
+
+=== [MÔ ĐUN 2] PHÂN TÍCH TẬP VĂN BẢN PHÁP LUẬT ===
+
+--- 1. Thống kê độ dài các Điều luật (Số Từ/Words) ---
+count    8.497000e+03
+mean     8.538849e+03
+std      1.872614e+04
+min      0.000000e+00
+25%      2.474000e+03
+50%      4.814000e+03
+75%      9.381000e+03
+max      1.242409e+06
+Name: num_words, dtype: float64
+ * Phân vị 95% độ dài văn bản là: 27526 từ -> Gợi ý chunk_size tối thiểu là 27526 từ để không làm đứt mạch văn bản.
+ * Phân vị 99% độ dài văn bản là: 59231 từ.
+-> Đã lưu biểu đồ phân phối độ dài văn bản tại 'eda_output\article_length_distribution.png'
+
+--- 2. Phân tích tham chiếu chéo (Cross-reference) ---
+ - Tỉ lệ Điều luật chứa tham chiếu đến điều khoản khác: 83.45%
+   * Lưu ý: Tỷ lệ này cao biểu thị mô hình Retriever cần hỗ trợ ngữ cảnh rộng hơn hoặc có cơ chế liên kết đồ thị (graph-based / metadata expansion).
+
+=== [MÔ ĐUN 3] PHÂN TÍCH QUAN HỆ CÂU HỎI - ĐÁP ÁN ===
+
+--- 1. Thống kê số lượng văn bản vàng cần thiết cho mỗi câu hỏi ---
+count    7000.0
+mean        1.0
+std         0.0
+min         1.0
+25%         1.0
+50%         1.0
+75%         1.0
+max         1.0
+dtype: float64
+
+ Tỷ lệ số lượng văn bản đúng:
+ - 1 văn bản: 7000 câu hỏi (100.00%)
+
+[CẢNH BÁO] Có 7000 ID văn bản đúng được trích dẫn trong train nhưng không tìm thấy nội dung tương ứng trong kho Corpus.
+
+=== [MÔ ĐUN 4] PHÂN TÍCH TẬP CÂU TRẢ LỜI THAM CHIẾU ===
+
+--- 1. Thống kê độ dài câu trả lời vàng (Trường 'answer') ---
+count    7000.000000
+mean      347.380714
+std       195.723371
+min        28.000000
+25%       218.000000
+50%       312.000000
+75%       439.000000
+max      2435.000000
+Name: num_words, dtype: float64
+
+--- 2. Phân tích khuôn mẫu mở đầu câu trả lời (Mẹo thiết kế Template sinh) ---
+ - Mẫu bắt đầu bằng 'Căn cứ': 4020 câu (57.43%)
+ - Mẫu bắt đầu bằng 'Theo Điều': 575 câu (8.21%)
+ - Mẫu bắt đầu bằng 'Theo quy định': 425 câu (6.07%)
+ - Mẫu bắt đầu bằng 'Như vậy / Theo đó': 8 câu (0.11%)
+ - Mẫu bắt đầu bằng 'Trực tiếp trích văn bản': 6961 câu (99.44%)
+ - Các dạng mở đầu khác: -4989 câu (-71.27%)
+   * Gợi ý: Nếu mẫu 'Căn cứ...' hoặc 'Theo Điều...' chiếm ưu thế tuyệt đối, việc bạn thiết lập template sinh tương ứng sẽ kéo điểm METEOR/ROUGE-L lên cực nhanh (như thực tế thử nghiệm đã tăng +4.8 METEOR).
+
+=====================================================================
+   QUÁ TRÌNH EDA HOÀN TẤT. VUI LÒNG KIỂM TRA CÁC PHÂN TÍCH TRONG THƯ MỤC:
+   => Thư mục đầu ra: 'eda_output/'
+   - Biểu đồ câu hỏi: 'eda_output/question_length_distribution.png'
+   - Biểu đồ điều luật: 'eda_output/article_length_distribution.png'
+   - Tệp báo cáo chi tiết: 'eda_output/eda_report.txt'
+=====================================================================
