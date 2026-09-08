@@ -5,6 +5,8 @@ import glob
 import sys
 import numpy as np
 import pandas as pd
+import matplotlib
+matplotlib.use('Agg')  # Thiết lập backend không tương tác để tránh lỗi Tcl/Tkinter
 import matplotlib.pyplot as plt
 import seaborn as sns
 from collections import Counter

@@ -1,0 +1,19 @@
+=====================================================================
+       HỆ THỐNG PHÂN TÍCH DỮ LIỆU ĐẶC TRƯNG LEGALQA (EDA SCRIPT)      
+=====================================================================
+
+[BƯỚC 1] Đang tải các tập tin dữ liệu (ở cùng thư mục với file code)...
+-> Tìm thấy 8497 file context JSON.
+
+=== [MÔ ĐUN 1] PHÂN TÍCH TẬP CÂU HỎI ===
+
+--- 1. Thống kê độ dài câu hỏi (Tính bằng số Từ/Words) ---
+count    7000.000000
+mean       19.692143
+std         6.515345
+min         4.000000
+25%        15.000000
+50%        19.000000
+75%        24.000000
+max        60.000000
+Name: num_words, dtype: float64
