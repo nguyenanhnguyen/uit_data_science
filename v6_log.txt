@@ -1,0 +1,334 @@
+6.9s 1 0.00s - Debugger warning: It seems that frozen modules are being used, which may
+6.9s 2 0.00s - make the debugger miss breakpoints. Please pass -Xfrozen_modules=off
+6.9s 3 0.00s - to python to disable frozen modules.
+6.9s 4 0.00s - Note: Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION=1 to disable this validation.
+7.5s 5 0.00s - Debugger warning: It seems that frozen modules are being used, which may
+7.5s 6 0.00s - make the debugger miss breakpoints. Please pass -Xfrozen_modules=off
+7.5s 7 0.00s - to python to disable frozen modules.
+7.5s 8 0.00s - Note: Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION=1 to disable this validation.
+12.2s 9 [?25l   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m0.0/739.8 kB[0m [31m?[0m eta [36m-:--:--[0m[2K   [91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m[91m╸[0m [32m737.3/739.8 kB[0m [31m22.6 MB/s[0m eta [36m0:00:01[0m[2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m739.8/739.8 kB[0m [31m14.7 MB/s[0m eta [36m0:00:00[0m
+12.2s 10 [?25h[?25l   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m0.0/559.1 kB[0m [31m?[0m eta [36m-:--:--[0m[2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m559.1/559.1 kB[0m [31m32.8 MB/s[0m eta [36m0:00:00[0m
+12.3s 11 [?25h[?25l   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m0.0/389.2 kB[0m [31m?[0m eta [36m-:--:--[0m[2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m389.2/389.2 kB[0m [31m27.8 MB/s[0m eta [36m0:00:00[0m
+12.3s 12 [?25h[?25l   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m0.0/1.8 MB[0m [31m?[0m eta [36m-:--:--[0m[2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m1.8/1.8 MB[0m [31m57.2 MB/s[0m eta [36m0:00:00[0m
+12.4s 13 [?25h[?25l   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m0.0/1.4 MB[0m [31m?[0m eta [36m-:--:--[0m[2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m1.4/1.4 MB[0m [31m55.1 MB/s[0m eta [36m0:00:00[0m
+12.4s 14 [?25h[?25l   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m0.0/775.8 kB[0m [31m?[0m eta [36m-:--:--[0m[2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m775.8/775.8 kB[0m [31m42.5 MB/s[0m eta [36m0:00:00[0m
+21.9s 15 [?25h[?25l   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m0.0/43.1 MB[0m [31m?[0m eta [36m-:--:--[0m[2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m0.1/43.1 MB[0m [31m3.0 MB/s[0m eta [36m0:00:15[0m[2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m0.2/43.1 MB[0m [31m3.5 MB/s[0m eta [36m0:00:13[0m[2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m0.3/43.1 MB[0m [31m3.2 MB/s[0m eta [36m0:00:14[0m[2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m0.5/43.1 MB[0m [31m3.7 MB/s[0m eta [36m0:00:12[0m[2K   [91m╸[0m[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m0.8/43.1 MB[0m [31m4.6 MB/s[0m eta [36m0:00:10[0m[2K   [91m━[0m[91m╸[0m[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m1.8/43.1 MB[0m [31m8.8 MB/s[0m eta [36m0:00:05[0m[2K   [91m━━━━[0m[91m╸[0m[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m4.9/43.1 MB[0m [31m20.4 MB/s[0m eta [36m0:00:02[0m[2K   [91m━━━━━━━━━[0m[90m╺[0m[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m9.9/43.1 MB[0m [31m35.6 MB/s[0m eta [36m0:00:01[0m[2K   [91m━━━━━━━━━━━━[0m[91m╸[0m[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m13.8/43.1 MB[0m [31m125.7 MB/s[0m eta [36m0:00:01[0m[2K   [91m━━━━━━━━━━━━━[0m[91m╸[0m[90m━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m14.7/43.1 MB[0m [31m91.8 MB/s[0m eta [36m0:00:01[0m[2K   [91m━━━━━━━━━━━━━━━━━[0m[90m╺[0m[90m━━━━━━━━━━━━━━━━━━━━━━[0m [32m18.9/43.1 MB[0m [31m83.8 MB/s[0m eta [36m0:00:01[0m[2K   [91m━━━━━━━━━━━━━━━━━━━━[0m[91m╸[0m[90m━━━━━━━━━━━━━━━━━━━[0m [32m22.5/43.1 MB[0m [31m96.7 MB/s[0m eta [36m0:00:01[0m[2K   [91m━━━━━━━━━━━━━━━━━━━━━━━━━[0m[91m╸[0m[90m━━━━━━━━━━━━━━[0m [32m28.0/43.1 MB[0m [31m139.6 MB/s[0m eta [36m0:00:01[0m[2K   [91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m[90m╺[0m[90m━━━━━━━━━[0m [32m32.4/43.1 MB[0m [31m130.4 MB/s[0m eta [36m0:00:01[0m[2K   [91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m[91m╸[0m[90m━━━━[0m [32m38.7/43.1 MB[0m [31m153.4 MB/s[0m eta [36m0:00:01[0m[2K   [91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m[91m╸[0m [32m43.1/43.1 MB[0m [31m161.1 MB/s[0m eta [36m0:00:01[0m[2K   [91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m[91m╸[0m [32m43.1/43.1 MB[0m [31m161.1 MB/s[0m eta [36m0:00:01[0m[2K   [91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m[91m╸[0m [32m43.1/43.1 MB[0m [31m161.1 MB/s[0m eta [36m0:00:01[0m[2K   [91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m[91m╸[0m [32m43.1/43.1 MB[0m [31m161.1 MB/s[0m eta [36m0:00:01[0m[2K   [91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m[91m╸[0m [32m43.1/43.1 MB[0m [31m161.1 MB/s[0m eta [36m0:00:01[0m[2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m43.1/43.1 MB[0m [31m43.0 MB/s[0m eta [36m0:00:00[0m
+29.6s 16 [?25hMôi trường: Kaggle
+29.6s 17 DATA_DIR  = /kaggle/input/datasets/anhnguyen7508/uit-data-science-dataset/
+29.6s 18 OUT_DIR   = /kaggle/working
+29.6s 19 CACHE_DIR = /kaggle/temp/legalqa_cache  (tạm, mất khi session kết thúc)
+29.6s 20 LOW_VRAM_MODE=False (VRAM=14.6GB) -> USE_LORA=False, USE_8BIT_OPTIM=False
+29.6s 21 Số GPU thấy được: 2
+29.6s 22 cuda:0 — Tesla T4, 14.6 GB
+29.6s 23 cuda:1 — Tesla T4, 14.6 GB
+29.6s 24 OK — sẽ dùng song song ['cuda:0', 'cuda:1'] ở Bước 5 (encode corpus) và Bước 6/7 (rerank).
+29.6s 25 [   0.0 phút] Bắt đầu  (còn lại ~480.0 phút trong ngân sách)
+29.7s 26 Đã seed toàn cục với SEED=42 (random/numpy/torch) — trước mọi lời gọi random ở Bước 3/4, để nhiều lần chạy cùng code fine-tune trên cùng 1 tập con, tái lập được.
+29.8s 27 === Bước 1: Chunk corpus (2 tầng — BẢN SỬA v4, xem Cell 2/result.md §3) ===
+90.2s 28 8532 văn bản -> 235204 chunk tầng 2 · 166078 chunk 450 từ (tầng 1). 98.65% văn bản có cấu trúc Điều.
+90.2s 29 Phân bố unit_type (tầng 2): dieu=158356, dieu_capped=48907, tiet=20901, raw450=3312, phu_luc_capped=2361, tiet_capped=600, phu_luc=531, muc_capped=162, muc=74
+90.2s 30 [A2] 52030 chunk bị chặn trên MAX_UNIT_WORDS=2000 rồi cắt lại 450 từ (outlier catastrophic — xem EDA_ANALYSIS_REPORT.md §5.1).
+90.2s 31 [A1] 3312 chunk fallback cắt 450 từ (không khớp Điều/Mục/Phụ lục/tiết).
+90.2s 32 [   1.0 phút] Xong chunking (2 tầng)  (còn lại ~479.0 phút trong ngân sách)
+90.4s 33 === Bước 2: BM25 index (2 tầng — BẢN SỬA v4) ===
+214.9s 34 [   3.1 phút] Xong BM25 index (2 tầng)  (còn lại ~476.9 phút trong ngân sách)
+215.1s 35 === Bước 3: Sinh nhãn từ train.json + warmup.json ===
+215.6s 36 train.json: 7000 câu
+215.6s 37 warmup.json: 500 câu, 0 câu đúng schema -> gộp thêm, 500 câu sai kiểu -> bỏ qua. KHÔNG gộp vào mẫu dev-eval/Recall@k ở Bước 6.
+215.6s 38 Positive pairs: 3579/7000
+215.6s 39 Cố định 300 câu dev-eval NGAY TỪ ĐÂY (trước Bước 4). 143 câu trong số đó có nhãn citation -> LOẠI khỏi tập fine-tune (3579 -> 3436 positive pair khả dụng để train), nhưng VẪN dùng nhãn gốc (train_positive_all) để đo Recall@k ở Bước 6.
+215.6s 40 [   3.1 phút] Xong sinh nhãn  (còn lại ~476.9 phút trong ngân sách)
+215.8s 41 === Bước 4: Fine-tune 2 dense encoder song song (bge-m3 @ cuda:0, e5-large @ cuda:1) ===
+215.8s 42 Đang tạo training rows (dense encoder — citation + Task 1)...
+231.3s 43 _build_training_rows: 500/3436  (3.4 phút)
+246.0s 44 _build_training_rows: 1000/3436  (3.6 phút)
+260.3s 45 _build_training_rows: 1500/3436  (3.8 phút)
+274.8s 46 _build_training_rows: 2000/3436  (4.1 phút)
+289.4s 47 _build_training_rows: 2500/3436  (4.3 phút)
+303.9s 48 _build_training_rows: 3000/3436  (4.6 phút)
+316.7s 49 _build_training_rows: 3436/3436  (4.8 phút)
+317.0s 50 3436 rows -> /kaggle/temp/legalqa_cache/train_rows.json
+317.0s 51 Đang tạo training rows (reranker — CHỈ citation, 3436 câu)...
+331.9s 52 _build_training_rows: 500/3436  (5.0 phút)
+346.3s 53 _build_training_rows: 1000/3436  (5.3 phút)
+360.7s 54 _build_training_rows: 1500/3436  (5.5 phút)
+375.1s 55 _build_training_rows: 2000/3436  (5.8 phút)
+389.7s 56 _build_training_rows: 2500/3436  (6.0 phút)
+404.0s 57 _build_training_rows: 3000/3436  (6.2 phút)
+416.7s 58 _build_training_rows: 3436/3436  (6.5 phút)
+416.7s 59 3436 rows_clean (reranker)
+416.7s 60 Chạy SONG SONG (2 GPU riêng) — ngân sách mỗi encoder ~100 phút.
+416.7s 61 Khởi động fine-tune Vietnamese_Embedding_v2 trên GPU 0 -> log: /kaggle/temp/legalqa_cache/train_Vietnamese_Embedding_v2.log
+416.7s 62 Khởi động fine-tune vietlegal-harrier-0.6b trên GPU 1 -> log: /kaggle/temp/legalqa_cache/train_vietlegal-harrier-0.6b.log
+416.7s 63 Đang chờ 2 tiến trình fine-tune song song...
+5846.3s 64 Vietnamese_Embedding_v2: xong, mã thoát 0
+6440.8s 65 vietlegal-harrier-0.6b: xong, mã thoát 0
+6463.6s 66 Vietnamese_Embedding_v2: 424 step, mini_batch cuối=16, 89.4 phút
+6463.6s 67 vietlegal-harrier-0.6b: 149 step, mini_batch cuối=4, 99.2 phút
+6472.9s 68 Checkpoint đã lưu trong /kaggle/working/checkpoints — tự tải về nếu muốn dùng lại phiên sau.
+6472.9s 69 [ 107.4 phút] Xong Bước 4 (2 dense encoder)  (còn lại ~372.6 phút trong ngân sách)
+6473.1s 70 === Bước 5: Encode toàn bộ corpus (tầng 1, 450 từ) cho 2 encoder ===
+6473.1s 71 [A] encode 166078 chunk ...
+6503.0s 72 /tmp/ipykernel_24/2187103907.py:19: DeprecationWarning: The `encode_multi_process` method has been deprecated, and its functionality has been integrated into `encode`. You can now call `encode` with the same parameters to achieve multi-process encoding.
+6503.0s 73 emb = model.encode_multi_process(texts, pool, batch_size=ENCODE_BATCH_SIZE,
+6503.0s 74 
+6503.0s 75 /tmp/ipykernel_24/2187103907.py:19: DeprecationWarning: The `encode_multi_process` method has been deprecated, and its functionality has been integrated into `encode`. You can now call `encode` with the same parameters to achieve multi-process encoding.
+6503.0s 76 emb = model.encode_multi_process(texts, pool, batch_size=ENCODE_BATCH_SIZE,
+11066.7s 77 -> (166078, 1024), 4594s
+11066.7s 78 [B] encode 166078 chunk ...
+18677.3s 79 -> (166078, 1024), 7611s
+18677.3s 80 [ 310.8 phút] Xong encode corpus (2 encoder)  (còn lại ~169.2 phút trong ngân sách)
+18677.5s 81 === Bước 5b: Fine-tune reranker (nếu bật) + tải mỗi GPU 1 bản ===
+18768.8s 82 Đang tải reranker zero-shot lên cuda:0...
+18769.0s 83 [Lần 1 lỗi: zero-shot is not a local folder and is not a valid model identifier listed on 'https://huggingface.co/models'
+18769.0s 84 If this is a private repository, make sure to pass a token having permission to this repo either by logging in with `hf auth login` or by passing `token=<your_token>`] thử lại sau 5s...
+18774.0s 85 Đang tải reranker zero-shot lên cuda:0 — thử lại lần 2...
+18774.1s 86 Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+18774.1s 87 
+18774.1s 88 Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+18774.2s 89 [CẢNH BÁO] Không tải được reranker trên cuda:0 (zero-shot is not a local folder and is not a valid model identifier listed on 'https://huggingface.co/models'
+18774.2s 90 If this is a private repository, make sure to pass a token having permission to this repo either by logging in with `hf auth login` or by passing `token=<your_token>`) -> bỏ qua reranker trên thẻ này.
+18774.2s 91 [mine] không tải được reranker để lọc -> bỏ chốt chặn, RỦI RO CAO
+18774.2s 92 [mine] 3436/3436 nhóm · 7 negative/nhóm · KHÔNG lọc
+18790.6s 93 /tmp/ipykernel_24/1462158616.py:89: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
+18790.6s 94 scaler = torch.cuda.amp.GradScaler(enabled=device.startswith("cuda"))
+18790.6s 95 /tmp/ipykernel_24/1462158616.py:128: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+18790.6s 96 with torch.cuda.amp.autocast(enabled=device.startswith("cuda")):
+18790.6s 97 
+18790.6s 98 /tmp/ipykernel_24/1462158616.py:89: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
+18790.6s 99 scaler = torch.cuda.amp.GradScaler(enabled=device.startswith("cuda"))
+18790.6s 100 /tmp/ipykernel_24/1462158616.py:128: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+18790.6s 101 with torch.cuda.amp.autocast(enabled=device.startswith("cuda")):
+18791.7s 102 [CUDA OOM reranker-ft] batch_size -> 4
+18792.5s 103 [CUDA OOM reranker-ft] batch_size -> 2
+18796.1s 104 [CUDA OOM reranker-ft] batch_size -> 1
+18882.3s 105 reranker-ft step 100, loss=0.0001, 1.5 phút
+18967.8s 106 reranker-ft step 200, loss=0.0099, 3.0 phút
+19053.9s 107 reranker-ft step 300, loss=0.5630, 4.4 phút
+19139.9s 108 reranker-ft step 400, loss=0.0415, 5.8 phút
+19227.3s 109 reranker-ft step 500, loss=0.0123, 7.3 phút
+19314.8s 110 reranker-ft step 600, loss=0.1111, 8.7 phút
+19405.9s 111 reranker-ft step 700, loss=0.4741, 10.3 phút
+19491.8s 112 reranker-ft step 800, loss=0.0118, 11.7 phút
+19579.0s 113 reranker-ft step 900, loss=1.1104, 13.1 phút
+19665.5s 114 reranker-ft step 1000, loss=0.0022, 14.6 phút
+19751.9s 115 reranker-ft step 1100, loss=0.0004, 16.0 phút
+19837.8s 116 reranker-ft step 1200, loss=0.1207, 17.5 phút
+19923.8s 117 reranker-ft step 1300, loss=0.9175, 18.9 phút
+20011.0s 118 reranker-ft step 1400, loss=0.0070, 20.3 phút
+20098.4s 119 reranker-ft step 1500, loss=0.0028, 21.8 phút
+20184.5s 120 reranker-ft step 1600, loss=0.0159, 23.2 phút
+20270.3s 121 reranker-ft step 1700, loss=4.3672, 24.7 phút
+20355.7s 122 reranker-ft step 1800, loss=0.8286, 26.1 phút
+20442.0s 123 reranker-ft step 1900, loss=0.0145, 27.5 phút
+20529.2s 124 reranker-ft step 2000, loss=0.0003, 29.0 phút
+20616.3s 125 reranker-ft step 2100, loss=0.0370, 30.4 phút
+20703.1s 126 reranker-ft step 2200, loss=0.0079, 31.9 phút
+20791.2s 127 reranker-ft step 2300, loss=0.9810, 33.3 phút
+20877.5s 128 reranker-ft step 2400, loss=0.0016, 34.8 phút
+20964.5s 129 reranker-ft step 2500, loss=0.0293, 36.2 phút
+21049.9s 130 reranker-ft step 2600, loss=0.0219, 37.7 phút
+21137.1s 131 reranker-ft step 2700, loss=0.0015, 39.1 phút
+21222.6s 132 reranker-ft step 2800, loss=0.0121, 40.5 phút
+21309.3s 133 reranker-ft step 2900, loss=0.0005, 42.0 phút
+21395.6s 134 reranker-ft step 3000, loss=0.0134, 43.4 phút
+21482.0s 135 reranker-ft step 3100, loss=0.0041, 44.9 phút
+21569.9s 136 reranker-ft step 3200, loss=0.1862, 46.3 phút
+21657.0s 137 reranker-ft step 3300, loss=0.0064, 47.8 phút
+21746.0s 138 reranker-ft step 3400, loss=0.0009, 49.3 phút
+21832.5s 139 reranker-ft step 3500, loss=0.3916, 50.7 phút
+21919.7s 140 reranker-ft step 3600, loss=0.0093, 52.2 phút
+22006.8s 141 reranker-ft step 3700, loss=0.0302, 53.6 phút
+22092.6s 142 reranker-ft step 3800, loss=0.2974, 55.0 phút
+22180.4s 143 reranker-ft step 3900, loss=0.0090, 56.5 phút
+22268.5s 144 reranker-ft step 4000, loss=0.0001, 58.0 phút
+22355.5s 145 reranker-ft step 4100, loss=0.0001, 59.4 phút
+22441.6s 146 reranker-ft step 4200, loss=0.0035, 60.9 phút
+22528.4s 147 reranker-ft step 4300, loss=0.1860, 62.3 phút
+22615.8s 148 reranker-ft step 4400, loss=0.1056, 63.8 phút
+22701.3s 149 reranker-ft step 4500, loss=0.1719, 65.2 phút
+22787.2s 150 reranker-ft step 4600, loss=0.0180, 66.6 phút
+22873.2s 151 reranker-ft step 4700, loss=0.0001, 68.0 phút
+22959.6s 152 reranker-ft step 4800, loss=0.0094, 69.5 phút
+23048.1s 153 reranker-ft step 4900, loss=0.0002, 71.0 phút
+23135.6s 154 reranker-ft step 5000, loss=0.3430, 72.4 phút
+23222.5s 155 reranker-ft step 5100, loss=0.0033, 73.9 phút
+23308.8s 156 reranker-ft step 5200, loss=0.0015, 75.3 phút
+23396.4s 157 reranker-ft step 5300, loss=0.0005, 76.8 phút
+23483.1s 158 reranker-ft step 5400, loss=0.0368, 78.2 phút
+23569.7s 159 reranker-ft step 5500, loss=0.0118, 79.7 phút
+23655.5s 160 reranker-ft step 5600, loss=0.4458, 81.1 phút
+23741.2s 161 reranker-ft step 5700, loss=0.0004, 82.5 phút
+23826.7s 162 reranker-ft step 5800, loss=0.0558, 83.9 phút
+23912.7s 163 reranker-ft step 5900, loss=0.0002, 85.4 phút
+23998.2s 164 reranker-ft step 6000, loss=0.0000, 86.8 phút
+24082.7s 165 reranker-ft step 6100, loss=0.0203, 88.2 phút
+24167.5s 166 reranker-ft step 6200, loss=0.0003, 89.6 phút
+24252.5s 167 reranker-ft step 6300, loss=0.0011, 91.0 phút
+24338.9s 168 reranker-ft step 6400, loss=0.9819, 92.5 phút
+24425.0s 169 reranker-ft step 6500, loss=0.6772, 93.9 phút
+24510.8s 170 reranker-ft step 6600, loss=0.0011, 95.3 phút
+24596.7s 171 reranker-ft step 6700, loss=0.0000, 96.8 phút
+24682.9s 172 reranker-ft step 6800, loss=0.0081, 98.2 phút
+24768.8s 173 reranker-ft step 6900, loss=0.0001, 99.6 phút
+24853.6s 174 reranker-ft step 7000, loss=0.0106, 101.1 phút
+24939.8s 175 reranker-ft step 7100, loss=0.0002, 102.5 phút
+25025.3s 176 reranker-ft step 7200, loss=0.0078, 103.9 phút
+25110.9s 177 reranker-ft step 7300, loss=0.0031, 105.3 phút
+25198.1s 178 reranker-ft step 7400, loss=0.0565, 106.8 phút
+25279.0s 179 reranker-ft DỪNG SỚM tại step 7494: loss trung bình 200 bước gần nhất = 0.0479 < 0.05 (đã hội tụ, tránh overfit lên phần dư nhiễu)
+25281.8s 180 Fine-tune reranker xong: 7494 step, 108.1 phút -> checkpoint /kaggle/working/checkpoints/reranker-ft
+25281.8s 181 Đang tải reranker AITeamVN/Vietnamese_Reranker lên cuda:0...
+25284.7s 182 Đang tải reranker AITeamVN/Vietnamese_Reranker lên cuda:1...
+25287.5s 183 Đang tải reranker /kaggle/working/checkpoints/reranker-ft lên cuda:0...
+25293.4s 184 Đang tải reranker /kaggle/working/checkpoints/reranker-ft lên cuda:1...
+25299.1s 185 Reranker zero-shot sẵn sàng trên: ['cuda:0', 'cuda:1'] | fine-tuned CŨNG sẵn sàng trên: ['cuda:0', 'cuda:1'] (Bước 6 sẽ so sánh, tự chọn cái thắng)
+25299.1s 186 [ 421.2 phút] Xong tải reranker  (còn lại ~58.8 phút trong ngân sách)
+25300.0s 187 [nltk_data] Error loading wordnet: Security Violation
+25300.0s 188 [nltk_data]     [pathsec.urlopen]: refusing a proxied fetch of
+25300.0s 189 [nltk_data]     'https://raw.githubusercontent.com/nltk/nltk_data/gh-
+25300.0s 190 [nltk_data]     pages/index.xml'. A configured proxy performs the
+25300.0s 191 [nltk_data]     egress, so NLTK cannot pin the validated IP and SSRF
+25300.0s 192 [nltk_data]     protection cannot be enforced (CWE-918). If and only
+25300.0s 193 [nltk_data]     if the proxy is trusted to be SSRF-safe, opt in via
+25300.0s 194 [nltk_data]     NLTK_ALLOW_PROXIED_URLOPEN=1 or
+25300.0s 195 [nltk_data]     nltk.pathsec.ALLOW_PROXIED_FETCH=True.
+25300.0s 196 [nltk_data] Error loading omw-1.4: Security Violation
+25300.0s 197 [nltk_data]     [pathsec.urlopen]: refusing a proxied fetch of
+25300.0s 198 [nltk_data]     'https://raw.githubusercontent.com/nltk/nltk_data/gh-
+25300.0s 199 [nltk_data]     pages/index.xml'. A configured proxy performs the
+25300.0s 200 [nltk_data]     egress, so NLTK cannot pin the validated IP and SSRF
+25300.0s 201 [nltk_data]     protection cannot be enforced (CWE-918). If and only
+25300.0s 202 [nltk_data]     if the proxy is trusted to be SSRF-safe, opt in via
+25300.0s 203 [nltk_data]     NLTK_ALLOW_PROXIED_URLOPEN=1 or
+25300.0s 204 [nltk_data]     nltk.pathsec.ALLOW_PROXIED_FETCH=True.
+25300.0s 205 
+25300.0s 206 [nltk_data] Error loading wordnet: Security Violation
+25300.0s 207 [nltk_data]     [pathsec.urlopen]: refusing a proxied fetch of
+25300.0s 208 [nltk_data]     'https://raw.githubusercontent.com/nltk/nltk_data/gh-
+25300.0s 209 [nltk_data]     pages/index.xml'. A configured proxy performs the
+25300.0s 210 [nltk_data]     egress, so NLTK cannot pin the validated IP and SSRF
+25300.0s 211 [nltk_data]     protection cannot be enforced (CWE-918). If and only
+25300.0s 212 [nltk_data]     if the proxy is trusted to be SSRF-safe, opt in via
+25300.0s 213 [nltk_data]     NLTK_ALLOW_PROXIED_URLOPEN=1 or
+25300.0s 214 [nltk_data]     nltk.pathsec.ALLOW_PROXIED_FETCH=True.
+25300.0s 215 [nltk_data] Error loading omw-1.4: Security Violation
+25300.0s 216 [nltk_data]     [pathsec.urlopen]: refusing a proxied fetch of
+25300.0s 217 [nltk_data]     'https://raw.githubusercontent.com/nltk/nltk_data/gh-
+25300.0s 218 [nltk_data]     pages/index.xml'. A configured proxy performs the
+25300.0s 219 [nltk_data]     egress, so NLTK cannot pin the validated IP and SSRF
+25300.0s 220 [nltk_data]     protection cannot be enforced (CWE-918). If and only
+25300.0s 221 [nltk_data]     if the proxy is trusted to be SSRF-safe, opt in via
+25300.0s 222 [nltk_data]     NLTK_ALLOW_PROXIED_URLOPEN=1 or
+25300.0s 223 [nltk_data]     nltk.pathsec.ALLOW_PROXIED_FETCH=True.
+25300.0s 224 === Bước 6: Dev-eval chọn TOP_N_ANSWER + đo Recall@k ===
+25300.0s 225 Mẫu dev-eval: 300 câu (143 câu có citation resolve được -> dùng luôn để đo Recall@k, không chạy lại retrieval riêng).
+25300.0s 226 --- BM25+dense (không rerank) ---
+25346.4s 227 retrieval+rerank 50/300 ... 46s
+25391.1s 228 retrieval+rerank 100/300 ... 91s
+25435.2s 229 retrieval+rerank 150/300 ... 135s
+25480.1s 230 retrieval+rerank 200/300 ... 180s
+25524.6s 231 retrieval+rerank 250/300 ... 225s
+25570.0s 232 retrieval+rerank 300/300 ... 270s
+25570.0s 233 Recall@k (BM25+dense (không rerank), n=143):
+25570.0s 234 Recall@1   = 22/143 = 15.4%
+25570.0s 235 Recall@3   = 38/143 = 26.6%
+25570.0s 236 Recall@5   = 54/143 = 37.8%
+25570.0s 237 Recall@10  = 66/143 = 46.2%
+25570.0s 238 Recall@30  = 89/143 = 62.2%
+25570.0s 239 Recall@100 = 109/143 = 76.2%
+25630.0s 240 top_n=1  METEOR=0.3879  ROUGE-L=0.3540  (n=300)
+25733.0s 241 top_n=2  METEOR=0.4020  ROUGE-L=0.2811  (n=300)
+25883.7s 242 top_n=3  METEOR=0.3747  ROUGE-L=0.2312  (n=300)
+26081.5s 243 top_n=4  METEOR=0.3510  ROUGE-L=0.1961  (n=300)
+26321.8s 244 top_n=5  METEOR=0.3201  ROUGE-L=0.1690  (n=300)
+26321.8s 245 --- BM25+dense+rerank (zero-shot) ---
+26786.3s 246 [BM25+dense+rerank (zero-shot) · luồng 1] 50/150
+26811.4s 247 [BM25+dense+rerank (zero-shot) · luồng 0] 50/150
+27255.8s 248 [BM25+dense+rerank (zero-shot) · luồng 1] 100/150
+27295.0s 249 [BM25+dense+rerank (zero-shot) · luồng 0] 100/150
+27731.0s 250 [BM25+dense+rerank (zero-shot) · luồng 1] 150/150
+27772.7s 251 [BM25+dense+rerank (zero-shot) · luồng 0] 150/150
+27772.7s 252 [BM25+dense+rerank (zero-shot)] 300 câu / 2 thiết bị song song -> 1451s
+27772.7s 253 Recall@k (BM25+dense+rerank (zero-shot), n=143):
+27772.7s 254 Recall@1   = 83/143 = 58.0%
+27772.7s 255 Recall@3   = 104/143 = 72.7%
+27772.7s 256 Recall@5   = 109/143 = 76.2%
+27772.7s 257 Recall@10  = 113/143 = 79.0%
+27772.7s 258 Recall@30  = 117/143 = 81.8%
+27772.7s 259 Recall@100 = 122/143 = 85.3%
+27804.9s 260 top_n=1  METEOR=0.5709  ROUGE-L=0.5643  (n=300)
+27867.0s 261 top_n=2  METEOR=0.5521  ROUGE-L=0.4443  (n=300)
+27961.9s 262 top_n=3  METEOR=0.5050  ROUGE-L=0.3532  (n=300)
+28089.3s 263 top_n=4  METEOR=0.4612  ROUGE-L=0.2937  (n=300)
+28248.7s 264 top_n=5  METEOR=0.4170  ROUGE-L=0.2450  (n=300)
+28310.6s 265 adaptive-k       METEOR=0.5677  ROUGE-L=0.4956  (n=300)
+28310.6s 266 --- BM25+dense+rerank (fine-tuned) ---
+28787.3s 267 [BM25+dense+rerank (fine-tuned) · luồng 1] 50/150
+28806.4s 268 [BM25+dense+rerank (fine-tuned) · luồng 0] 50/150
+29261.4s 269 [BM25+dense+rerank (fine-tuned) · luồng 1] 100/150
+29303.3s 270 [BM25+dense+rerank (fine-tuned) · luồng 0] 100/150
+29739.1s 271 [BM25+dense+rerank (fine-tuned) · luồng 1] 150/150
+29789.5s 272 [BM25+dense+rerank (fine-tuned) · luồng 0] 150/150
+29789.5s 273 [BM25+dense+rerank (fine-tuned)] 300 câu / 2 thiết bị song song -> 1479s
+29789.5s 274 Recall@k (BM25+dense+rerank (fine-tuned), n=143):
+29789.5s 275 Recall@1   = 79/143 = 55.2%
+29789.5s 276 Recall@3   = 98/143 = 68.5%
+29789.5s 277 Recall@5   = 103/143 = 72.0%
+29789.5s 278 Recall@10  = 108/143 = 75.5%
+29789.5s 279 Recall@30  = 114/143 = 79.7%
+29789.5s 280 Recall@100 = 114/143 = 79.7%
+29823.5s 281 top_n=1  METEOR=0.5382  ROUGE-L=0.5358  (n=300)
+29890.3s 282 top_n=2  METEOR=0.5184  ROUGE-L=0.4172  (n=300)
+29987.8s 283 top_n=3  METEOR=0.4722  ROUGE-L=0.3346  (n=300)
+30117.7s 284 top_n=4  METEOR=0.4320  ROUGE-L=0.2768  (n=300)
+30282.4s 285 top_n=5  METEOR=0.3980  ROUGE-L=0.2346  (n=300)
+30354.9s 286 adaptive-k       METEOR=0.5212  ROUGE-L=0.4484  (n=300)
+30357.0s 287 
+30357.0s 288 --- Bước 6b: hàm gộp ở mức văn bản (top_n=1) ---
+30357.0s 289 max            nửa A 0.5371 · nửa B 0.5394
+30359.4s 290 lse T=0.5   nửa A 0.5378 (+0.0007) · nửa B 0.5392 (-0.0002)
+30361.8s 291 lse T=1     nửa A 0.5392 (+0.0021) · nửa B 0.5342 (-0.0052)
+30364.0s 292 lse T=2     nửa A 0.5361 (-0.0009) · nửa B 0.5316 (-0.0077)
+30364.0s 293 => BỎ, giữ max. T tốt nhất trên nửa A là 1.0 (+0.0021) nhưng nửa B cho -0.0052 — không xác nhận được, đúng kiểu ảo giác đỉnh-trên-toàn-dev.
+30364.0s 294 => chọn TOP_N_ANSWER=1, dùng reranker=True (nguồn=zeroshot), dùng adaptive-k=False (METEOR=0.5709)
+30364.0s 295 Reranker zero-shot THẮNG (hoặc không dùng reranker) -> giải phóng bản fine-tuned, không dùng cho Bước 7.
+30364.0s 296 [ 505.6 phút] Xong dev-eval + Recall@k  (còn lại ~-25.6 phút trong ngân sách)
+30364.2s 297 === Bước 7: Sinh câu trả lời cho public-official.json ===
+30827.0s 298 [Bước 7 · luồng 1] 50/500
+30853.2s 299 [Bước 7 · luồng 0] 50/500
+31290.0s 300 [Bước 7 · luồng 1] 100/500
+31330.2s 301 [Bước 7 · luồng 0] 100/500
+31760.8s 302 [Bước 7 · luồng 1] 150/500
+31818.2s 303 [Bước 7 · luồng 0] 150/500
+32224.7s 304 [Bước 7 · luồng 1] 200/500
+32293.6s 305 [Bước 7 · luồng 0] 200/500
+32690.6s 306 [Bước 7 · luồng 1] 250/500
+32787.4s 307 [Bước 7 · luồng 0] 250/500
+33156.2s 308 [Bước 7 · luồng 1] 300/500
+33267.2s 309 [Bước 7 · luồng 0] 300/500
+33623.0s 310 [Bước 7 · luồng 1] 350/500
+33755.4s 311 [Bước 7 · luồng 0] 350/500
+34090.7s 312 [Bước 7 · luồng 1] 400/500
+34246.9s 313 [Bước 7 · luồng 0] 400/500
+34558.9s 314 [Bước 7 · luồng 1] 450/500
+34739.7s 315 [Bước 7 · luồng 0] 450/500
+35035.2s 316 [Bước 7 · luồng 1] 500/500
+35226.1s 317 [Bước 7 · luồng 0] 500/500
+35226.1s 318 [Bước 7] 1000 câu / 2 thiết bị song song -> 4862s
+35226.1s 319 Đã sinh 1000 câu trả lời, 0 câu rỗng
+35226.1s 320 [ 586.6 phút] Xong sinh câu trả lời  (còn lại ~-106.6 phút trong ngân sách)
+35226.3s 321 === Bước 8: Đóng gói submission.zip ===
+35226.4s 322 OK — /kaggle/working/submission.zip (1000 câu trả lời, đã kiểm tra lại từ đĩa)
+35226.4s 323 [ 586.6 phút] XONG — tổng thời gian 586.6 phút (trần an toàn 8 giờ)  (còn lại ~-106.6 phút trong ngân sách)
+35226.4s 324 Đã ghi thêm 1 dòng vào /kaggle/working/experiment_log.jsonl (sổ thí nghiệm — không ghi đè, giữ lại khi Save Version).
+35226.4s 325 [SỔ THÍ NGHIỆM — copy dòng dưới đây nếu cần đối chiếu sau này]
+35226.4s 326 {"ts": "2026-09-09 13:01:42", "seed": 42, "use_warmup": true, "n_warmup_used": 0, "hardware": "kaggle_t4x2", "concl": "echo2", "use_task1_labels": false, "n_task1_pairs_added": 0, "dense_model_a": "AITeamVN/Vietnamese_Embedding_v2", "dense_model_b": "mainguyen9/vietlegal-harrier-0.6b", "use_new_encoders_requested": true, "encoder_fallback_fired": false, "agg_mode_requested": "lse", "agg_mode_chosen": "max", "agg_T_chosen": 1.0, "agg_report": [{"T": 0.5, "half_a": 0.5378, "half_b": 0.5392, "delta_a": 0.0007, "delta_b": -0.0002}, {"T": 1.0, "half_a": 0.5392, "half_b": 0.5342, "delta_a": 0.0021, "delta_b": -0.0052}, {"T": 2.0, "half_a": 0.5361, "half_b": 0.5316, "delta_a": -0.0009, "delta_b": -0.0077}], "reranker_source": "zeroshot", "n_neg_rerank": 7, "rerank_false_neg_gate": true, "reranker_ft_lr": 3e-06, "doc_k": 5, "max_dieu_candidates": 100, "n_dev_excluded_from_train": 143, "n_train_pairs_available": 3436, "n_train_pairs_used": 3436, "used_finetune": true, "finetune_reason": null, "finetune_models": {"Vietnamese_Embedding_v2": {"max_steps": 424, "mini_batch_final": 16, "calib_time_s": 12.242516827583312, "elapsed_s": 5364.933772325516, "lora_used": false, "optim": "adamw_torch"}, "vietlegal-harrier-0.6b": {"max_steps": 149, "mini_batch_final": 4, "calib_time_s": 37.07321214675903, "elapsed_s": 5952.916514158249, "lora_used": false, "optim": "adamw_torch"}}, "reranker_finetuned": true, "reranker_finetune_steps": 7494, "reranker_finetune_elapsed_min": 108.1, "reranker_finetune_n_pairs": 3436, "checkpoint_dir": "/kaggle/working/checkpoints", "top_n_answer": 1, "use_reranker": true, "use_adaptive_k": false, "dev_meteor": 0.5709, "dev_rouge_l": 0.5643, "dev_n": 300, "dev_recall_at_k": {"BM25+dense (không rerank)": {"1": 0.1538, "3": 0.2657, "5": 0.3776, "10": 0.4615, "30": 0.6224, "100": 0.7622}, "BM25+dense+rerank (zero-shot)": {"1": 0.5804, "3": 0.7273, "5": 0.7622, "10": 0.7902, "30": 0.8182, "100": 0.8531}, "BM25+dense+rerank (fine-tuned)": {"1": 0.5524, "3": 0.6853, "5": 0.7203, "10": 0.7552, "30": 0.7972, "100": 0.7972}}, "n_empty_answers": 0, "elapsed_min": 586.6}
+35233.7s 327 /usr/local/lib/python3.12/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\|'
+35233.7s 328 cells[i][c] = re.sub('\\\\\|', '|', cell)
+35233.9s 329 /usr/local/lib/python3.12/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\_'
+35233.9s 330 text = re.sub(r'_', '\_', text) # Escape underscores in display text
+35234.6s 331 [NbConvertApp] Converting notebook __notebook__.ipynb to notebook
+35235.0s 332 [NbConvertApp] Writing 333502 bytes to __notebook__.ipynb
+35237.4s 333 [NbConvertApp] Converting notebook __notebook__.ipynb to html
+35238.8s 334 [NbConvertApp] Writing 869582 bytes to __results__.html
