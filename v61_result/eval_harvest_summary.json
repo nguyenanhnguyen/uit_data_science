@@ -1,0 +1,118 @@
+{
+  "meta": {
+    "ts": "2026-09-12 14:10:33",
+    "n_harvested": 3500,
+    "n_scored": 3500,
+    "harvest_rate_s_per_q": 4.52,
+    "config": {
+      "top_n": 1,
+      "agg_mode": "max",
+      "use_ltr": false,
+      "reranker": "zeroshot",
+      "top_k_candidates": 5
+    },
+    "thresholds": {
+      "ok": 0.6,
+      "ranking_gap": 0.05,
+      "retrieval_ceil": 0.4
+    },
+    "sample_note": "Mẫu gồm câu dev (đã loại khỏi fine-tune) + câu KHÔNG có nhãn citation (chưa bao giờ vào fine-tune). Không câu nào bị contamination bởi fine-tune encoder. Điểm vẫn cao hơn public vì template render_answer khớp văn phong train.json (result.md §5) — đó là lệch phân phối, không phải rò rỉ."
+  },
+  "scores": {
+    "meteor_mean": 0.5437,
+    "oracle_meteor_mean": 0.6085,
+    "gap_to_oracle": 0.0649,
+    "pick_best_rate": 0.5789,
+    "ce_gap_rank0_rank1_median": 2.1709
+  },
+  "error_distribution": {
+    "ok": {
+      "count": 1458,
+      "pct": 41.7
+    },
+    "ranking_fail": {
+      "count": 766,
+      "pct": 21.9
+    },
+    "extraction_weak": {
+      "count": 691,
+      "pct": 19.7
+    },
+    "retrieval_fail": {
+      "count": 585,
+      "pct": 16.7
+    }
+  },
+  "where_best_candidate_sits": {
+    "0": 2026,
+    "1": 600,
+    "2": 373,
+    "3": 269,
+    "4": 232
+  },
+  "meteor_by_unit_type": {
+    "dieu": {
+      "n": 2910,
+      "meteor": 0.5588
+    },
+    "dieu_capped": {
+      "n": 405,
+      "meteor": 0.4687
+    },
+    "raw450": {
+      "n": 86,
+      "meteor": 0.5355
+    },
+    "tiet": {
+      "n": 58,
+      "meteor": 0.4081
+    },
+    "phu_luc": {
+      "n": 13,
+      "meteor": 0.3527
+    },
+    "phu_luc_capped": {
+      "n": 9,
+      "meteor": 0.3969
+    },
+    "tiet_capped": {
+      "n": 8,
+      "meteor": 0.5453
+    },
+    "muc_capped": {
+      "n": 7,
+      "meteor": 0.3996
+    },
+    "muc": {
+      "n": 4,
+      "meteor": 0.438
+    }
+  },
+  "ltr": {
+    "trained": true,
+    "reason": null,
+    "n_groups": 599,
+    "delta_half_a": -0.0089,
+    "delta_half_b": -0.0059,
+    "accepted": false,
+    "feature_importance": {
+      "ce_score": 498,
+      "n_words": 460,
+      "ce_z_in_group": 454,
+      "ce_gap_to_next": 413,
+      "q_overlap_ratio": 360,
+      "ce_gap_to_top": 283,
+      "q_overlap": 181,
+      "doc_rank": 62,
+      "unit_is_dieu": 35,
+      "ce_rank": 30,
+      "is_first_in_doc": 24,
+      "so_hieu_match": 0,
+      "dieu_no_match": 0
+    },
+    "base_half_a": 0.5577,
+    "base_half_b": 0.5786,
+    "oracle_meteor": 0.633,
+    "base_meteor": 0.5681
+  }
+}

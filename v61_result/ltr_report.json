@@ -1,0 +1,27 @@
+{
+  "trained": true,
+  "reason": null,
+  "n_groups": 599,
+  "delta_half_a": -0.0089,
+  "delta_half_b": -0.0059,
+  "accepted": false,
+  "feature_importance": {
+    "ce_score": 498,
+    "n_words": 460,
+    "ce_z_in_group": 454,
+    "ce_gap_to_next": 413,
+    "q_overlap_ratio": 360,
+    "ce_gap_to_top": 283,
+    "q_overlap": 181,
+    "doc_rank": 62,
+    "unit_is_dieu": 35,
+    "ce_rank": 30,
+    "is_first_in_doc": 24,
+    "so_hieu_match": 0,
+    "dieu_no_match": 0
+  },
+  "base_half_a": 0.5577,
+  "base_half_b": 0.5786,
+  "oracle_meteor": 0.633,
+  "base_meteor": 0.5681
+}
