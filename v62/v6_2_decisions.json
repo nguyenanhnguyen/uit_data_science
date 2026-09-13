@@ -1,0 +1,211 @@
+{
+  "arms_evaluated": [
+    "zs",
+    "ft2",
+    "ft"
+  ],
+  "gate_reranker": {
+    "base": "zs",
+    "candidates": {
+      "ft2": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.00349,
+          "se": 0.00541,
+          "win": 13,
+          "loss": 12
+        },
+        "half_b": {
+          "n": 150,
+          "delta": -0.01561,
+          "se": 0.00769,
+          "win": 9,
+          "loss": 18
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.00955,
+          "se": 0.00471,
+          "win": 22,
+          "loss": 30
+        },
+        "pass": false
+      },
+      "ft": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.00757,
+          "se": 0.0071,
+          "win": 11,
+          "loss": 18
+        },
+        "half_b": {
+          "n": 150,
+          "delta": -0.02783,
+          "se": 0.00947,
+          "win": 10,
+          "loss": 29
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.0177,
+          "se": 0.00594,
+          "win": 21,
+          "loss": 47
+        },
+        "pass": false
+      }
+    },
+    "winner": "zs"
+  },
+  "gate_template": {
+    "base": "T0_current",
+    "candidates": {
+      "T1_theo_qd_tai": {
+        "half_a": {
+          "n": 150,
+          "delta": 0.00118,
+          "se": 0.00019,
+          "win": 76,
+          "loss": 71
+        },
+        "half_b": {
+          "n": 150,
+          "delta": 0.00094,
+          "se": 0.00019,
+          "win": 72,
+          "loss": 72
+        },
+        "all": {
+          "n": 300,
+          "delta": 0.00106,
+          "se": 0.00013,
+          "win": 148,
+          "loss": 143
+        },
+        "pass": true
+      },
+      "T2_title": {
+        "half_a": {
+          "n": 150,
+          "delta": 0.00345,
+          "se": 0.00061,
+          "win": 81,
+          "loss": 47
+        },
+        "half_b": {
+          "n": 150,
+          "delta": 0.00323,
+          "se": 0.00061,
+          "win": 81,
+          "loss": 51
+        },
+        "all": {
+          "n": 300,
+          "delta": 0.00334,
+          "se": 0.00043,
+          "win": 162,
+          "loss": 98
+        },
+        "pass": true
+      },
+      "T3_theo_qd_tai_title": {
+        "half_a": {
+          "n": 150,
+          "delta": 0.00508,
+          "se": 0.00074,
+          "win": 96,
+          "loss": 51
+        },
+        "half_b": {
+          "n": 150,
+          "delta": 0.0045,
+          "se": 0.00074,
+          "win": 96,
+          "loss": 48
+        },
+        "all": {
+          "n": 300,
+          "delta": 0.00479,
+          "se": 0.00052,
+          "win": 192,
+          "loss": 99
+        },
+        "pass": true
+      }
+    },
+    "winner": "T3_theo_qd_tai_title"
+  },
+  "gate_channels": {
+    "base": "all_channels",
+    "candidates": {
+      "no_A": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.01192,
+          "se": 0.00721,
+          "win": 5,
+          "loss": 9
+        },
+        "half_b": {
+          "n": 150,
+          "delta": 0.00023,
+          "se": 0.00414,
+          "win": 5,
+          "loss": 5
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.00585,
+          "se": 0.00417,
+          "win": 10,
+          "loss": 14
+        },
+        "pass": false
+      },
+      "no_B": {
+        "half_a": {
+          "n": 150,
+          "delta": 0.00081,
+          "se": 0.00078,
+          "win": 2,
+          "loss": 0
+        },
+        "half_b": {
+          "n": 150,
+          "delta": -0.00208,
+          "se": 0.00154,
+          "win": 1,
+          "loss": 4
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.00064,
+          "se": 0.00087,
+          "win": 3,
+          "loss": 4
+        },
+        "pass": false
+      }
+    },
+    "winner": "all_channels",
+    "active_mask": "all_channels"
+  },
+  "doc_recall_at_doc_k": {
+    "arm_zs": 0.9091,
+    "arm_ft2": 0.9091,
+    "arm_ft": 0.8881,
+    "no_A": 0.9021,
+    "no_B": 0.9161
+  },
+  "active": {
+    "arm": "zs",
+    "reranker": "zeroshot",
+    "template": "T3_theo_qd_tai_title",
+    "channels": [
+      "bm25",
+      "A",
+      "B"
+    ]
+  }
+}
