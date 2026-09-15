@@ -1,0 +1,89 @@
+{
+  "meta": {
+    "ts": "2026-09-15 06:51:34",
+    "n_harvested": 300,
+    "n_scored": 300,
+    "harvest_rate_s_per_q": 11.37,
+    "config": {
+      "top_n": 1,
+      "agg_mode": "max",
+      "use_ltr": false,
+      "reranker": "zeroshot",
+      "top_k_candidates": 5,
+      "answer_template": "T3_theo_qd_tai_title",
+      "channels": [
+        "bm25",
+        "A",
+        "B"
+      ]
+    },
+    "thresholds": {
+      "ok": 0.6,
+      "ranking_gap": 0.05,
+      "retrieval_ceil": 0.4
+    },
+    "sample_note": "Mẫu gồm câu dev (đã loại khỏi fine-tune) + câu KHÔNG có nhãn citation (chưa bao giờ vào fine-tune). Không câu nào bị contamination bởi fine-tune encoder. Điểm vẫn cao hơn public vì template render_answer khớp văn phong train.json (result.md §5) — đó là lệch phân phối, không phải rò rỉ."
+  },
+  "scores": {
+    "meteor_mean": 0.5751,
+    "oracle_meteor_mean": 0.6403,
+    "gap_to_oracle": 0.0651,
+    "pick_best_rate": 0.6,
+    "ce_gap_rank0_rank1_median": 2.3594
+  },
+  "error_distribution": {
+    "ok": {
+      "count": 142,
+      "pct": 47.3
+    },
+    "ranking_fail": {
+      "count": 69,
+      "pct": 23.0
+    },
+    "extraction_weak": {
+      "count": 57,
+      "pct": 19.0
+    },
+    "retrieval_fail": {
+      "count": 32,
+      "pct": 10.7
+    }
+  },
+  "where_best_candidate_sits": {
+    "0": 180,
+    "1": 52,
+    "2": 28,
+    "3": 28,
+    "4": 12
+  },
+  "meteor_by_unit_type": {
+    "dieu": {
+      "n": 260,
+      "meteor": 0.5939
+    },
+    "dieu_capped": {
+      "n": 32,
+      "meteor": 0.4557
+    },
+    "raw450": {
+      "n": 5,
+      "meteor": 0.3965
+    },
+    "tiet": {
+      "n": 2,
+      "meteor": 0.4121
+    },
+    "phu_luc": {
+      "n": 1,
+      "meteor": 0.7512
+    }
+  },
+  "ltr": {
+    "trained": false,
+    "reason": "v7: tắt (v6_2 đo âm cả hai nửa)",
+    "n_groups": 0,
+    "delta_half_a": null,
+    "delta_half_b": null,
+    "accepted": false
+  }
+}

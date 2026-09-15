@@ -13,3 +13,5 @@ cache/
 structure_MD/
 .gitignore
 checkpoints/
+
+results.zip
