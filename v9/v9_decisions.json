@@ -1,0 +1,350 @@
+{
+  "llm": {
+    "requested": true,
+    "model": "Qwen/Qwen3-1.7B",
+    "devices": [
+      "cuda:0",
+      "cuda:1"
+    ],
+    "dtype": {
+      "cuda:0": "torch.float16",
+      "cuda:1": "torch.float16"
+    },
+    "error": null,
+    "registered": true,
+    "adapter": null,
+    "n_params": 1720574976
+  },
+  "ce_meteor_ft": {
+    "used": false,
+    "reason": null,
+    "ckpt": null,
+    "meta": null
+  },
+  "llm_lora": {
+    "used": false,
+    "reason": null,
+    "adapter": null,
+    "meta": null
+  },
+  "labels": {
+    "n_q": 0,
+    "n_pairs": 0,
+    "n_groups": 0,
+    "n_gen": 0,
+    "n_list": 0,
+    "elapsed_s": null,
+    "stop": null
+  },
+  "gate_retrieval": {
+    "base": "base",
+    "candidates": {},
+    "winner": "base"
+  },
+  "gate_retrieval_final": {
+    "base": "base",
+    "candidates": {},
+    "winner": "base"
+  },
+  "gate_retrieval_final_nollm": {
+    "base": "base",
+    "candidates": {},
+    "winner": "base"
+  },
+  "retrieval_arms": {
+    "base": {
+      "w": {},
+      "kb": null,
+      "prf": null,
+      "rw": null
+    }
+  },
+  "gate_t2": {
+    "base": "base",
+    "candidates": {},
+    "winner": "base"
+  },
+  "gate_t2_nollm": {
+    "base": "base",
+    "candidates": {},
+    "winner": "base"
+  },
+  "gate_template": {
+    "base": "T3_theo_qd_tai_title",
+    "candidates": {
+      "T0_current": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.00481,
+          "se": 0.00074,
+          "win": 52,
+          "loss": 95
+        },
+        "half_b": {
+          "n": 150,
+          "delta": -0.00387,
+          "se": 0.00065,
+          "win": 52,
+          "loss": 92
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.00434,
+          "se": 0.00049,
+          "win": 104,
+          "loss": 187
+        },
+        "z": 8.86,
+        "pass": false
+      },
+      "T1_theo_qd_tai": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.00369,
+          "se": 0.00067,
+          "win": 47,
+          "loss": 82
+        },
+        "half_b": {
+          "n": 150,
+          "delta": -0.00309,
+          "se": 0.00061,
+          "win": 50,
+          "loss": 82
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.00339,
+          "se": 0.00045,
+          "win": 97,
+          "loss": 164
+        },
+        "z": 7.53,
+        "pass": false
+      },
+      "T2_title": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.00156,
+          "se": 0.00028,
+          "win": 68,
+          "loss": 79
+        },
+        "half_b": {
+          "n": 150,
+          "delta": -0.00113,
+          "se": 0.00024,
+          "win": 71,
+          "loss": 73
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.00134,
+          "se": 0.00019,
+          "win": 139,
+          "loss": 152
+        },
+        "z": 7.05,
+        "pass": false
+      }
+    },
+    "winner": "T3_theo_qd_tai_title"
+  },
+  "gate_gen": {
+    "base": "base",
+    "candidates": {
+      "concl_replace": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.01027,
+          "se": 0.00394,
+          "win": 44,
+          "loss": 85
+        },
+        "half_b": {
+          "n": 150,
+          "delta": -0.01252,
+          "se": 0.00425,
+          "win": 45,
+          "loss": 84
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.01139,
+          "se": 0.00289,
+          "win": 89,
+          "loss": 169
+        },
+        "z": 3.94,
+        "pass": false
+      },
+      "concl_plus_echo2": {
+        "half_a": {
+          "n": 150,
+          "delta": 0.0062,
+          "se": 0.00361,
+          "win": 70,
+          "loss": 59
+        },
+        "half_b": {
+          "n": 150,
+          "delta": 0.00184,
+          "se": 0.00399,
+          "win": 69,
+          "loss": 60
+        },
+        "all": {
+          "n": 300,
+          "delta": 0.00402,
+          "se": 0.00269,
+          "win": 139,
+          "loss": 119
+        },
+        "z": 1.49,
+        "pass": false
+      },
+      "free": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.10319,
+          "se": 0.01373,
+          "win": 28,
+          "loss": 119
+        },
+        "half_b": {
+          "n": 150,
+          "delta": -0.11128,
+          "se": 0.01342,
+          "win": 30,
+          "loss": 119
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.10723,
+          "se": 0.00958,
+          "win": 58,
+          "loss": 238
+        },
+        "z": 11.19,
+        "pass": false
+      },
+      "free_plus_verbatim": {
+        "half_a": {
+          "n": 150,
+          "delta": 0.02186,
+          "se": 0.00714,
+          "win": 80,
+          "loss": 67
+        },
+        "half_b": {
+          "n": 150,
+          "delta": 0.01858,
+          "se": 0.00735,
+          "win": 69,
+          "loss": 80
+        },
+        "all": {
+          "n": 300,
+          "delta": 0.02022,
+          "se": 0.00512,
+          "win": 149,
+          "loss": 147
+        },
+        "z": 3.95,
+        "pass": true
+      }
+    },
+    "winner": "free_plus_verbatim",
+    "n_fallback": {
+      "concl_replace": 42,
+      "concl_plus_echo2": 42,
+      "free": 4,
+      "free_plus_verbatim": 4
+    }
+  },
+  "gate_full_vs_nollm": {
+    "half_a": {
+      "n": 150,
+      "delta": 0.02186,
+      "se": 0.00714,
+      "win": 80,
+      "loss": 67
+    },
+    "half_b": {
+      "n": 150,
+      "delta": 0.01858,
+      "se": 0.00735,
+      "win": 69,
+      "loss": 80
+    },
+    "all": {
+      "n": 300,
+      "delta": 0.02022,
+      "se": 0.00512,
+      "win": 149,
+      "loss": 147
+    },
+    "z": 3.95,
+    "pass": true
+  },
+  "subspan": {
+    "pool_size_mean": 5.0,
+    "oracle_top5_dieu": 0.6391,
+    "oracle_pool": 0.6391,
+    "lowm_thresh": 2.3984,
+    "picked_subspan_pct_full": 0.0,
+    "picked_subspan_pct_nollm": 0.0
+  },
+  "doc_recall_at_doc_k": {
+    "base": 0.8951
+  },
+  "timing_min": {
+    "gate_r_round1": 34.4,
+    "gate_t2": 0.0,
+    "gate_gen": 23.3,
+    "gen_per_q_sec": 4.67
+  },
+  "n_params": {
+    "encoders": 1163804672,
+    "reranker": 567755777,
+    "reranker_meteor_ft": 0,
+    "llm": 1720574976,
+    "ceft_with_llm_ok": true
+  },
+  "active": {
+    "full": {
+      "retrieval": "base",
+      "t2": "base",
+      "gen": "free_plus_verbatim",
+      "uses_llm": true,
+      "uses_lora": false,
+      "uses_ce_meteor": false
+    },
+    "nollm": {
+      "retrieval": "base",
+      "t2": "base",
+      "gen": "base",
+      "uses_llm": false,
+      "uses_ce_meteor": false
+    },
+    "template": "T3_theo_qd_tai_title",
+    "channels": [
+      "bm25",
+      "A",
+      "B"
+    ]
+  },
+  "dev_final": {
+    "full": {
+      "meteor": 0.5961,
+      "rouge_l": 0.4704
+    },
+    "nollm": {
+      "meteor": 0.5759,
+      "rouge_l": 0.5637
+    },
+    "base": {
+      "meteor": 0.5759
+    }
+  }
+}

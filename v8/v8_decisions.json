@@ -1,0 +1,923 @@
+{
+  "llm": {
+    "requested": true,
+    "model": "Qwen/Qwen3-1.7B",
+    "devices": [
+      "cuda:0",
+      "cuda:1"
+    ],
+    "dtype": {
+      "cuda:0": "torch.float16",
+      "cuda:1": "torch.float16"
+    },
+    "error": null,
+    "registered": false,
+    "adapter": null,
+    "n_params": 1720574976
+  },
+  "ce_meteor_ft": {
+    "used": true,
+    "reason": null,
+    "ckpt": "/kaggle/working/checkpoints/reranker-meteor-ft",
+    "meta": {
+      "updates": 257,
+      "groups_seen": 2056,
+      "planned_updates": 257,
+      "n_groups": 1886,
+      "elapsed_s": 1753.0,
+      "stop_reason": "đủ số bước theo ngân sách",
+      "lr": 1e-05,
+      "tau": 0.05,
+      "accum": 8,
+      "max_length": 512,
+      "loss_log": [
+        {
+          "update": 25,
+          "loss": 2.5105,
+          "acc_top1": 0.45,
+          "min": 2.9
+        },
+        {
+          "update": 50,
+          "loss": 1.5313,
+          "acc_top1": 0.46,
+          "min": 5.7
+        },
+        {
+          "update": 75,
+          "loss": 1.5491,
+          "acc_top1": 0.425,
+          "min": 8.6
+        },
+        {
+          "update": 100,
+          "loss": 1.482,
+          "acc_top1": 0.53,
+          "min": 11.5
+        },
+        {
+          "update": 125,
+          "loss": 1.3899,
+          "acc_top1": 0.565,
+          "min": 14.3
+        },
+        {
+          "update": 150,
+          "loss": 1.4051,
+          "acc_top1": 0.59,
+          "min": 17.1
+        },
+        {
+          "update": 175,
+          "loss": 1.4998,
+          "acc_top1": 0.5,
+          "min": 19.9
+        },
+        {
+          "update": 200,
+          "loss": 1.4998,
+          "acc_top1": 0.49,
+          "min": 22.7
+        },
+        {
+          "update": 225,
+          "loss": 1.3632,
+          "acc_top1": 0.525,
+          "min": 25.6
+        },
+        {
+          "update": 250,
+          "loss": 1.4502,
+          "acc_top1": 0.545,
+          "min": 28.4
+        }
+      ]
+    }
+  },
+  "llm_lora": {
+    "used": false,
+    "reason": "ImportError: Found an incompatible version of torchao. Found version 0.10.0, but only versions above 0.16.0 are supported",
+    "adapter": null,
+    "meta": null
+  },
+  "labels": {
+    "n_q": 2000,
+    "n_pairs": 74850,
+    "n_groups": 1886,
+    "n_gen": 1173,
+    "n_list": 1173,
+    "elapsed_s": 800.8,
+    "stop": "hết câu",
+    "oracle_mean": 0.613,
+    "best_is_subspan_pct": 21.7
+  },
+  "gate_retrieval": {
+    "base": "base",
+    "candidates": {},
+    "winner": "base"
+  },
+  "gate_retrieval_final": {
+    "base": "base",
+    "candidates": {},
+    "winner": "base"
+  },
+  "gate_retrieval_final_nollm": {
+    "base": "base",
+    "candidates": {},
+    "winner": "base"
+  },
+  "retrieval_arms": {
+    "base": {
+      "w": {},
+      "kb": null,
+      "prf": null,
+      "rw": null
+    }
+  },
+  "gate_t2": {
+    "base": "base",
+    "candidates": {
+      "bc_only": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.01634,
+          "se": 0.00913,
+          "win": 15,
+          "loss": 22
+        },
+        "half_b": {
+          "n": 150,
+          "delta": -0.01586,
+          "se": 0.01108,
+          "win": 16,
+          "loss": 22
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.0161,
+          "se": 0.00717,
+          "win": 31,
+          "loss": 44
+        },
+        "pass": false
+      },
+      "bc_ce_0.5": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.0051,
+          "se": 0.00486,
+          "win": 7,
+          "loss": 9
+        },
+        "half_b": {
+          "n": 150,
+          "delta": -0.00207,
+          "se": 0.00546,
+          "win": 7,
+          "loss": 8
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.00359,
+          "se": 0.00365,
+          "win": 14,
+          "loss": 17
+        },
+        "pass": false
+      },
+      "yn_a0.25": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.00537,
+          "se": 0.00403,
+          "win": 3,
+          "loss": 6
+        },
+        "half_b": {
+          "n": 150,
+          "delta": 0.00298,
+          "se": 0.00324,
+          "win": 6,
+          "loss": 2
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.00119,
+          "se": 0.00259,
+          "win": 9,
+          "loss": 8
+        },
+        "pass": false
+      },
+      "list_a0.25": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.0003,
+          "se": 0.00484,
+          "win": 6,
+          "loss": 5
+        },
+        "half_b": {
+          "n": 150,
+          "delta": 0.00257,
+          "se": 0.00314,
+          "win": 3,
+          "loss": 3
+        },
+        "all": {
+          "n": 300,
+          "delta": 0.00114,
+          "se": 0.00288,
+          "win": 9,
+          "loss": 8
+        },
+        "pass": false
+      },
+      "yn_a0.5": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.01064,
+          "se": 0.00603,
+          "win": 7,
+          "loss": 12
+        },
+        "half_b": {
+          "n": 150,
+          "delta": 0.00664,
+          "se": 0.00669,
+          "win": 14,
+          "loss": 7
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.002,
+          "se": 0.00453,
+          "win": 21,
+          "loss": 19
+        },
+        "pass": false
+      },
+      "list_a0.5": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.00249,
+          "se": 0.00623,
+          "win": 10,
+          "loss": 9
+        },
+        "half_b": {
+          "n": 150,
+          "delta": 0.00048,
+          "se": 0.00458,
+          "win": 5,
+          "loss": 7
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.001,
+          "se": 0.00386,
+          "win": 15,
+          "loss": 16
+        },
+        "pass": false
+      },
+      "yn_a1.0": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.01459,
+          "se": 0.00912,
+          "win": 19,
+          "loss": 23
+        },
+        "half_b": {
+          "n": 150,
+          "delta": 0.00097,
+          "se": 0.00895,
+          "win": 21,
+          "loss": 16
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.00681,
+          "se": 0.00639,
+          "win": 40,
+          "loss": 39
+        },
+        "pass": false
+      },
+      "list_a1.0": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.02584,
+          "se": 0.01064,
+          "win": 15,
+          "loss": 30
+        },
+        "half_b": {
+          "n": 150,
+          "delta": -0.0153,
+          "se": 0.00922,
+          "win": 11,
+          "loss": 21
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.02057,
+          "se": 0.00703,
+          "win": 26,
+          "loss": 51
+        },
+        "pass": false
+      },
+      "yn_only": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.09105,
+          "se": 0.01576,
+          "win": 29,
+          "loss": 67
+        },
+        "half_b": {
+          "n": 150,
+          "delta": -0.10369,
+          "se": 0.01911,
+          "win": 28,
+          "loss": 61
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.09737,
+          "se": 0.01237,
+          "win": 57,
+          "loss": 128
+        },
+        "pass": false
+      },
+      "list_only": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.08505,
+          "se": 0.01438,
+          "win": 21,
+          "loss": 66
+        },
+        "half_b": {
+          "n": 150,
+          "delta": -0.07528,
+          "se": 0.01555,
+          "win": 21,
+          "loss": 54
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.08017,
+          "se": 0.01057,
+          "win": 42,
+          "loss": 120
+        },
+        "pass": false
+      },
+      "yn_list_0.5": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.01086,
+          "se": 0.00884,
+          "win": 14,
+          "loss": 18
+        },
+        "half_b": {
+          "n": 150,
+          "delta": 0.00285,
+          "se": 0.00543,
+          "win": 12,
+          "loss": 9
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.004,
+          "se": 0.00519,
+          "win": 26,
+          "loss": 27
+        },
+        "pass": false
+      },
+      "bc_list_0.5": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.0238,
+          "se": 0.00912,
+          "win": 13,
+          "loss": 28
+        },
+        "half_b": {
+          "n": 150,
+          "delta": -0.01619,
+          "se": 0.01038,
+          "win": 13,
+          "loss": 23
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.02,
+          "se": 0.0069,
+          "win": 26,
+          "loss": 51
+        },
+        "pass": false
+      },
+      "sub_ce": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.08232,
+          "se": 0.01428,
+          "win": 23,
+          "loss": 57
+        },
+        "half_b": {
+          "n": 150,
+          "delta": -0.05194,
+          "se": 0.01399,
+          "win": 24,
+          "loss": 45
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.06713,
+          "se": 0.01002,
+          "win": 47,
+          "loss": 102
+        },
+        "pass": false
+      },
+      "lowm_list_a0.5": {
+        "half_a": {
+          "n": 150,
+          "delta": 0.00143,
+          "se": 0.00533,
+          "win": 10,
+          "loss": 7
+        },
+        "half_b": {
+          "n": 150,
+          "delta": 0.00048,
+          "se": 0.00458,
+          "win": 5,
+          "loss": 7
+        },
+        "all": {
+          "n": 300,
+          "delta": 0.00095,
+          "se": 0.00351,
+          "win": 15,
+          "loss": 14
+        },
+        "pass": true
+      }
+    },
+    "winner": "lowm_list_a0.5"
+  },
+  "gate_t2_nollm": {
+    "base": "base",
+    "candidates": {
+      "bc_only": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.01634,
+          "se": 0.00913,
+          "win": 15,
+          "loss": 22
+        },
+        "half_b": {
+          "n": 150,
+          "delta": -0.01586,
+          "se": 0.01108,
+          "win": 16,
+          "loss": 22
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.0161,
+          "se": 0.00717,
+          "win": 31,
+          "loss": 44
+        },
+        "pass": false
+      },
+      "bc_ce_0.5": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.0051,
+          "se": 0.00486,
+          "win": 7,
+          "loss": 9
+        },
+        "half_b": {
+          "n": 150,
+          "delta": -0.00207,
+          "se": 0.00546,
+          "win": 7,
+          "loss": 8
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.00359,
+          "se": 0.00365,
+          "win": 14,
+          "loss": 17
+        },
+        "pass": false
+      },
+      "ceft": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.00208,
+          "se": 0.00694,
+          "win": 18,
+          "loss": 14
+        },
+        "half_b": {
+          "n": 150,
+          "delta": -0.01052,
+          "se": 0.00913,
+          "win": 16,
+          "loss": 19
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.0063,
+          "se": 0.00573,
+          "win": 34,
+          "loss": 33
+        },
+        "pass": false
+      },
+      "ceft_ce_0.5": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.00096,
+          "se": 0.0045,
+          "win": 14,
+          "loss": 11
+        },
+        "half_b": {
+          "n": 150,
+          "delta": -0.00338,
+          "se": 0.00746,
+          "win": 12,
+          "loss": 13
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.00217,
+          "se": 0.00435,
+          "win": 26,
+          "loss": 24
+        },
+        "pass": false
+      },
+      "sub_ce": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.08232,
+          "se": 0.01428,
+          "win": 23,
+          "loss": 57
+        },
+        "half_b": {
+          "n": 150,
+          "delta": -0.05194,
+          "se": 0.01399,
+          "win": 24,
+          "loss": 45
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.06713,
+          "se": 0.01002,
+          "win": 47,
+          "loss": 102
+        },
+        "pass": false
+      },
+      "sub_ceft": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.01313,
+          "se": 0.00921,
+          "win": 28,
+          "loss": 26
+        },
+        "half_b": {
+          "n": 150,
+          "delta": -0.01926,
+          "se": 0.01205,
+          "win": 28,
+          "loss": 29
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.0162,
+          "se": 0.00757,
+          "win": 56,
+          "loss": 55
+        },
+        "pass": false
+      },
+      "sub_ceft_ce_0.5": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.01976,
+          "se": 0.00966,
+          "win": 28,
+          "loss": 32
+        },
+        "half_b": {
+          "n": 150,
+          "delta": -0.0189,
+          "se": 0.01208,
+          "win": 33,
+          "loss": 29
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.01933,
+          "se": 0.00772,
+          "win": 61,
+          "loss": 61
+        },
+        "pass": false
+      }
+    },
+    "winner": "base"
+  },
+  "gate_template": {
+    "base": "T3_theo_qd_tai_title",
+    "candidates": {
+      "T0_current": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.00467,
+          "se": 0.00072,
+          "win": 53,
+          "loss": 94
+        },
+        "half_b": {
+          "n": 150,
+          "delta": -0.00465,
+          "se": 0.00081,
+          "win": 49,
+          "loss": 96
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.00466,
+          "se": 0.00054,
+          "win": 102,
+          "loss": 190
+        },
+        "pass": false
+      },
+      "T1_theo_qd_tai": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.0036,
+          "se": 0.00065,
+          "win": 46,
+          "loss": 82
+        },
+        "half_b": {
+          "n": 150,
+          "delta": -0.00375,
+          "se": 0.00076,
+          "win": 49,
+          "loss": 84
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.00367,
+          "se": 0.0005,
+          "win": 95,
+          "loss": 166
+        },
+        "pass": false
+      },
+      "T2_title": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.00144,
+          "se": 0.00026,
+          "win": 67,
+          "loss": 80
+        },
+        "half_b": {
+          "n": 150,
+          "delta": -0.00123,
+          "se": 0.00024,
+          "win": 68,
+          "loss": 77
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.00133,
+          "se": 0.00018,
+          "win": 135,
+          "loss": 157
+        },
+        "pass": false
+      }
+    },
+    "winner": "T3_theo_qd_tai_title"
+  },
+  "gate_gen": {
+    "base": "base",
+    "candidates": {
+      "concl_replace": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.00982,
+          "se": 0.00388,
+          "win": 44,
+          "loss": 85
+        },
+        "half_b": {
+          "n": 150,
+          "delta": -0.01413,
+          "se": 0.00415,
+          "win": 44,
+          "loss": 85
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.01197,
+          "se": 0.00284,
+          "win": 88,
+          "loss": 170
+        },
+        "pass": false
+      },
+      "concl_plus_echo2": {
+        "half_a": {
+          "n": 150,
+          "delta": 0.00629,
+          "se": 0.00343,
+          "win": 71,
+          "loss": 58
+        },
+        "half_b": {
+          "n": 150,
+          "delta": 0.00087,
+          "se": 0.00388,
+          "win": 68,
+          "loss": 61
+        },
+        "all": {
+          "n": 300,
+          "delta": 0.00358,
+          "se": 0.00259,
+          "win": 139,
+          "loss": 119
+        },
+        "pass": true
+      },
+      "free": {
+        "half_a": {
+          "n": 150,
+          "delta": -0.11244,
+          "se": 0.01436,
+          "win": 26,
+          "loss": 121
+        },
+        "half_b": {
+          "n": 150,
+          "delta": -0.11173,
+          "se": 0.01342,
+          "win": 29,
+          "loss": 121
+        },
+        "all": {
+          "n": 300,
+          "delta": -0.11208,
+          "se": 0.00981,
+          "win": 55,
+          "loss": 242
+        },
+        "pass": false
+      },
+      "free_plus_verbatim": {
+        "half_a": {
+          "n": 150,
+          "delta": 0.02023,
+          "se": 0.00684,
+          "win": 81,
+          "loss": 66
+        },
+        "half_b": {
+          "n": 150,
+          "delta": 0.01806,
+          "se": 0.00748,
+          "win": 69,
+          "loss": 81
+        },
+        "all": {
+          "n": 300,
+          "delta": 0.01915,
+          "se": 0.00506,
+          "win": 150,
+          "loss": 147
+        },
+        "pass": true
+      }
+    },
+    "winner": "free_plus_verbatim",
+    "n_fallback": {
+      "concl_replace": 42,
+      "concl_plus_echo2": 42,
+      "free": 3,
+      "free_plus_verbatim": 3
+    }
+  },
+  "gate_full_vs_nollm": {
+    "half_a": {
+      "n": 150,
+      "delta": 0.02166,
+      "se": 0.00846,
+      "win": 83,
+      "loss": 64
+    },
+    "half_b": {
+      "n": 150,
+      "delta": 0.01854,
+      "se": 0.00819,
+      "win": 68,
+      "loss": 82
+    },
+    "all": {
+      "n": 300,
+      "delta": 0.0201,
+      "se": 0.00588,
+      "win": 151,
+      "loss": 146
+    },
+    "pass": true
+  },
+  "subspan": {
+    "pool_size_mean": 40.1,
+    "oracle_top5_dieu": 0.6404,
+    "oracle_pool": 0.6687,
+    "lowm_thresh": 2.3399,
+    "picked_subspan_pct_full": 0.0,
+    "picked_subspan_pct_nollm": 0.0
+  },
+  "doc_recall_at_doc_k": {
+    "base": 0.9091
+  },
+  "timing_min": {
+    "gate_r_round1": 32.5,
+    "gate_t2": 10.1,
+    "gate_gen": 19.9,
+    "gen_per_q_sec": 3.98
+  },
+  "n_params": {
+    "encoders": 1163804672,
+    "reranker": 567755777,
+    "reranker_meteor_ft": 567755777,
+    "llm": 1720574976,
+    "ceft_with_llm_ok": false
+  },
+  "active": {
+    "full": {
+      "retrieval": "base",
+      "t2": "lowm_list_a0.5",
+      "gen": "free_plus_verbatim",
+      "uses_llm": true,
+      "uses_lora": false,
+      "uses_ce_meteor": false
+    },
+    "nollm": {
+      "retrieval": "base",
+      "t2": "base",
+      "gen": "base",
+      "uses_llm": false,
+      "uses_ce_meteor": false
+    },
+    "template": "T3_theo_qd_tai_title",
+    "channels": [
+      "bm25",
+      "A",
+      "B"
+    ]
+  },
+  "dev_final": {
+    "full": {
+      "meteor": 0.5942,
+      "rouge_l": 0.4706
+    },
+    "nollm": {
+      "meteor": 0.5741,
+      "rouge_l": 0.5623
+    },
+    "base": {
+      "meteor": 0.5741
+    }
+  }
+}
